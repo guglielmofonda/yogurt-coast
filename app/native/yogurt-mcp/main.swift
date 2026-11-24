@@ -8,7 +8,7 @@ func fail(_ s: String) -> Never { FileHandle.standardError.write((s + "\n").data
 
 let env = ProcessInfo.processInfo.environment
 let profile = env["YOGURT_USER_DATA"] ?? (NSHomeDirectory() + "/Library/Application Support/Yogurt")
-let path = profile + "/mcp.sock"
+let path = profile + (CommandLine.arguments.contains("--read-only") ? "/mcp-read.sock" : "/mcp.sock")
 
 func connectOnce() -> Int32? {
   let fd = socket(AF_UNIX, SOCK_STREAM, 0)

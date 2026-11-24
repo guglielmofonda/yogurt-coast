@@ -17,8 +17,8 @@ On Linux, clone into a folder whose path has no spaces: Electron's sandbox can't
 ## Run it
 
 ```sh
-git clone https://github.com/FrigadeHQ/yogurt.git
-cd yogurt
+git clone https://github.com/guglielmofonda/yogurt-coast.git
+cd yogurt-coast
 pnpm install --frozen-lockfile
 pnpm -C app native   # builds the audio, system and transcription helpers (first time, and after they change)
 pnpm dev             # opens Yogurt from source
@@ -38,15 +38,28 @@ pnpm -C app test   # unit tests
 pnpm -C app e2e    # builds, then drives the app with Playwright in fake mode
 ```
 
-## Build an installer
+## Package Yogurt + Coast on macOS
+
+Use a valid Apple code-signing identity from your keychain. Set `YOGURT_COAST_CERTIFICATE` to its certificate fingerprint (listed by `security find-identity -v -p codesigning`), then run:
 
 ```sh
 pnpm -C app build
-pnpm -C app exec electron-builder --mac   # or --win, --linux, on that platform
+pnpm -C app package:coast
 ```
 
-Installers land in `app/dist/`. They're unsigned unless signing is set up; see `app/scripts/release-mac.sh` for the Mac.
+Open `app/dist/mac-arm64/Yogurt + Coast.app` or copy it to Applications. The local package keeps upstream's Yogurt profile. Quit the other copy before opening it. This signing path produces a local build without notarization or an update feed.
 
-## Release
+## Connect Hermes on another computer
+
+If the Hermes computer already has authenticated SSH access to your Mac, configure the Mac as an SSH host named `meeting-mac` and run this on the Hermes computer:
+
+```sh
+hermes mcp add yogurt-coast --command /usr/bin/ssh --args -T meeting-mac '"/Applications/Yogurt + Coast.app/Contents/Resources/bin/yogurt-mcp" --read-only'
+hermes mcp test yogurt-coast
+```
+
+Use a new Hermes session or run `/reload-mcp` in an open one. The Mac holding the meetings must be awake and reachable.
+
+## Upstream release process
 
 `sh app/scripts/release.sh X.Y.Z` sets the version, tags it and pushes. GitHub Actions builds Mac (signed and notarized), Windows and Linux, and publishes one release once all three pass. Installed copies update from it.

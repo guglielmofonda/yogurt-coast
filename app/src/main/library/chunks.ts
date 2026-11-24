@@ -9,7 +9,17 @@ import { transcriptText } from '../notes/enhance'
  */
 export const CHUNK_WORDS = 300
 
-export type Chunk = { startMs: number; endMs: number; text: string; speakers: string[] }
+export type Chunk = { screenFile?: string; startMs: number; endMs: number; text: string; speakers: string[] }
+
+// Keep a matching part of a dense screen inside the model's context window.
+export function screenExcerpt(text: string, terms: string[]) {
+  const limit = 6000
+  if (text.length <= limit) return text
+  const lower = text.toLowerCase()
+  const term = [...terms].sort((a, b) => b.length - a.length).find(t => lower.includes(t))
+  const start = term ? Math.min(text.length - limit, Math.max(0, lower.indexOf(term) - limit / 3)) : 0
+  return (start ? '…' : '') + text.slice(start, start + limit) + (start + limit < text.length ? '…' : '')
+}
 
 const who = (s: Segment) => (s.speaker === AUDIO_SPEAKER ? 'Audio' : s.track === 'me' ? 'You' : s.speaker || 'Them')
 const count = (s: string) => s.split(/\s+/).filter(Boolean).length

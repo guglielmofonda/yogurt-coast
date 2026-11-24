@@ -483,7 +483,7 @@ export type ChatView = {
 
 /** [n] in the answer. atMs is the transcript position (null: notes); older saved sources have no excerpt. */
 export type LibrarySource = {
-  n: number; meetingId: string; title: string; startedAt: number; atMs: number | null; excerpt?: string
+  n: number; meetingId: string; title: string; startedAt: number; atMs: number | null; screenAtMs?: number; excerpt?: string
   /** Actual chunk segments and the note's stable speaker order; absent on older saved answers. */
   transcript?: { lines: Array<{ text: string; track: 'me' | 'them'; speaker: string | null; startMs: number }>; speakers: string[] }
 }

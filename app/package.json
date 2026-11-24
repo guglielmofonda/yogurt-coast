@@ -9,6 +9,7 @@
     "build": "node scripts/native.mjs && electron-vite build",
     "test": "vitest run",
     "e2e": "node scripts/native.mjs && electron-vite build && playwright test",
+    "package:coast": "electron-builder --config electron-builder.coast.cjs --mac dir --arm64 --publish never",
     "native": "node scripts/native.mjs",
     "typecheck": "tsc -p ."
   },

@@ -1,4 +1,5 @@
 import type { Store } from '../store'
+import { screenExcerpt } from './chunks'
 import { meetingWords, respell } from '../vocab'
 import type { Library } from './store'
 import type { Indexer } from './indexer'
@@ -19,7 +20,7 @@ const OVERVIEW_CHUNKS = 4
 const EACH = 50
 
 /** a piece the answer can use and cite: a chunk of transcript (atMs: where it starts) or a meeting's notes (atMs null) */
-export type Item = { meetingId: string; title: string; startedAt: number; atMs: number | null; text: string; transcriptRange?: { startMs: number; endMs: number } }
+export type Item = { meetingId: string; title: string; startedAt: number; atMs: number | null; screenAtMs?: number; text: string; transcriptRange?: { startMs: number; endMs: number } }
 export type Retrieved = { kind: Kind; filters: Filters; items: Item[] }
 
 /** words that say nothing about what to find */
@@ -80,6 +81,7 @@ export async function retrieve(d: Deps, question: string, o: { now: number; scop
   const chunkItem = (c: typeof ranked[number]): Item => {
     const m = byId.get(c.meetingId)!
     // the line its words were found on, else where it starts
+    if (c.screenFile) return { meetingId: c.meetingId, title: m.title, startedAt: m.startedAt, atMs: null, screenAtMs: c.startMs, text: screenExcerpt(c.text, wordsOf(filters.rest)) }
     return { meetingId: c.meetingId, title: m.title, startedAt: m.startedAt, atMs: lineAt.get(c.id) ?? c.startMs, text: spelled(c.meetingId, c.text), transcriptRange: { startMs: c.startMs, endMs: c.endMs } }
   }
   const notesOf = (id: string) => { const n = d.store.notes(id); return (n.enhanced?.trim() || n.mine.trim()).replace(/<\/?mine>/g, '') }

@@ -228,6 +228,14 @@ export class Store {
         INSERT INTO segments_fts(rowid, text) VALUES (new.id, new.text); END;
 
 
+      CREATE TABLE IF NOT EXISTS coast_screen_text (
+        id INTEGER PRIMARY KEY, meeting_id TEXT NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
+        file TEXT NOT NULL, captured_at INTEGER NOT NULL, text TEXT NOT NULL, UNIQUE(meeting_id, file));
+      CREATE VIRTUAL TABLE IF NOT EXISTS coast_fts USING fts5(text, content='coast_screen_text', content_rowid='id');
+      CREATE TRIGGER IF NOT EXISTS coast_ai AFTER INSERT ON coast_screen_text BEGIN
+        INSERT INTO coast_fts(rowid, text) VALUES (new.id, new.text); END;
+      CREATE TRIGGER IF NOT EXISTS coast_ad AFTER DELETE ON coast_screen_text BEGIN
+        INSERT INTO coast_fts(coast_fts, rowid, text) VALUES ('delete', old.id, old.text); END;
       CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(mine, enhanced, content='notes', content_rowid='id');
       CREATE TRIGGER IF NOT EXISTS notes_ai AFTER INSERT ON notes BEGIN
         INSERT INTO notes_fts(rowid, mine, enhanced) VALUES (new.id, new.mine, new.enhanced); END;
@@ -530,6 +538,14 @@ export class Store {
   }
   /** the meeting's lines in order; hidden echo lines left out unless asked for */
   /** last: only the latest lines (the recorder's hover reads a recent tail, however long the meeting runs) */
+  screenTexts(meetingId: string) {
+    return this.db.prepare('SELECT file, captured_at AS capturedAt, text FROM coast_screen_text WHERE meeting_id = ? ORDER BY captured_at, file').all(meetingId) as { file: string; capturedAt: number; text: string }[]
+  }
+
+  saveScreenText(meetingId: string, file: string, capturedAt: number, text: string) {
+    this.db.prepare('INSERT INTO coast_screen_text(meeting_id, file, captured_at, text) VALUES (?, ?, ?, ?) ON CONFLICT(meeting_id, file) DO NOTHING').run(meetingId, file, capturedAt, text)
+  }
+
   segments(meetingId: string, o: { hidden?: boolean; last?: number } = {}): Segment[] {
     const where = o.hidden ? 'meeting_id = ?' : 'meeting_id = ? AND hidden = 0'
     if (o.last) return (this.db.prepare(`SELECT * FROM (SELECT * FROM segments WHERE ${where} ORDER BY start_ms DESC, id DESC LIMIT ?) ORDER BY start_ms, id`).all(meetingId, o.last) as Row[]).map(toSegment)
@@ -711,9 +727,12 @@ export class Store {
         SELECT n.meeting_id, snippet(notes_fts, -1, '${OPEN}', '${CLOSE}', '…', 24) AS snippet, 20 AS score, notes_fts.rank AS rank
           FROM notes_fts JOIN notes n ON n.id = notes_fts.rowid WHERE notes_fts MATCH ?${inScope('n.meeting_id')}
         UNION ALL
+        SELECT s.meeting_id, 'Screenshot · ' || snippet(coast_fts, 0, '${OPEN}', '${CLOSE}', '…', 24), 15, coast_fts.rank
+          FROM coast_fts JOIN coast_screen_text s ON s.id = coast_fts.rowid WHERE coast_fts MATCH ?${inScope('s.meeting_id')}
+        UNION ALL
         SELECT s.meeting_id, snippet(segments_fts, 0, '${OPEN}', '${CLOSE}', '…', 24), 10, segments_fts.rank
           FROM segments_fts JOIN segments s ON s.id = segments_fts.rowid WHERE segments_fts MATCH ? AND s.hidden = 0${inScope('s.meeting_id')}
-      ) GROUP BY meeting_id, score`).all(fts, ...args, fts, ...args) as Row[]
+      ) GROUP BY meeting_id, score`).all(fts, ...args, fts, ...args, fts, ...args) as Row[]
       const add = (id: string, parts: SnippetPart[], score: number) => {
         const hit = found.get(id)
         if (!hit) return
@@ -727,6 +746,7 @@ export class Store {
         const where = (col: string) => pairs.map(() => `instr(${col}, ?) > 0`).join(' AND ')
         for (const r of this.db.prepare(`SELECT meeting_id, coalesce(enhanced, '') || char(10) || mine AS text FROM notes
           WHERE ${where("coalesce(enhanced, '') || char(10) || mine")}${inScope('meeting_id')}`).all(...pairs, ...args) as Row[]) add(String(r.meeting_id), around(String(r.text), pairs), 20)
+        for (const r of this.db.prepare(`SELECT meeting_id, text FROM coast_screen_text WHERE ${where('text')}${inScope('meeting_id')}`).all(...pairs, ...args) as Row[]) add(String(r.meeting_id), around(String(r.text), pairs), 15)
         for (const r of this.db.prepare(`SELECT meeting_id, text FROM segments WHERE hidden = 0 AND ${where('text')}${inScope('meeting_id')}`).all(...pairs, ...args) as Row[]) add(String(r.meeting_id), around(String(r.text), pairs), 10)
       }
     })
@@ -736,7 +756,9 @@ export class Store {
         SELECT n.meeting_id FROM notes_fts JOIN notes n ON n.id = notes_fts.rowid WHERE notes_fts MATCH ?${inScope('n.meeting_id')}
         UNION
         SELECT s.meeting_id FROM segments_fts JOIN segments s ON s.id = segments_fts.rowid WHERE segments_fts MATCH ? AND s.hidden = 0${inScope('s.meeting_id')}
-      `).all(exact, ...args, exact, ...args) as Row[]
+        UNION
+        SELECT s.meeting_id FROM coast_fts JOIN coast_screen_text s ON s.id = coast_fts.rowid WHERE coast_fts MATCH ?${inScope('s.meeting_id')}
+      `).all(exact, ...args, exact, ...args, exact, ...args) as Row[]
       for (const r of phrases) { const hit = found.get(String(r.meeting_id)); if (hit) hit.bonus = 5 }
     }
     return scopedRows.map(r => {

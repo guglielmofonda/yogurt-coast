@@ -30,6 +30,7 @@ export function libraryTables(db: DatabaseSync) {
   `)
   if (!(db.prepare('PRAGMA table_info(conversation_turns)').all() as Row[]).some(r => r.name === 'waiting_model')) db.exec('ALTER TABLE conversation_turns ADD COLUMN waiting_model INTEGER NOT NULL DEFAULT 0')
   if (!(db.prepare('PRAGMA table_info(conversation_turns)').all() as Row[]).some(r => r.name === 'scope')) db.exec('ALTER TABLE conversation_turns ADD COLUMN scope TEXT')
+  if (!(db.prepare('PRAGMA table_info(library_chunks)').all() as Row[]).some(r => r.name === 'screen_file')) db.exec('ALTER TABLE library_chunks ADD COLUMN screen_file TEXT')
   const cols = (db.prepare('PRAGMA table_info(conversations)').all() as Row[]).map(r => r.name)
   for (const [name, definition] of Object.entries({ chips: "TEXT NOT NULL DEFAULT '[]'", draft: "TEXT NOT NULL DEFAULT ''", draft_chips: "TEXT NOT NULL DEFAULT '[]'", current_key: 'TEXT', legacy_meeting_id: 'TEXT', first_chips: 'TEXT' })) {
     if (!cols.includes(name)) db.exec(`ALTER TABLE conversations ADD COLUMN ${name} ${definition}`)
@@ -65,11 +66,11 @@ export function migrateMeetingChats(db: DatabaseSync) {
   } catch (e) { db.exec('ROLLBACK TO meeting_chats; RELEASE meeting_chats'); throw e }
 }
 
-export type LibraryChunk = { id: number; meetingId: string; startMs: number; endMs: number; text: string; speakers: string[] }
+export type LibraryChunk = { screenFile?: string; id: number; meetingId: string; startMs: number; endMs: number; text: string; speakers: string[] }
 export type ConversationRow = { id: string; title: string; createdAt: number; updatedAt: number; chips: ContextChip[]; draft: string; draftChips: ContextChip[]; firstChips: ContextChip[] | null }
 export type TurnRow = { id: number; question: string; answer: string; stopped: boolean; waitingModel: boolean; sources: LibrarySource[]; scope?: ContextTarget[] }
 
-const toChunk = (r: Row): LibraryChunk => ({ id: Number(r.id), meetingId: String(r.meeting_id), startMs: Number(r.start_ms), endMs: Number(r.end_ms), text: String(r.text), speakers: JSON.parse(String(r.speakers)) })
+const toChunk = (r: Row): LibraryChunk => ({ id: Number(r.id), meetingId: String(r.meeting_id), startMs: Number(r.start_ms), endMs: Number(r.end_ms), text: String(r.text), speakers: JSON.parse(String(r.speakers)), ...(r.screen_file ? { screenFile: String(r.screen_file) } : {}) })
 const toConversation = (r: Row): ConversationRow => ({ id: String(r.id), title: String(r.title), createdAt: Number(r.created_at), updatedAt: Number(r.updated_at), chips: JSON.parse(String(r.chips)), draft: String(r.draft), draftChips: JSON.parse(String(r.draft_chips)), firstChips: r.first_chips == null ? null : JSON.parse(String(r.first_chips)) })
 const asVector = (b: unknown) => { const u = b as Uint8Array; return new Float32Array(u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength)) }
 
@@ -83,22 +84,23 @@ export class Library {
    */
   stale(): Array<{ meetingId: string; signature: string }> {
     const rows = this.db.prepare(`SELECT m.id AS id, m.title AS title, m.attendees AS attendees, count(s.id) AS n, coalesce(sum(length(s.text)), 0) AS len,
-      coalesce(sum(s.start_ms), 0) AS st, coalesce(sum(length(coalesce(s.speaker, ''))), 0) AS sp, ls.signature AS have
+      coalesce(sum(s.start_ms), 0) AS st, coalesce(sum(length(coalesce(s.speaker, ''))), 0) AS sp, ls.signature AS have,
+      (SELECT count(*) FROM coast_screen_text t WHERE t.meeting_id = m.id AND t.text != '') AS screens
       FROM meetings m LEFT JOIN segments s ON s.meeting_id = m.id AND s.hidden = 0 LEFT JOIN library_sources ls ON ls.meeting_id = m.id
       WHERE m.state IN ('done', 'stopped') AND m.trashed_at IS NULL GROUP BY m.id ORDER BY m.started_at DESC`).all() as Row[]
     return rows.flatMap((r) => {
-      const signature = createHash('sha1').update(`${r.n}:${r.len}:${r.st}:${r.sp}:${r.title}:${JSON.stringify(resolvePeople(this.db, JSON.parse(String(r.attendees))))}`).digest('hex')
+      const signature = createHash('sha1').update(`${r.n}:${r.len}:${r.st}:${r.sp}:${r.title}:${JSON.stringify(resolvePeople(this.db, JSON.parse(String(r.attendees))))}`).digest('hex') + (r.screens ? `/${r.screens}` : '')
       return r.have === signature ? [] : [{ meetingId: String(r.id), signature }]
     })
   }
 
   /** a meeting's chunks made again: the old ones (and their vectors) go */
   setChunks(meetingId: string, signature: string, people: string[], chunks: Chunk[]) {
-    const ins = this.db.prepare('INSERT INTO library_chunks (meeting_id, start_ms, end_ms, text, speakers) VALUES (?, ?, ?, ?, ?)')
+    const ins = this.db.prepare('INSERT INTO library_chunks (meeting_id, start_ms, end_ms, text, speakers, screen_file) VALUES (?, ?, ?, ?, ?, ?)')
     this.db.exec('BEGIN')
     try {
       this.db.prepare('DELETE FROM library_chunks WHERE meeting_id = ?').run(meetingId)
-      for (const c of chunks) ins.run(meetingId, c.startMs, c.endMs, c.text, JSON.stringify(c.speakers))
+      for (const c of chunks) ins.run(meetingId, c.startMs, c.endMs, c.text, JSON.stringify(c.speakers), c.screenFile ?? null)
       this.db.prepare('INSERT INTO library_sources (meeting_id, signature, people) VALUES (?, ?, ?) ON CONFLICT(meeting_id) DO UPDATE SET signature = excluded.signature, people = excluded.people')
         .run(meetingId, signature, JSON.stringify(people))
       this.db.exec('COMMIT')
@@ -141,11 +143,17 @@ export class Library {
     if (!words.length || meetingIds?.length === 0) return []
     const match = words.map((w) => `"${w.replace(/"/g, '')}"`).join(' OR ')
     const within = meetingIds ? ` AND s.meeting_id IN (${meetingIds.map(() => '?').join(', ')})` : ''
-    const segs = this.db.prepare(`SELECT s.meeting_id AS meeting_id, s.start_ms AS start_ms FROM segments_fts JOIN segments s ON s.id = segments_fts.rowid
-      WHERE segments_fts MATCH ? AND s.hidden = 0${within} ORDER BY segments_fts.rank LIMIT ?`).all(match, ...(meetingIds ?? []), limit) as Row[]
-    const of = this.db.prepare('SELECT id FROM library_chunks WHERE meeting_id = ? AND start_ms <= ? ORDER BY start_ms DESC LIMIT 1')
+    const args = [match, ...(meetingIds ?? [])]
+    const segs = this.db.prepare(`SELECT s.meeting_id, s.start_ms, NULL AS chunk_id, segments_fts.rank AS score FROM segments_fts JOIN segments s ON s.id = segments_fts.rowid
+      WHERE segments_fts MATCH ? AND s.hidden = 0${within}
+      UNION ALL
+      SELECT s.meeting_id, c.start_ms, c.id, coast_fts.rank FROM coast_fts JOIN coast_screen_text s ON s.id = coast_fts.rowid
+      JOIN library_chunks c ON c.meeting_id = s.meeting_id AND c.screen_file = s.file
+      WHERE coast_fts MATCH ?${within} ORDER BY score LIMIT ?`).all(...args, ...args, limit) as Row[]
+    const of = this.db.prepare('SELECT id FROM library_chunks WHERE meeting_id = ? AND screen_file IS NULL AND start_ms <= ? ORDER BY start_ms DESC LIMIT 1')
     const out = new Set<number>()
     for (const s of segs) {
+      if (s.chunk_id != null) { out.add(Number(s.chunk_id)); continue }
       const r = of.get(String(s.meeting_id), Number(s.start_ms)) as Row | undefined
       if (!r || out.has(Number(r.id))) continue
       out.add(Number(r.id))

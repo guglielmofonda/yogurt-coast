@@ -2,6 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { setup, call, json, EVENT } from './mcpRig'
 
 describe('reading more through MCP', () => {
+  it('searches screen-only words and refuses writes on a dedicated reader even with changes enabled globally', async () => {
+    const { store, mcp, older } = setup({ readOnly: true, changes: true })
+    store.saveScreenText(older.id, '1790000000000-1.png', older.startedAt + 1000, 'Juniper observatory')
+    expect((await json(mcp, 'search', { query: 'observatory' }))[0].meeting_id).toBe(older.id)
+    expect((await json(mcp, 'get_screenshot_text', { id: older.id })).screenshots[0].text).toBe('Juniper observatory')
+    expect(await call(mcp, 'rename_meeting', { id: older.id, title: 'Wrong' })).toMatchObject({ isError: true })
+    expect(store.meeting(older.id)?.title).toBe(older.title)
+  })
   it("ask gives Yogurt's own answer with its sources, read from the folder or meetings named", async () => {
     const { mcp, store, older, calls } = setup()
     const f = store.createFolder('Finance')

@@ -765,8 +765,15 @@ app.whenReady().then(() => {
     // the notes are written: the meeting goes into the library for chat across meetings
     changed: () => { win?.webContents.send('meetings:changed'); void indexer.schedule() },
   })
+  const nativeOCR = isFake() && process.platform === 'darwin' ? createHelperRunner(helperPath).run : runHelper
   const coast = createCoastScreenshots({ root: userDataDir(), store, queue, model,
-    cli: isFake() ? (!app.isPackaged ? process.env.YOGURT_FAKE_COAST_CLI : undefined) : process.platform === 'darwin' ? coastCLI : undefined,
+    cli: isFake() ? (!app.isPackaged ? process.env.YOGURT_FAKE_COAST_CLI : undefined) : process.platform === 'darwin' && existsSync(coastCLI) ? coastCLI : undefined,
+    recognize: process.platform === 'darwin' || isFake() ? async path => {
+      const result = await nativeOCR(['screen-ocr', path]) as { text?: unknown }
+      if (typeof result?.text !== 'string') throw Error('Screenshot recognition failed')
+      return result.text
+    } : undefined,
+    indexed: () => { void indexer.schedule() },
     changed: id => win?.webContents.send('coast:changed', id) })
   onMeetingStart(m => coast.start(m.id, m.resume?.startedAt ?? m.startedAt))
   onMeetingPause(coast.pause)
@@ -931,7 +938,7 @@ app.whenReady().then(() => {
   // every meeting to one file and back; what an import adds shows up on home
   hookBackup({ getRecordingPill: () => visibilityOf(loadSettings(settingsFile), platform).showRecordingPill,
     setRecordingPill: preferences.setRecordingPill, db: store.db, meetingsDir: join(userDataDir(), 'meetings'), window: () => win, recording: () => !!activeMeeting() || !!resumingId,
-    changed: () => { win?.webContents.send('meetings:changed'); win?.webContents.send('conversations:list', conversations.list()); void indexer.refresh(); folderSuggestions.refresh() },
+    changed: () => { win?.webContents.send('meetings:changed'); win?.webContents.send('conversations:list', conversations.list()); void indexer.refresh(); coast.restore(); folderSuggestions.refresh() },
     beforeExport: () => { notes.retryDrafts(); return notes.pendingDraftId() } })
   // AI apps change things only through the functions behind the app's own buttons
   const noteSaved = (id: string, r: ReturnType<typeof notes.replace>) => { if (r === 'saved') win?.webContents.send('meetings:changed'); return r }

@@ -142,7 +142,8 @@ export function hookConversations(p: Deps) {
         signal: ac.signal,
         onStart: () => { p.library.startTurn(turn.id); turn.status = 'answering'; later() },
         onStep: (step) => { turn.step = step; later() },
-        onRestart: () => { written = ''; completed = undefined; turn.answer = ''; turn.status = 'waiting'; turn.step = undefined; later() },
+        onRestart: () => { written = ''; completed = undefined; turn.answer = ''; turn.sources = []; turn.status = 'waiting'; turn.step = undefined; later() },
+        onSources: sources => { turn.sources = sources },
         onComplete: answer => { completed = answer },
       })) { written += text; turn.answer = withoutPreamble(written, { streaming: true }); later() }
     })() : p.queue.enqueue(async (stop) => {
@@ -162,7 +163,7 @@ export function hookConversations(p: Deps) {
         const fitted = await fit(llm, got.items, question, history, spelling)
         const items = byMeeting(fitted.items), recent = fitted.history
         turn.sources = items.map((i, k): LibrarySource => {
-          const source: LibrarySource = { n: k + 1, meetingId: i.meetingId, title: i.title, startedAt: i.startedAt, atMs: i.atMs, excerpt: i.text }
+          const source: LibrarySource = { n: k + 1, meetingId: i.meetingId, title: i.title, startedAt: i.startedAt, atMs: i.atMs, excerpt: i.text, ...(i.screenAtMs == null ? {} : { screenAtMs: i.screenAtMs }) }
           const range = i.transcriptRange, meeting = p.store.meeting(i.meetingId)
           if (range && meeting) source.transcript = {
             speakers: p.store.speakerOrder(i.meetingId),
@@ -193,7 +194,7 @@ export function hookConversations(p: Deps) {
       try {
         await Promise.race([job, stopped])
         const answer = withoutPreamble((completed ?? written).trim())
-        turn.answer = single ? answer : tidyCitations(answer, turn.sources)
+        turn.answer = single && !turn.sources.length ? answer : tidyCitations(answer, turn.sources)
         turn.status = ac.signal.aborted ? 'stopped' : 'done'
         turn.step = undefined
         const cited = new Set(citedIn(turn.answer))

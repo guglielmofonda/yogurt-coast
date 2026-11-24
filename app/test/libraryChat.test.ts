@@ -374,6 +374,17 @@ describe('questions waiting for the first notes download', () => {
 })
 
 describe('one question from another app (askOnce)', () => {
+  it('returns the cited screenshot for a question scoped to one meeting, including text near the end of a dense screen', async () => {
+    const t = await rig({ llm: { chat: async (prompt) => {
+      expect(prompt).toContain('Juniper observatory: 37 credits')
+      expect(prompt).toContain('[1] Screenshot at 0:42')
+      return '37 credits [1].'
+    } } })
+    const at = t.meeting.startedAt + 42_000
+    t.store.saveScreenText(t.meeting.id, `${at}-1.png`, at, '. '.repeat(4000) + 'Juniper observatory: 37 credits')
+    const got = await t.chats.askOnce('What was the observatory budget?', [{ kind: 'meeting', id: t.meeting.id }])
+    expect(got).toMatchObject({ answer: '37 credits [1].', sources: [{ n: 1, screenAtMs: 42_000, excerpt: expect.stringContaining('37 credits') }] })
+  })
   it('answers across meetings with the sources it cites, and keeps no conversation in Ask', async () => {
     const t = await rig()
     const got = await t.chats.askOnce('What did Tarun say about the price?', [])

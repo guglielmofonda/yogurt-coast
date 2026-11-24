@@ -49,6 +49,7 @@ export type McpApp = {
   setSummaryLanguage(v: string): boolean
 }
 export type McpDeps = {
+  readOnly?: boolean
   store: Store
   enabled: () => boolean
   /** Settings' "Let AI apps make changes": off unless the person turned it on */
@@ -83,9 +84,11 @@ const readTools = (platform: string): Tool[] => [
     inputSchema: { type: 'object', properties: { query: { type: 'string' }, folder: inFolder, person, limit: { type: 'number', description: 'Most to return (default 20, at most 100)' }, before: { type: 'string', description: 'Only meetings that started before this ISO time, to page back' } } } },
   { name: 'get_meeting', description: "One meeting: its details, its attendees with their emails, the calendar event it is linked to (calendar_event: title, start, end, calendar; null when none), the folder Yogurt suggests for it (suggested_folder, null when none), the notes the person typed (myNotes) and Yogurt's written summary (Markdown).",
     inputSchema: { type: 'object', properties: { id: idArg }, required: ['id'] } },
+  { name: 'get_screenshot_text', description: 'Read text recognized on saved meeting screenshots, with capture times. Returns up to five screenshots per page. Use next_offset for more.',
+    inputSchema: { type: 'object', properties: { id: idArg, offset: { type: 'integer', minimum: 0 } }, required: ['id'] } },
   { name: 'get_transcript', description: 'What was said in a meeting, line by line with who said it. format "text" (default): "[mm:ss] Name: words" lines. format "lines": JSON with start_ms, end_ms, speaker, is_me and text. "Them" is the other side of the call when the call app gave no name.',
     inputSchema: { type: 'object', properties: { id: idArg, format: { type: 'string', enum: ['text', 'lines'] } }, required: ['id'] } },
-  { name: 'search', description: 'Finds words across every meeting (titles, transcripts, notes): meeting id, title, start and a snippet with the matched words in **bold**. Optional person keeps only meetings with them.',
+  { name: 'search', description: 'Finds words across every meeting (titles, transcripts, notes and screenshot text): meeting id, title, start and a snippet with the matched words in **bold**. Optional person keeps only meetings with them.',
     inputSchema: { type: 'object', properties: { query: { type: 'string' }, folder: inFolder, person, limit: { type: 'number', description: 'Most meetings to return (default 20, at most 100)' } }, required: ['query'] } },
   { name: 'ask', description: "Yogurt answers a question from the person's meetings itself, on this computer, with numbered sources ([1], [2]) naming the meeting and the moment. Optional folder or meeting_ids limit what it reads. Slower than search (it writes an answer); use it for questions that need meetings read and put together.",
     inputSchema: { type: 'object', properties: { question: { type: 'string' }, folder: { type: 'string', description: 'Only meetings in this folder' }, meeting_ids: { type: 'array', items: { type: 'string' }, description: 'Only these meetings (at most 40)' } }, required: ['question'] } },
@@ -129,7 +132,7 @@ export type Ctx = {
 
 export function createMcp(d: McpDeps): Mcp {
   const mac = (d.platform ?? 'darwin') === 'darwin'
-  const listed = mcpTools(d.platform ?? 'darwin')
+  const listed = (d.readOnly ? readTools : mcpTools)(d.platform ?? 'darwin')
   const log = d.log ?? ((line: string) => console.info('MCP', line))
   // the calendar's people with their emails (null when the calendar gave none): another app can write to them or match them
   const summary = (m: Meeting) => ({ id: m.id, title: m.title, start: iso(m.startedAt), end: iso(m.endedAt), people: m.attendees.map((a) => a.name),
@@ -210,6 +213,14 @@ export function createMcp(d: McpDeps): Mcp {
       const n = d.store.notes(m.id)
       return JSON.stringify({ ...summary(m), calendar_event: calendarEvent(m), suggested_folder: suggestedFolder(m), myNotes: n.mine, summary: n.enhanced }, null, 2)
     },
+    async get_screenshot_text(a) {
+      const m = meetingOf(a.id)
+      const rows = d.store.screenTexts(m.id).filter(r => r.text)
+      const offset = a.offset === undefined ? 0 : Number(a.offset)
+      if (!Number.isSafeInteger(offset) || offset < 0) throw new Refusal('offset must be a nonnegative integer.')
+      const screenshots = rows.slice(offset, offset + 5).map(r => ({ file: r.file, captured_at: iso(r.capturedAt), text: r.text }))
+      return JSON.stringify({ screenshots, next_offset: offset + 5 < rows.length ? offset + 5 : null })
+    },
     async get_transcript(a) {
       const m = meetingOf(a.id)
       const lines = d.store.segments(m.id)
@@ -238,7 +249,7 @@ export function createMcp(d: McpDeps): Mcp {
       }
       return JSON.stringify({
         answer: got.answer, ...(got.stopped ? { note: 'The answer took too long and was stopped; this is what was written.' } : {}),
-        sources: got.sources.map((s) => ({ n: s.n, meeting_id: s.meetingId, title: s.title, start: iso(s.startedAt), at: s.atMs == null ? null : clock(s.atMs), excerpt: s.excerpt?.slice(0, 600) ?? null })),
+        sources: got.sources.map((s) => ({ n: s.n, meeting_id: s.meetingId, title: s.title, start: iso(s.startedAt), at: s.atMs == null ? null : clock(s.atMs), ...(s.screenAtMs == null ? {} : { source: 'screenshot', screen_at: clock(s.screenAtMs) }), excerpt: s.excerpt?.slice(0, 600) ?? null })),
       }, null, 2)
     },
     async list_people(a) {
@@ -293,8 +304,8 @@ export function createMcp(d: McpDeps): Mcp {
           protocolVersion: VERSIONS.includes(String(asked)) ? asked : VERSIONS[0],
           capabilities: { tools: {} },
           serverInfo: { name: 'yogurt', title: 'Yogurt', version: d.version },
-          instructions: `Yogurt holds the person's meeting notes, transcripts and recordings on this ${mac ? 'Mac' : 'computer'}. Use list_meetings or search to find a meeting, then get_meeting, get_transcript or get_audio.`
-            + " With changes allowed in Yogurt's Settings, it can also file and edit meetings, take notes of a call, and bring in meetings from other notes apps (create_meeting).",
+          instructions: `Yogurt holds the person's meeting notes, transcripts and recordings on this ${mac ? 'Mac' : 'computer'}. Use list_meetings or search to find a meeting, then get_meeting, get_screenshot_text, get_transcript or get_audio.`
+            + (d.readOnly ? " This connection is read-only." : " With changes allowed in Yogurt's Settings, it can also file and edit meetings, take notes of a call, and bring in meetings from other notes apps (create_meeting)."),
         })
       }
       if (method === 'ping') return ok(msgId, {})
@@ -303,7 +314,7 @@ export function createMcp(d: McpDeps): Mcp {
         const name = String(params?.name ?? '')
         const tool = tools[name]
         const a = params?.arguments && typeof params.arguments === 'object' && !Array.isArray(params.arguments) ? params.arguments as Args : {}
-        if (!tool) return said(msgId, `Yogurt has no tool called ${name}.`, true)
+        if (!tool || !listed.some(t => t.name === name)) return said(msgId, `Yogurt has no tool called ${name}.`, true)
         if (!d.enabled()) return said(msgId, 'Yogurt has connecting AI apps turned off. The person can turn it on in Yogurt: Settings, AI apps.', true)
         const change = CHANGES.has(name)
         if (change && !d.changesEnabled()) {

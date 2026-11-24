@@ -47,20 +47,26 @@ export async function hookMcp(d: {
   /** Settings is told when apps come and go */
   send: (clients: string[]) => void
 }) {
-  const mcp = createMcp({ store: d.store, enabled: d.enabled, changesEnabled: d.changesEnabled, me: d.me, version: d.version, audio: d.audio, app: d.app, platform: process.platform })
+  const deps = { store: d.store, enabled: d.enabled, changesEnabled: d.changesEnabled, me: d.me, version: d.version, audio: d.audio, app: d.app, platform: process.platform }
   let server: Awaited<ReturnType<typeof serveMcp>> | undefined
+  let reader: typeof server
+  const clients = () => [...(server?.clients() ?? []), ...(reader?.clients() ?? [])]
+  const changed = () => d.send(clients())
   const address = mcpAddress(process.platform, d.profile, randomBytes(16).toString('hex'))
   try {
-    server = await serveMcp(address, mcp, d.send)
+    server = await serveMcp(address, createMcp(deps), changed)
+    if (process.platform === 'darwin') {
+      reader = await serveMcp(join(d.profile, 'mcp-read.sock'), createMcp({ ...deps, readOnly: true }), changed)
+    }
     if (process.platform === 'win32') writeWhole(join(d.profile, PIPE_FILE), address)
   } catch (e) { console.error('mcp: could not open its socket', e) }
   // what the helper starts when Yogurt is closed (Windows, Linux): recorded each launch, as an AppImage can move
   const launch = launchCommand(process.platform, app.isPackaged, process.execPath, process.env)
   if (launch) { try { writeWhole(join(d.profile, LAUNCH_FILE), launch) } catch (e) { console.error('mcp: could not record how to open Yogurt', e) } }
   const copy = copyHelper(d.profile)
-  const status = () => ({ enabled: d.enabled(), changes: d.changesEnabled(), clients: server?.clients() ?? [], command: copy ?? mcpHelperPath() })
+  const status = () => ({ enabled: d.enabled(), changes: d.changesEnabled(), clients: clients(), command: copy ?? mcpHelperPath() })
   ipcMain.handle('mcp:status', status)
   ipcMain.handle('mcp:set', (_e, on: unknown) => { d.setEnabled(on === true); return status() })
   ipcMain.handle('mcp:set-changes', (_e, on: unknown) => { d.setChangesEnabled(on === true); return status() })
-  return { close: () => server?.close() }
+  return { close: () => Promise.all([server?.close(), reader?.close()]) }
 }

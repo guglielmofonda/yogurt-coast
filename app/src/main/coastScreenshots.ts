@@ -17,6 +17,7 @@ const fileOf = (f: Candidate) => `${f.at}-${f.id}.png`
 
 export function createCoastScreenshots(o: {
   root: string; cli?: string; store: Store; model: Pick<NotesModel, 'llm'>; queue: Queue; changed(id: string): void
+  recognize?(path: string): Promise<string>; indexed(): void
 }) {
   // Jobs stay outside portable meeting backups: importing someone else's note must never query this Mac's history.
   const jobs = join(o.root, 'coast-imports')
@@ -98,13 +99,39 @@ export function createCoastScreenshots(o: {
       }
     } finally { await rm(temp, { recursive: true, force: true }) }
   }
+  async function imagePath(id: string, name: string) {
+    const folder = await realpath(join(o.root, 'meetings'))
+    const expected = join(folder, id, 'coast', name)
+    const info = await stat(expected)
+    if (await realpath(expected) !== expected || !info.isFile() || info.size > 80 * 1024 * 1024) throw Error('Invalid screenshot')
+    return expected
+  }
+  function missing(id: string) {
+    if (!o.recognize) return []
+    const known = new Set(o.store.screenTexts(id).map(row => row.file))
+    return files(id).filter(name => !known.has(name))
+  }
+  async function recognizeSaved(id: string, signal: AbortSignal) {
+    if (!o.recognize) return
+    let indexed = false
+    try {
+      for (const name of missing(id)) {
+        if (signal.aborted || !eligible(id)) return
+        const text = await o.recognize(await imagePath(id, name))
+        if (signal.aborted || !eligible(id)) return
+        o.store.saveScreenText(id, name, Number(name.split('-')[0]), text)
+        indexed ||= text.length > 0
+      }
+    } finally { if (indexed) o.indexed() }
+  }
   function schedule(id: string) {
-    if (!o.cli || running.has(id) || !eligible(id) || !flush(id) || !existsSync(jobFile(id))) return
+    if (running.has(id) || !eligible(id) || !flush(id)) return
+    if (!(o.cli && existsSync(jobFile(id))) && !missing(id).length) return
     failed.delete(id); running.add(id); o.changed(id)
     void o.queue.enqueue(async signal => {
       while (!signal.aborted && eligible(id)) {
         const pending = spans(id)
-        if (!pending.length) return
+        if (!o.cli || !pending.length) break
         const [from, end] = pending[0]
         const to = Math.min(end, Math.floor(from / 1000) * 1000 + windowMs)
         mkdirSync(dir(id), { recursive: true, mode: 0o700 })
@@ -114,13 +141,14 @@ export function createCoastScreenshots(o: {
         save(id, to < end ? [[to, end], ...rest] : rest)
         o.changed(id)
       }
+      if (!signal.aborted && eligible(id)) await recognizeSaved(id, signal)
     }, 'screenshots', id).catch(() => { failed.add(id) }).finally(() => { running.delete(id); o.changed(id) })
   }
   function view(id: string): CoastView | null {
     if (!eligible(id)) return null
     const pending = existsSync(jobFile(id))
     if (!pending && !failed.has(id) && !existsSync(dir(id))) return null
-    return { files: files(id), status: failed.has(id) ? 'error' : !pending ? 'done' : running.has(id) ? 'working' : 'retry' }
+    return { files: files(id), status: failed.has(id) ? 'error' : running.has(id) ? 'working' : pending ? 'retry' : 'done' }
   }
   return {
     start(id: string, at: number) { if (o.cli) live = { id, since: at, spans: [] } },
@@ -133,15 +161,22 @@ export function createCoastScreenshots(o: {
       flush(id)
     },
     schedule, view,
-    restore() { if (o.cli && existsSync(jobs)) for (const f of readdirSync(jobs)) { const id = f.slice(0, -5); if (f.endsWith('.json') && isId(id)) schedule(id) } },
+    restore() {
+      const ids = new Set<string>()
+      if (o.cli && existsSync(jobs)) for (const f of readdirSync(jobs)) if (f.endsWith('.json')) ids.add(f.slice(0, -5))
+      const meetings = join(o.root, 'meetings')
+      if (o.recognize && existsSync(meetings)) {
+        for (const entry of readdirSync(meetings, { withFileTypes: true })) {
+          if (entry.isDirectory() && existsSync(dir(entry.name))) ids.add(entry.name)
+        }
+      }
+      for (const id of ids) if (isId(id)) schedule(id)
+    },
     forget(id: string) { unsaved.delete(id); failed.delete(id); rmSync(jobFile(id), { force: true }) },
     async image(id: string, name: unknown) {
       if (!eligible(id) || typeof name !== 'string' || !fileName.test(name)) return null
       try {
-        const folder = await realpath(join(o.root, 'meetings'))
-        const expected = join(folder, id, 'coast', name)
-        if (await realpath(expected) !== expected || (await stat(expected)).size > 80 * 1024 * 1024) return null
-        const png = await readFile(expected)
+        const png = await readFile(await imagePath(id, name))
         if (!eligible(id) || !png.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'))) return null
         return 'data:image/png;base64,' + png.toString('base64')
       } catch { return null }

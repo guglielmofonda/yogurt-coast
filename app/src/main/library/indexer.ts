@@ -14,7 +14,7 @@ const BATCH = 8
  * without a vector are embedded, newest meetings first. Asked for after notes are written, at launch, after an import
  * and when the embedding model lands. The vectors for search are kept in memory and follow what changed.
  */
-export function createIndexer(o: { store: Pick<Store, 'meeting' | 'segments'>; library: Library; embedder: Embedder; queue: Pick<Queue, 'enqueue'> }) {
+export function createIndexer(o: { store: Pick<Store, 'meeting' | 'segments' | 'screenTexts'>; library: Library; embedder: Embedder; queue: Pick<Queue, 'enqueue'> }) {
   const index = new VectorIndex()
   /** meetings whose vectors changed since the index was read: read again on the next search */
   const dirty = new Set<string>()
@@ -27,6 +27,11 @@ export function createIndexer(o: { store: Pick<Store, 'meeting' | 'segments'>; l
     const chunks = chunkTranscript(o.store.segments(meetingId))
     const spoke = chunks.flatMap((c) => c.speakers).filter((s) => s !== 'You' && s !== 'Them')
     const people = [...new Set([...m.attendees.map((a) => a.name.trim()).filter(Boolean), ...spoke])]
+    for (const screen of o.store.screenTexts(meetingId)) {
+      if (!screen.text) continue
+      const at = Math.max(0, screen.capturedAt - m.startedAt)
+      chunks.push({ startMs: at, endMs: at, screenFile: screen.file, text: screen.text, speakers: [] })
+    }
     o.library.setChunks(meetingId, signature, people, chunks)
     dirty.add(meetingId)
   }

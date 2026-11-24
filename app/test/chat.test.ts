@@ -129,6 +129,7 @@ function seeded() {
 describe('ask: one question, through the model queue as a chat job', () => {
   it('streams the answer; the prompt has the context, earlier questions, then the question last, in the person’s language', async () => {
     const { store, id } = seeded()
+    store.saveScreenText(id, '1790000000000-1.png', 1790000000000, 'Juniper observatory')
     const kinds: JobKind[] = []
     const q = createQueue({ recording: () => false, smallMac: false })
     const queue = { ...q, enqueue: (job: Parameters<typeof q.enqueue>[0], kind: JobKind) => { kinds.push(kind); return q.enqueue(job, kind) } }
@@ -139,6 +140,8 @@ describe('ask: one question, through the model queue as a chat job', () => {
     expect(kinds).toEqual(['chat'])
     const p = prompts[0]
     expect(p.startsWith(readAheadText(transcriptText(store.segments(id)).split('\n')))).toBe(true)
+    expect(p).toContain('Juniper observatory')
+    expect(p).toContain('text displayed on screen')
     expect(p).toContain('Who was there?')
     expect(p).toContain('You and Ann.')
     expect(p.trimEnd().endsWith('When does it go live?\n</question>')).toBe(true)

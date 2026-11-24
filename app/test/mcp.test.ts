@@ -20,7 +20,7 @@ describe('the MCP server', () => {
     const { mcp } = setup()
     const r = await mcp.handle({ jsonrpc: '2.0', id: 3, method: 'tools/list' }) as { result: { tools: Array<{ name: string; annotations: { readOnlyHint: boolean; destructiveHint: boolean } }> } }
     const tools = r.result.tools
-    const reading = ['list_folders', 'list_meetings', 'get_meeting', 'get_transcript', 'search', 'ask', 'list_people', 'upcoming_meetings', 'calendar_day', 'list_trash', 'get_settings', 'export_meeting', 'get_audio']
+    const reading = ['list_folders', 'list_meetings', 'get_meeting', 'get_screenshot_text', 'get_transcript', 'search', 'ask', 'list_people', 'upcoming_meetings', 'calendar_day', 'list_trash', 'get_settings', 'export_meeting', 'get_audio']
     expect(tools.filter((t) => t.annotations.readOnlyHint).map((t) => t.name)).toEqual(reading)
     expect(tools.filter((t) => !t.annotations.readOnlyHint).map((t) => t.name)).toEqual(['create_folder', 'rename_folder', 'delete_folder', 'add_to_folder', 'remove_from_folder',
       'accept_folder_suggestion', 'dismiss_folder_suggestion', 'rename_meeting', 'set_attendees', 'link_calendar_event', 'unlink_calendar_event', 'trash_meeting', 'restore_meeting',
@@ -40,7 +40,7 @@ describe('the MCP server', () => {
     }
     const mac = "A meeting's recording as files on this Mac: one per side (track me: the person's microphone; them: the other side of the call), AAC in .m4a. Gives paths, which apps on this Mac can open."
     const here = await audioText()
-    expect(here).toEqual([expect.stringMatching(/^Yogurt holds the person's meeting notes, transcripts and recordings on this Mac\. Use list_meetings or search to find a meeting, then get_meeting, get_transcript or get_audio\./), mac])
+    expect(here).toEqual([expect.stringMatching(/^Yogurt holds the person's meeting notes, transcripts and recordings on this Mac\. Use list_meetings or search to find a meeting, then get_meeting, get_screenshot_text, get_transcript or get_audio\./), mac])
     expect(await audioText('darwin')).toEqual(here)
     for (const p of ['win32', 'linux']) {
       const [instructions, audio] = await audioText(p)

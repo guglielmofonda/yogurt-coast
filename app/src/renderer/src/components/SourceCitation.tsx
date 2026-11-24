@@ -48,6 +48,7 @@ export function SourceCitationCard({ source, sentence, triggerId, open, animate,
     const preview = citationCardPassage(item, sentence), title = item.title || t('Untitled'), date = new Date(item.startedAt)
     return <section className="citation-source" data-source={item.meetingId} key={`${item.n}-${index}`}>
       <div className="citation-heading">{showTitle && <><h3 className="citation-title" title={title}>{title}</h3><span aria-hidden="true">·</span></>}<time className="citation-date" dateTime={date.toISOString()} title={date.toLocaleDateString(language(), { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}>{date.toLocaleDateString(language(), { month: 'short', day: 'numeric' })}</time>
+        {item.screenAtMs != null && <><span aria-hidden="true">·</span>{t('Screenshot')} <time className="citation-moment">{clock(item.screenAtMs)}</time></>}
         {item.atMs !== null && <><span aria-hidden="true">·</span><time className="citation-moment">{clock(preview.match.atMs ?? item.atMs)}</time></>}
       </div>
       {preview.match.text && <blockquote className="citation-quote" data-testid="citation-excerpt" dir="auto"><q>{preview.before.text && <span className="citation-context">{preview.before.text} </span>}<span className="citation-match">{preview.match.text}</span>{preview.after.text && <span className="citation-context"> {preview.after.text}</span>}</q></blockquote>}

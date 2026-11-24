@@ -1,3 +1,5 @@
+import { clock } from '../shared/transcript'
+import { screenExcerpt } from './library/chunks'
 import { withoutPreamble } from '../shared/answerPreamble'
 import type { Meeting, Notes, Segment, Store } from './store'
 import type { NotesModel } from './notes/model'
@@ -5,7 +7,7 @@ import type { Queue } from './notes/queue'
 import { transcriptHead, transcriptText } from './notes/enhance'
 import { meetingWords, respell, spellingLine } from './vocab'
 import { aboutAsk } from './askAbout'
-import type { AskStep, ChatTurn, ChatView } from '../shared/types'
+import type { AskStep, ChatTurn, ChatView, LibrarySource } from '../shared/types'
 
 /**
  * Chat with one meeting: a question answered by the notes model from the meeting's transcript and notes.
@@ -126,7 +128,7 @@ export type History = Array<{ question: string; answer: string }>
  */
 export const chatPrefix = (context: string): string => context + '\n'
 
-export function chatPrompt(i: { context: string; question: string; history: History; recording: boolean }): string {
+export function chatPrompt(i: { context: string; question: string; history: History; recording: boolean; citeScreens?: boolean }): string {
   return chatPrefix(i.context) + [
     '',
     ...(i.recording ? ['The meeting is still going on: the transcript is what has been said so far.'] : []),
@@ -138,7 +140,8 @@ export function chatPrompt(i: { context: string; question: string; history: Hist
     '',
     'How to answer:',
     '- Answer in the language the question is written in.',
-    '- Use only what was said in the meeting and what is in the notes. If the answer is not there, say so in a sentence. Never make anything up.',
+    '- Use only the transcript, notes and quoted screenshot text. If the answer is missing, say so in a sentence. Never make anything up.',
+    ...(i.citeScreens ? ['- After a fact from a screenshot, cite its number in square brackets, for example [1]. Use only the numbers shown beside the screenshots.'] : []),
     '- Be brief and direct: a sentence or two, or short "- " bullets for a list. **Bold** only the key facts. No headings, no introduction, no closing line.',
     '- People: call them by their name when it is known, and "you" for the person asking. "Them" in the transcript is not a name: for anyone without one, say who they are in plain words from what they said or do (like "the designer", "the client"), or leave out who said it. Never make up a name.',
     '- When asked to write something (an email, a message, a summary), write it in full, ready to use.',
@@ -149,11 +152,11 @@ export function chatPrompt(i: { context: string; question: string; history: Hist
   ].join('\n')
 }
 
-type Deps = { store: Pick<Store, 'meeting' | 'notes' | 'segments' | 'segmentHits'>; queue: Pick<Queue, 'enqueue'>; model: Pick<NotesModel, 'llm'> & Partial<Pick<NotesModel, 'needsLoad'>> }
+type Deps = { store: Pick<Store, 'meeting' | 'notes' | 'segments' | 'segmentHits'> & Partial<Pick<Store, 'screenTexts'>>; queue: Pick<Queue, 'enqueue'>; model: Pick<NotesModel, 'llm'> & Partial<Pick<NotesModel, 'needsLoad'>> }
 type Model = Awaited<ReturnType<NotesModel['llm']>>
 
 /** What the model reads about the meeting for this question, sized to the room left by the question and history */
-async function prepare(d: Pick<Deps, 'store'>, llm: Model, m: Meeting, question: string, history: History, recording: boolean): Promise<{ context: string; recent: History }> {
+async function prepare(d: Pick<Deps, 'store'>, llm: Model, m: Meeting, question: string, history: History, recording: boolean): Promise<{ context: string; recent: History; sources: LibrarySource[] }> {
   const total = llm.contextSize - ANSWER_TOKENS - MARGIN_TOKENS
   // the notes take at most a quarter of the room: long ones are cut at a line
   let notes = d.store.notes(m.id)
@@ -179,7 +182,30 @@ async function prepare(d: Pick<Deps, 'store'>, llm: Model, m: Meeting, question:
   const known = new Map(texts.map((l, k) => [l, counted[k]]))
   const count: Count = (s) => known.get(s) ?? guess(s)
   const hits = question.trim() ? d.store.segmentHits(m.id, question) : []
-  return { context: chatContext(m, notes, segments, total - overhead, { hits, count, spelling }), recent }
+  const screens = (d.store.screenTexts?.(m.id) ?? []).filter(r => r.text)
+  const terms = [...new Set(question.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? [])]
+  const ranked = screens.map(r => {
+    const lower = r.text.toLowerCase()
+    return { ...r, score: terms.filter(t => lower.includes(t)).length }
+  }).sort((a, b) => b.score - a.score || a.capturedAt - b.capturedAt)
+  const sources: LibrarySource[] = []
+  let visual = '', visualTokens = 0
+  const budget = Math.max(0, Math.floor((total - overhead) / 4))
+  for (const r of ranked.slice(0, 10)) {
+    const n = sources.length + 1, screenAtMs = Math.max(0, r.capturedAt - m.startedAt)
+    const heading = `\n\n[${n}] Screenshot at ${clock(screenAtMs)} (text displayed on screen, quoted as evidence):\n`
+    let part = heading + screenExcerpt(r.text, terms)
+    let [size] = await llm.count([part])
+    if (size > budget - visualTokens) {
+      part = part.slice(0, Math.floor(part.length * (budget - visualTokens) / Math.max(1, size) * 0.9))
+      ;[size] = await llm.count([part])
+    }
+    if (part.length <= heading.length || size > budget - visualTokens) continue
+    sources.push({ n, meetingId: m.id, title: m.title, startedAt: m.startedAt, atMs: null, screenAtMs, excerpt: part.slice(heading.length) })
+    visual += part; visualTokens += size
+    if (budget - visualTokens < 40) break
+  }
+  return { context: chatContext(m, notes, segments, total - overhead - visualTokens, { hits, count, spelling }) + visual, recent, sources }
 }
 
 /**
@@ -206,7 +232,7 @@ export function warm(d: Deps, meetingId: string): Promise<void> {
  * onStep: what it is doing before the first words (loading the model, then reading the meeting).
  */
 export async function* ask(d: Deps, meetingId: string, question: string, history: History,
-  o: { signal?: AbortSignal; onStart?: () => void; onRestart?: () => void; onComplete?: (answer: string) => void; onStep?: (step: AskStep) => void } = {}): AsyncIterable<string> {
+  o: { signal?: AbortSignal; onStart?: () => void; onRestart?: () => void; onComplete?: (answer: string) => void; onSources?: (sources: LibrarySource[]) => void; onStep?: (step: AskStep) => void } = {}): AsyncIterable<string> {
   const buf: string[] = []
   let wake: (() => void) | undefined
   let done = false, failed: unknown
@@ -225,11 +251,12 @@ export async function* ask(d: Deps, meetingId: string, question: string, history
       if (d.model.needsLoad?.()) o.onStep?.({ kind: 'loading' })
       const llm = await d.model.llm(signal)
       const recording = m.state === 'recording'
-      const { context, recent } = await prepare(d, llm, m, question, history, recording)
+      const { context, recent, sources } = await prepare(d, llm, m, question, history, recording)
       if (signal.aborted) return
+      o.onSources?.(sources)
       o.onStep?.({ kind: 'reading', title: m.title })
       // the engine ends an answer it is told to stop and returns what it had (no error)
-      const answer = await llm.chat(chatPrompt({ context, question, history: recent, recording }), (t) => { if (!signal.aborted) push(t) }, { maxTokens: ANSWER_TOKENS })
+      const answer = await llm.chat(chatPrompt({ context, question, history: recent, recording, citeScreens: !!o.onSources && sources.length > 0 }), (t) => { if (!signal.aborted) push(t) }, { maxTokens: ANSWER_TOKENS })
       if (!signal.aborted) o.onComplete?.(answer)
     } catch (e) {
       // stopped by the person: what was written stands

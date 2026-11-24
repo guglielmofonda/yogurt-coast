@@ -1,31 +1,32 @@
-<p align="center"><a href="https://yogurt.so?utm_source=github&utm_medium=readme&utm_campaign=yogurt"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme-banner-app-dark.webp"><img src="docs/assets/readme-banner-app-light.webp" width="880" alt="Yogurt. AI meeting notes without a bot. The app showing a launch planning meeting with Ask open."></picture></a></p>
+# Yogurt + Coast
 
-<div align="center"><strong>Yogurt</strong></div>
-<div align="center">Private AI meeting notes, with no bot in your call.<br />A free, open-source alternative to Granola, Otter and Fireflies.</div>
-<br />
-<div align="center">
-<a href="https://yogurt.so?utm_source=github&utm_medium=readme&utm_campaign=yogurt">Website</a>
-<span> · </span>
-<a href="https://github.com/FrigadeHQ/yogurt">GitHub</a>
-</div>
+Search what was on screen during a call alongside what people said. This macOS fork of [Yogurt](https://github.com/FrigadeHQ/yogurt) attaches selected screenshots from Coast Local to finished meeting notes.
 
-## Introduction
+## Run on your Mac
 
-Yogurt records your microphone and call audio, then transcribes and summarizes on your Mac, Windows or Linux computer. It names speakers from Zoom, Teams and Meet and answers questions across meetings with sources.
-
-## Why
-
-Our conversations should be our own business. Good notes shouldn't need third-party servers or an account. That's why we built Yogurt to record, transcribe and summarize on your computer. It goes online only to download models and check for updates.
-
-## Download
-
-Yogurt is free for [Mac](https://github.com/FrigadeHQ/yogurt/releases/latest/download/Yogurt-mac-arm64.dmg), [Windows](https://github.com/FrigadeHQ/yogurt/releases/latest/download/Yogurt-windows-x64-setup.exe) and [Linux](https://github.com/FrigadeHQ/yogurt/releases/latest/download/Yogurt-linux-x86_64-setup.AppImage).
-
-On a Mac you can also use [Homebrew](https://brew.sh).
+Use an Apple silicon Mac with macOS 14.4 or newer, Xcode Command Line Tools, CMake, Node.js 24, and pnpm 10.7.0. Install Coast Local in Applications, allow screen capture, and enable its local CLI bridge. Open Yogurt + Coast and let its local notes model finish downloading.
 
 ```sh
-brew install --cask frigadehq/yogurt/yogurt
+git clone https://github.com/guglielmofonda/yogurt-coast.git
+cd yogurt-coast
+pnpm install --frozen-lockfile
+pnpm -C app native
+pnpm dev
 ```
+
+After a recording stops, Yogurt checks the recorded intervals for screen changes. A local language model selects frames using visual-change scores, app and window titles, available screen text, and meeting notes. Apple Vision reads the selected images on your Mac. The images appear in the meeting note, and the text is available in search and Ask. On startup, Yogurt also reads previously attached screenshots so older notes become searchable. A paused recording excludes the paused interval.
+
+## Give an agent read access
+
+In Settings → AI apps, enable **Let AI apps read your meetings**. For an installed build, register its read-only helper with Codex:
+
+```sh
+codex mcp add yogurt-coast -- "/Applications/Yogurt + Coast.app/Contents/Resources/bin/yogurt-mcp" --read-only
+```
+
+For a source build, use the absolute path to `app/resources/bin/yogurt-mcp` in the checkout and keep the app running. Agents can use `search` to find screen text, `get_screenshot_text` to read it with capture times, and `ask` for an answer with sources. The read-only connection rejects edits even if other agents are allowed to make changes. If the agent uses a hosted model, meeting content it retrieves can reach that provider.
+
+This fork is distributed as source. The [build instructions](docs/building.md) cover local packaging and connecting a remote agent over SSH. The fork package has no automatic update feed.
 
 ## What it does
 
@@ -52,7 +53,7 @@ https://github.com/user-attachments/assets/da16b894-beb1-491a-89e1-fd10666dc9b8
 2. **Transcribe.** Yogurt uses whisper.cpp and, on supported Macs, Apple SpeechAnalyzer.
 3. **Summarize and ask.** A local open-weight model runs through llama.cpp.
 
-Meeting data stays local; Yogurt goes online for model downloads and update checks.
+Transcription, screenshot selection, OCR and meeting answers run locally. Setup downloads the models. Sharing a result with an AI client follows that client’s provider settings.
 
 <details><summary>Where your meetings, recordings, settings and models are stored</summary>
 
@@ -108,7 +109,7 @@ Meeting data stays local; Yogurt goes online for model downloads and update chec
 
 <br>
 
-> No. Your recordings, transcripts and notes stay on your computer, and Yogurt has no server that receives them, so nobody at Yogurt can read them. The AI models run on your computer and don't learn from your meetings. Yogurt only goes online to download its models, check for updates and, if you add one, read your calendar link.
+> The application stores recordings, transcripts, notes and screenshots in your local Yogurt profile. The models run on your computer. Optional features such as an online calendar feed, pairing another device, or giving an AI app access can communicate with those services or devices.
 
 </details>
 
@@ -222,7 +223,7 @@ Meeting data stays local; Yogurt goes online for model downloads and update chec
 
 - [Help](docs/README.md)
 - [Discord](https://yogurt.so/discord)
-- [Report a bug](https://github.com/FrigadeHQ/yogurt/issues)
+- [Upstream Yogurt issues](https://github.com/FrigadeHQ/yogurt/issues)
 
 ## Development
 

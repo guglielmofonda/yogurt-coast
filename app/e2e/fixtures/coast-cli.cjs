@@ -14,6 +14,6 @@ if (args.includes('cover')) {
   console.log(JSON.stringify({ frames, selected_count: 1, total_count: 1 }))
 } else if (args.includes('image')) {
   const out = path.join(process.env.TMPDIR, 'fixture.png')
-  fs.copyFileSync(path.join(__dirname, '../../resources/tray-titled@2x.png'), out)
+  fs.copyFileSync(path.join(__dirname, 'coast-slide.png'), out)
   console.log(out)
 } else process.exit(1)

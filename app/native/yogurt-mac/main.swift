@@ -608,6 +608,10 @@ func watchMic() {
 
 let args = Array(CommandLine.arguments.dropFirst())
 switch args.first {
+case "screen-ocr":
+  guard args.count == 2 else { fail("screen-ocr IMAGE") }
+  do { out(["text": try screenText(at: args[1])]) }
+  catch { fail("Could not read this screenshot.") }
 case "calendar-status":
   out(["status": status()])
 case "calendar-auth":

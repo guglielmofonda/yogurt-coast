@@ -32,6 +32,8 @@ test('imports only after stop, retries Coast, excludes pauses, and reopens a sav
     await gallery.getByRole('button', { name: 'Try again' }).click()
     await expect(gallery.getByRole('button', { name: 'Enlarge screenshot' })).toBeVisible({ timeout: 20_000 })
     await expect.poll(() => page.evaluate(id => window.yogurt.coast.get(id), id)).toMatchObject({ status: 'done' })
+    const hits = await page.evaluate(() => window.yogurt.search.query('Juniper observatory'))
+    expect(hits).toEqual(expect.arrayContaining([expect.objectContaining({ meetingId: id })]))
     const ranges = readFileSync(join(profile, 'ranges'), 'utf8').trim().split('\n').map(s => s.split('|').map(x => new Date(x).getTime()))
     expect(ranges).toHaveLength(3)
     expect(ranges[0]).toEqual(ranges[1])

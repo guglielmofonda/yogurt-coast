@@ -48,6 +48,16 @@ async function rig(o: { embeds?: boolean } = {}) {
 }
 
 describe('finding what was said across meetings', () => {
+  it('finds text unique to a saved screenshot with a source time and excludes it from other meetings', async () => {
+    const t = await rig({ embeds: false })
+    const at = t.launch.startedAt + 42_000
+    t.store.saveScreenText(t.launch.id, `${at}-1.png`, at, 'Juniper observatory')
+    expect((await t.r('observatory')).items[0]).toMatchObject({ meetingId: t.launch.id, screenAtMs: 42_000, atMs: null, text: 'Juniper observatory' })
+    expect((await t.r('observatory', { scope: [t.pricing.id] })).items.every(i => i.meetingId === t.pricing.id)).toBe(true)
+    t.store.trashMeeting(t.launch.id)
+    expect(t.store.search('observatory', 5)).toEqual([])
+    expect((await t.r('observatory')).items.some(i => i.meetingId === t.launch.id)).toBe(false)
+  })
   it('by words: names, numbers and exact terms find the line, with where it was said', async () => {
     const t = await rig()
     const got = await t.r('Who said twenty dollars?')

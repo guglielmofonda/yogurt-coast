@@ -10,10 +10,12 @@ for name in yogurt-mac yogurt-audio yogurt-mcp; do
   src=native/$name/main.swift
   plist=native/$name/Info.plist
   out=resources/bin/$name
-  if [ -f "$out" ] && [ "$out" -nt "$src" ] && [ "$out" -nt "$plist" ]; then continue; fi
+  set -- "$src"
+  if [ "$name" = yogurt-mac ]; then set -- "$src" native/yogurt-mac/ScreenText.swift; fi
+  if [ -f "$out" ] && [ "$out" -nt "$src" ] && [ "$out" -nt "$plist" ] && [ "$out" -nt "${2:-$src}" ]; then continue; fi
   # the plist is embedded so the system's Calendar, Microphone and audio recording prompts have Yogurt's words.
   # 14.4: Core Audio process taps arrived in 14.2, their permission prompt in 14.4
-  xcrun swiftc -O -target arm64-apple-macos14.4 "$src" -o "$out" -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker "$plist"
+  xcrun swiftc -O -target arm64-apple-macos14.4 "$@" -o "$out" -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker "$plist"
   echo "built $out"
 done
 

@@ -113,6 +113,7 @@ export const fakeHelper: Helper = async (args) => {
         url: null, attendees: [{ name: 'Maya Chen', email: 'maya@example.com' }, { name: 'Alex Kim', email: null }, { name: 'Sam Ito', email: null }],
       }].filter(within)
     }
+    case 'screen-ocr': return { text: 'Juniper observatory launch budget' }
     case 'mic-apps': return []
     case 'mic-devices': return { devices: fakeMicList() }
     case 'permissions': return {
