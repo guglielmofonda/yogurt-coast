@@ -3,6 +3,7 @@ import { TranscriptionControl, transcriptionNotice } from '../components/Transcr
 import { transcriptionBusy } from '../../../shared/transcription'
 import { citationTargetIndex } from '../../../shared/citations'
 import { NoteReadingPane } from '../components/NoteReadingPane'
+import { CoastScreenshots } from '../components/CoastScreenshots'
 import type { LibrarySource } from '../../../shared/types'
 import { flushSync } from 'react-dom'
 import { Loading } from '../components/Loading'
@@ -463,6 +464,7 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
                   onChange={(md) => { typing.current = true; const next = { ...current.current!, mine: md }; current.current = next; setNotes(next); mineSave.change(md) }}
                   onBlur={() => { typing.current = false; mineSave.flush() }}
                 /> : <Enhanced key={id} presentation={summaryState} focus={primary === 'notes' && at?.ms === null ? at : undefined} notes={notes} disabled={starting} onChange={(md) => { setEditedHere(true); const next = { ...current.current!, enhanced: md }; current.current = next; setNotes(next); enhancedSave.change(md) }} onBlur={enhancedSave.flush} onRetry={requestRewrite} />}
+                {!recording && !m.stopSavePending && <CoastScreenshots key={id} id={id} />}
           </NoteReadingPane>
           {(primary === 'transcript' || transcriptVisited) && <section hidden={primary !== 'transcript'} id="note-transcript-panel" role="tabpanel" aria-labelledby="note-transcript-tab" className="note-content note-transcript-pane">
             <Transcript notice={

@@ -787,5 +787,15 @@
   "Unmute my mic in Yogurt": "Yogurt-এ আমার মাইক আনমিউট করুন",
   "Mic will stay off on resume": "রেকর্ডিং আবার শুরু হলে মাইক বন্ধ থাকবে",
   "Mic mute couldn’t be confirmed.": "মাইক মিউট হয়েছে কি না নিশ্চিত করা যায়নি।",
-  "Mic off. Yogurt can’t hear call audio.": "মাইক বন্ধ। Yogurt কলের শব্দ শুনতে পাচ্ছে না।"
+  "Mic off. Yogurt can’t hear call audio.": "মাইক বন্ধ। Yogurt কলের শব্দ শুনতে পাচ্ছে না।",
+  "Search meetings or run a command…": "মিটিং খুঁজুন বা কমান্ড চালান…",
+  "Screenshot": "স্ক্রিনশট",
+  "Coast screenshots": "Coast স্ক্রিনশট",
+  "Selecting screenshots on this Mac…": "এই Mac-এ স্ক্রিনশট বাছাই করা হচ্ছে…",
+  "Screenshot selection is incomplete.": "স্ক্রিনশট বাছাই অসম্পূর্ণ।",
+  "No screenshots selected for this call.": "এই কলের জন্য কোনো স্ক্রিনশট বাছাই করা হয়নি।",
+  "Enlarge screenshot": "স্ক্রিনশট বড় করুন",
+  "This screenshot could not be read.": "এই স্ক্রিনশটটি পড়া যায়নি।",
+  "Previous": "আগেরটি",
+  "Next": "পরেরটি"
 }

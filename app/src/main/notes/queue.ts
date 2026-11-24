@@ -6,7 +6,8 @@ import { CONTEXT } from '../../shared/engine-protocol'
  * meeting records, and gives way to anything else (run again after: what it did stays done).
  * folder: one folder proposal per meeting, with the same priority and recording policy as indexing.
  */
-export type JobKind = 'names' | 'enhance' | 'chat' | 'readahead' | 'index' | 'folder'
+export type JobKind = 'names' | 'enhance' | 'chat' | 'readahead' | 'index' | 'folder' | 'screenshots'
+const background = (kind: JobKind) => kind === 'index' || kind === 'folder' || kind === 'screenshots'
 /** A job gets a signal: aborted when a recording starts on a small Mac. It is then run again from the start later. */
 export type Job = (signal: AbortSignal) => Promise<void>
 
@@ -69,7 +70,7 @@ export function createQueue(o: {
   const backlog = () => o.backlogMs?.() ?? 0
   const allowed = (kind: JobKind) => {
     if (o.modelReady && !o.modelReady()) return false
-    if ((kind === 'index' || kind === 'folder') && o.recording()) return false
+    if (background(kind) && o.recording()) return false
     if (kind === 'readahead' && !o.smallMac && backlog() > READ_BACKLOG_MS) return false
     if (o.smallMac) return !o.recording()
     if (yielded && backlog() < RESUME_MS) yielded = false
@@ -102,9 +103,9 @@ export function createQueue(o: {
     if (running) return
     // a question first (someone is waiting on it), reading ahead only once nothing else can run
     let i = waiting.findIndex((e) => e.kind === 'chat' && allowed(e.kind))
-    if (i === -1) i = waiting.findIndex((e) => e.kind !== 'readahead' && e.kind !== 'index' && e.kind !== 'folder' && allowed(e.kind))
+    if (i === -1) i = waiting.findIndex((e) => e.kind !== 'readahead' && !background(e.kind) && allowed(e.kind))
     if (i === -1) i = waiting.findIndex((e) => e.kind === 'readahead' && allowed(e.kind))
-    if (i === -1) i = waiting.findIndex((e) => (e.kind === 'index' || e.kind === 'folder') && allowed(e.kind))
+    if (i === -1) i = waiting.findIndex((e) => background(e.kind) && allowed(e.kind))
     if (i === -1) {
       if (!waiting.length) armIdle()
       else if (o.modelReady && !o.modelReady() && !saidWait) { saidWait = true; console.info('NOTES', 'waiting for the notes model to finish downloading') }
@@ -144,7 +145,7 @@ export function createQueue(o: {
         // a pass goes over every meeting: one waiting is enough
         const queued = waiting.find((x) => x.kind === 'index')
         if (queued) { resolve(); return queued.done }
-      } else if (kind !== 'folder' && (running?.entry.kind === 'readahead' || running?.entry.kind === 'index' || running?.entry.kind === 'folder')) running.abort.abort()
+      } else if (!background(kind) && running && (running.entry.kind === 'readahead' || background(running.entry.kind))) running.abort.abort()
       waiting.push({ job, kind, meetingId, done, resolve, reject })
       pump()
       return done
@@ -161,7 +162,7 @@ export function createQueue(o: {
     /** call when any recording starts or stops */
     recordingChanged() {
       if (o.recording()) disarmIdle()
-      if (o.recording() && (running?.entry.kind === 'index' || running?.entry.kind === 'folder')) running.abort.abort()
+      if (o.recording() && running && background(running.entry.kind)) running.abort.abort()
       if (o.recording() && o.smallMac) {
         // a read ahead waiting would be stale by the time the meeting ends
         for (const e of waiting.filter((x) => x.kind === 'readahead')) { waiting.splice(waiting.indexOf(e), 1); e.resolve() }

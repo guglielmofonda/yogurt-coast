@@ -1,3 +1,4 @@
+import { desktopName } from '../../../shared/desktopName'
 import { AudioLines, CalendarDays, Mic, PhoneOff, Plus, Video, X } from './Icons'
 import type { PermissionKind } from '../../../shared/types'
 import { AppIcon, Logo } from './Logo'
@@ -143,7 +144,7 @@ export function SettingsWindowArt({ pane, section }: { pane: string; section?: s
           <div className="ob-settings-row ob-settings-other"><span className="ob-app-icon" /><span className="ob-app-name" /><span className="ob-switch" /></div>
           <div className="ob-settings-row ob-settings-yogurt">
             <span className="ob-app-icon ob-app-yogurt"><Logo size={12} className="text-[#fff]" /></span>
-            <span className="ob-settings-app">Yogurt</span>
+            <span className="ob-settings-app">{desktopName}</span>
             <span className="ob-switch ob-switch-on" />
           </div>
           <div className="ob-settings-tools"><Plus size={11} /><span className="ob-settings-minus" /></div>

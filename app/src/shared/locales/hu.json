@@ -787,5 +787,15 @@
   "Unmute my mic in Yogurt": "Mikrofonom bekapcsolása a Yogurtban",
   "Mic will stay off on resume": "Folytatáskor a mikrofon néma marad",
   "Mic mute couldn’t be confirmed.": "Nem sikerült megerősíteni a mikrofon némítását.",
-  "Mic off. Yogurt can’t hear call audio.": "A mikrofon néma. A Yogurt nem érzékeli a hívás hangját."
+  "Mic off. Yogurt can’t hear call audio.": "A mikrofon néma. A Yogurt nem érzékeli a hívás hangját.",
+  "Search meetings or run a command…": "Megbeszélések keresése vagy parancs futtatása…",
+  "Screenshot": "Képernyőkép",
+  "Coast screenshots": "A Coast képernyőképei",
+  "Selecting screenshots on this Mac…": "Képernyőképek kiválasztása ezen a Macen…",
+  "Screenshot selection is incomplete.": "A képernyőképek kiválasztása nem fejeződött be.",
+  "No screenshots selected for this call.": "Ehhez a híváshoz nem lett képernyőkép kiválasztva.",
+  "Enlarge screenshot": "Képernyőkép nagyítása",
+  "This screenshot could not be read.": "Ez a képernyőkép nem olvasható.",
+  "Previous": "Előző",
+  "Next": "Következő"
 }

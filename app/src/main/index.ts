@@ -1,3 +1,4 @@
+import { desktopName } from '../shared/desktopName'
 import { importPhoneRecording } from './companion/phoneImport'
 import { loadWindowState, placeWindow, saveWindowState } from './windowState'
 import { trustSystemCertificates } from './systemCerts'
@@ -6,6 +7,8 @@ import { transcriptionBusy } from '../shared/transcription'
 import { hookAudioUploads } from './audioUploadIpc'
 import { uploadedAudio } from './audioUpload'
 import { hookRendererErrors } from './rendererErrors'
+import { createCoastScreenshots } from './coastScreenshots'
+import { coastCLI } from './coastClient'
 import { matchSearchPeople, searchPersonKey } from '../shared/searchPeople'
 import { resolvePeople } from './people'
 import { createFolderSuggestions } from './folderSuggestions'
@@ -55,7 +58,7 @@ import { createSignals } from './detectSignals'
 import { createMicWatch, spawnMicWatch } from './micWatch'
 import { Watcher } from './watch'
 import { createPrompts } from './prompts'
-import { activeMeeting, bindMeetingApp, getMeeting, initMeetings, onMeetingBound, onMeetingChange, onMeetingStart, onMeetingStop, onMeetingStopSaved, createFolderNote, refreshEventSnapshots, linkEvent, unlinkEvent, prepareMeeting, startPreparedMeeting, resumeMeeting, pauseMeetingClock, renameMeeting, retryStopSave, setAttendees, startMeeting, stopMeeting, stopSavePending, withStopState } from './meeting'
+import { activeMeeting, bindMeetingApp, getMeeting, initMeetings, onMeetingBound, onMeetingChange, onMeetingPause, onMeetingStart, onMeetingStop, onMeetingStopSaved, createFolderNote, refreshEventSnapshots, linkEvent, unlinkEvent, prepareMeeting, startPreparedMeeting, resumeMeeting, pauseMeetingClock, renameMeeting, retryStopSave, setAttendees, startMeeting, stopMeeting, stopSavePending, withStopState } from './meeting'
 import { deleteMeeting } from './deleteMeeting'
 import { emptyTrash, moveToTrash, purgeTrash } from './trash'
 import { isId, text, rewriteNote } from './ipcArgs'
@@ -101,6 +104,7 @@ import type { NoteSaveResult, StartResult } from '../shared/types'
 // the transcript's player streams each meeting's audio from here; seeking needs stream support (before ready)
 protocol.registerSchemesAsPrivileged([{ scheme: AUDIO_SCHEME, privileges: { standard: true, secure: true, stream: true } }])
 
+// Keep Electron’s existing application identity for encrypted local profile data.
 app.setName('Yogurt')
 // Windows shows notifications only for an app with this id (the installer's shortcut carries the same one, electron-builder appId)
 if (process.platform === 'win32') app.setAppUserModelId('so.yogurt.app')
@@ -160,7 +164,7 @@ function createWindow() {
   const place = placeWindow(remember ? loadWindowState(stateFile) : null, screen.getAllDisplays().map((d) => d.workArea), { width: 1100, height: 760, minWidth: 720, minHeight: 520 })
   win = new BrowserWindow({
     x: place.x, y: place.y, width: place.width, height: place.height, minWidth: 720, minHeight: 520,
-    title: 'Yogurt',
+    title: desktopName,
     ...windowChrome(process.platform, nativeTheme.shouldUseDarkColors),
     show: false,
     // hidden pages would otherwise pause timers and animations
@@ -557,6 +561,7 @@ function startDetection() {
 }
 
 app.whenReady().then(() => {
+  if (process.platform === 'darwin') app.setAboutPanelOptions({ applicationName: desktopName })
   console.info('APP', `trusting ${systemCerts} certificates from the system on top of the built-in ones`)
   // #147: which start this was (login, an AI app, an update, the person), so a log says what opened Yogurt
   const started = startReason({ argv: process.argv, env: process.env, parent: parentName(), openedAtLogin: openedAtLogin() })
@@ -760,6 +765,17 @@ app.whenReady().then(() => {
     // the notes are written: the meeting goes into the library for chat across meetings
     changed: () => { win?.webContents.send('meetings:changed'); void indexer.schedule() },
   })
+  const coast = createCoastScreenshots({ root: userDataDir(), store, queue, model,
+    cli: isFake() ? (!app.isPackaged ? process.env.YOGURT_FAKE_COAST_CLI : undefined) : process.platform === 'darwin' ? coastCLI : undefined,
+    changed: id => win?.webContents.send('coast:changed', id) })
+  onMeetingStart(m => coast.start(m.id, m.resume?.startedAt ?? m.startedAt))
+  onMeetingPause(coast.pause)
+  onMeetingStop(m => { if (m.endedAt != null) coast.stopped(m.id, m.endedAt) })
+  onMeetingStopSaved(m => coast.schedule(m.id))
+  ipcMain.handle('coast:get', (_e, id: unknown) => isId(id) ? coast.view(id) : null)
+  ipcMain.handle('coast:image', (_e, id: unknown, name: unknown) => isId(id) ? coast.image(id, name) : null)
+  ipcMain.handle('coast:retry', (_e, id: unknown) => { if (isId(id)) coast.schedule(id) })
+  coast.restore()
   let finishing = false, discardUnsaved = false
   busyNow = () => !!activeMeeting() || queue.busy() || setup.state.phase === 'checking' || setup.state.phase === 'downloading'
   const savedTranscriptions = createSavedTranscriptions({
@@ -1116,7 +1132,7 @@ app.whenReady().then(() => {
   // gone for good, audio too; never while it records
   const removeForGood = (id: unknown) => id === resumingId ? Promise.resolve('failed' as const) : isId(id) && stopSavePending(id) ? Promise.resolve('save-pending' as const) : deleteMeeting(id, {
     store, dirOf: meetingDir,
-    cancel: (id) => { queue.cancel(id); conversations.forgetMeeting(id); indexer.forget(id) },
+    cancel: (id) => { queue.cancel(id); coast.forget(id); conversations.forgetMeeting(id); indexer.forget(id) },
     // Actual writer completion: deleteMeeting refuses deletion if this wait times out.
     settle: async (id) => { await Promise.all([recordingFinished(id), transcriptFinished(id)]) },
     removed: (id) => {
@@ -1139,7 +1155,7 @@ app.whenReady().then(() => {
   ipcMain.handle('meetings:trash', (_e, id: unknown) => trashMeeting(id))
   const restoreMeeting = (id: unknown): boolean => {
     if (!isId(id) || store.meeting(id)?.trashedAt == null) return false
-    store.restoreMeeting(id); indexer.restored(id)
+    store.restoreMeeting(id); indexer.restored(id); coast.schedule(id)
     win?.webContents.send('meetings:changed'); win?.webContents.send('folders:changed')
     return true
   }
@@ -1199,7 +1215,7 @@ app.whenReady().then(() => {
         meetingsChanged()
         if (route === `/note/${id}`) { route = ''; win?.webContents.send('nav:go', route) }
       },
-      restored: (id) => { indexer.restored(id); meetingsChanged() },
+      restored: (id) => { indexer.restored(id); coast.schedule(id); meetingsChanged() },
       foldersChanged: () => { win?.webContents.send('folders:changed'); folderSuggestions.refresh() },
     },
   }).then((c) => { companion = c; return c }, (err) => { console.error('COMPANION could not start', (err as Error).name); return undefined })

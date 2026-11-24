@@ -809,5 +809,15 @@
   "Unmute my mic in Yogurt": "ביטול השתקת המיקרופון שלי ב־Yogurt",
   "Mic will stay off on resume": "המיקרופון יישאר מושתק כשההקלטה תתחדש",
   "Mic mute couldn’t be confirmed.": "לא ניתן היה לאשר שהמיקרופון הושתק.",
-  "Mic off. Yogurt can’t hear call audio.": "המיקרופון מושתק. Yogurt לא קולט את שמע השיחה."
+  "Mic off. Yogurt can’t hear call audio.": "המיקרופון מושתק. Yogurt לא קולט את שמע השיחה.",
+  "Search meetings or run a command…": "חיפוש פגישות או הפעלת פקודה…",
+  "Screenshot": "צילום מסך",
+  "Coast screenshots": "צילומי מסך מ־Coast",
+  "Selecting screenshots on this Mac…": "בוחר צילומי מסך ב־Mac הזה…",
+  "Screenshot selection is incomplete.": "בחירת צילומי המסך לא הושלמה.",
+  "No screenshots selected for this call.": "לא נבחרו צילומי מסך לשיחה זו.",
+  "Enlarge screenshot": "הגדלת צילום המסך",
+  "This screenshot could not be read.": "לא ניתן לקרוא את צילום המסך הזה.",
+  "Previous": "הקודם",
+  "Next": "הבא"
 }

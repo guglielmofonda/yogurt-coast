@@ -830,5 +830,15 @@
   "Unmute my mic in Yogurt": "Zapnout můj mikrofon v Yogurtu",
   "Mic will stay off on resume": "Po obnovení nahrávání zůstane mikrofon ztlumený",
   "Mic mute couldn’t be confirmed.": "Ztlumení mikrofonu se nepodařilo potvrdit.",
-  "Mic off. Yogurt can’t hear call audio.": "Mikrofon je ztlumený. Yogurt neslyší zvuk hovoru."
+  "Mic off. Yogurt can’t hear call audio.": "Mikrofon je ztlumený. Yogurt neslyší zvuk hovoru.",
+  "Search meetings or run a command…": "Hledat schůzky nebo spustit příkaz…",
+  "Screenshot": "Snímek obrazovky",
+  "Coast screenshots": "Snímky obrazovky z Coast",
+  "Selecting screenshots on this Mac…": "Vybírání snímků na tomto Macu…",
+  "Screenshot selection is incomplete.": "Výběr snímků není dokončen.",
+  "No screenshots selected for this call.": "Pro tento hovor nebyly vybrány žádné snímky.",
+  "Enlarge screenshot": "Zvětšit snímek",
+  "This screenshot could not be read.": "Tento snímek nelze načíst.",
+  "Previous": "Předchozí",
+  "Next": "Další"
 }

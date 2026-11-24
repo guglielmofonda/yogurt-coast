@@ -1,0 +1,10 @@
+.coast-screenshots { margin: 2rem 0; padding-top: 1rem; border-top: 1px solid var(--line); }
+.coast-screenshots h3 { font-size: 15px; font-weight: 600; }
+.coast-screenshots p, .coast-screenshots figcaption { margin: .5rem 0; color: var(--muted); font-size: 13px; }
+.coast-screenshots figure { margin: .75rem 0; }
+.coast-preview { display: block; width: 100%; cursor: zoom-in; }
+.coast-preview img { width: 100%; max-height: 380px; object-fit: contain; border-radius: 6px; }
+.coast-screenshots figcaption { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+.coast-screenshots figcaption button + button { margin-left: .35rem; }
+.app-modal:has(.coast-full-image) { width: min(96vw, 1500px); max-width: 96vw; }
+.coast-full-image { display: block; max-width: 100%; max-height: 75vh; object-fit: contain; margin: auto; }

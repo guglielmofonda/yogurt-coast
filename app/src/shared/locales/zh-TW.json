@@ -757,5 +757,15 @@
   "Unmute my mic in Yogurt": "在 Yogurt 中解除我的麥克風靜音",
   "Mic will stay off on resume": "繼續錄製後麥克風會保持靜音",
   "Mic mute couldn’t be confirmed.": "無法確認麥克風是否已靜音。",
-  "Mic off. Yogurt can’t hear call audio.": "麥克風已關閉。Yogurt 無法接收通話音訊。"
+  "Mic off. Yogurt can’t hear call audio.": "麥克風已關閉。Yogurt 無法接收通話音訊。",
+  "Search meetings or run a command…": "搜尋會議或執行指令…",
+  "Screenshot": "螢幕截圖",
+  "Coast screenshots": "Coast 螢幕截圖",
+  "Selecting screenshots on this Mac…": "正在這部 Mac 上選擇螢幕截圖…",
+  "Screenshot selection is incomplete.": "尚未完成螢幕截圖選擇。",
+  "No screenshots selected for this call.": "未為這次通話選擇任何螢幕截圖。",
+  "Enlarge screenshot": "放大螢幕截圖",
+  "This screenshot could not be read.": "無法讀取這張螢幕截圖。",
+  "Previous": "上一張",
+  "Next": "下一張"
 }

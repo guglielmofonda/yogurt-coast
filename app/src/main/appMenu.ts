@@ -1,11 +1,12 @@
-import { app, ipcMain, Menu, type BrowserWindow, type MenuItemConstructorOptions } from 'electron'
+import { desktopName } from '../shared/desktopName'
+import { ipcMain, Menu, type BrowserWindow, type MenuItemConstructorOptions } from 'electron'
 import { onLanguage, t } from '../shared/i18n'
 
 /**
  * The Mac's menu bar for Yogurt: Electron's own menu, with every label in the interface language
  * (Electron's are English only). The roles keep what each item does and its shortcut.
  */
-export function appMenuTemplate(name = app.name, sidebar?: { open: boolean | null; toggle(): void }, reopen?: () => void, os = 'darwin'): MenuItemConstructorOptions[] {
+export function appMenuTemplate(name = desktopName, sidebar?: { open: boolean | null; toggle(): void }, reopen?: () => void, os = 'darwin'): MenuItemConstructorOptions[] {
   if (os !== 'darwin') return pcMenuTemplate(sidebar)
   return [
     { label: name, submenu: [
@@ -21,7 +22,7 @@ export function appMenuTemplate(name = app.name, sidebar?: { open: boolean | nul
     ] },
     { label: t('File'), submenu: [
       // With no visible renderer, these app-local shortcuts only bring the retained window back.
-      ...(reopen ? ['N', 'J'].map(key => ({ id: `reopen-${key}`, label: t('Open Yogurt'), accelerator: `Command+${key}`, visible: false, acceleratorWorksWhenHidden: true, click: reopen })) : []),
+      ...(reopen ? ['N', 'J'].map(key => ({ id: `reopen-${key}`, label: t('Open Yogurt').replace('Yogurt', name), accelerator: `Command+${key}`, visible: false, acceleratorWorksWhenHidden: true, click: reopen })) : []),
       { role: 'close', label: t('Close Window') },
     ] },
     { label: t('Edit'), submenu: [
@@ -104,7 +105,7 @@ export function installAppMenu(mainWindow: () => BrowserWindow | undefined, reop
     const window = mainWindow()
     if (open !== null && window && !window.isDestroyed()) window.webContents.send('sidebar:toggle')
   }
-  const set = () => Menu.setApplicationMenu(Menu.buildFromTemplate(appMenuTemplate(app.name, { open, toggle }, reopen && !mainWindow()?.isVisible() ? reopen : undefined, os)))
+  const set = () => Menu.setApplicationMenu(Menu.buildFromTemplate(appMenuTemplate(desktopName, { open, toggle }, reopen && !mainWindow()?.isVisible() ? reopen : undefined, os)))
   ipcMain.on('sidebar:state', (event, value: unknown) => {
     if (event.sender !== mainWindow()?.webContents || (value !== null && typeof value !== 'boolean') || value === open) return
     open = value

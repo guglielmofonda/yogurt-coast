@@ -757,5 +757,15 @@
   "Unmute my mic in Yogurt": "Aktifkan mikrofon saya dalam Yogurt",
   "Mic will stay off on resume": "Mikrofon akan kekal senyap apabila rakaman disambung",
   "Mic mute couldn’t be confirmed.": "Mikrofon tidak dapat disahkan telah disenyapkan.",
-  "Mic off. Yogurt can’t hear call audio.": "Mikrofon disenyapkan. Yogurt tidak dapat mendengar audio panggilan."
+  "Mic off. Yogurt can’t hear call audio.": "Mikrofon disenyapkan. Yogurt tidak dapat mendengar audio panggilan.",
+  "Search meetings or run a command…": "Cari mesyuarat atau jalankan perintah…",
+  "Screenshot": "Tangkapan skrin",
+  "Coast screenshots": "Tangkapan skrin Coast",
+  "Selecting screenshots on this Mac…": "Memilih tangkapan skrin pada Mac ini…",
+  "Screenshot selection is incomplete.": "Pemilihan tangkapan skrin belum selesai.",
+  "No screenshots selected for this call.": "Tiada tangkapan skrin dipilih untuk panggilan ini.",
+  "Enlarge screenshot": "Besarkan tangkapan skrin",
+  "This screenshot could not be read.": "Tangkapan skrin ini tidak dapat dibaca.",
+  "Previous": "Sebelumnya",
+  "Next": "Seterusnya"
 }

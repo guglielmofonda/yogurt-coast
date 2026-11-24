@@ -799,5 +799,15 @@
   "Unmute my mic in Yogurt": "Slå på mikrofonen min i Yogurt",
   "Mic will stay off on resume": "Mikrofonen forblir av når opptaket fortsetter",
   "Mic mute couldn’t be confirmed.": "Kunne ikke bekrefte at mikrofonen er av.",
-  "Mic off. Yogurt can’t hear call audio.": "Mikrofonen er av. Yogurt får ikke lyd fra samtalen."
+  "Mic off. Yogurt can’t hear call audio.": "Mikrofonen er av. Yogurt får ikke lyd fra samtalen.",
+  "Search meetings or run a command…": "Søk etter møter eller kjør en kommando…",
+  "Screenshot": "Skjermbilde",
+  "Coast screenshots": "Skjermbilder fra Coast",
+  "Selecting screenshots on this Mac…": "Velger skjermbilder på denne Macen…",
+  "Screenshot selection is incomplete.": "Valget av skjermbilder er ikke fullført.",
+  "No screenshots selected for this call.": "Ingen skjermbilder ble valgt for denne samtalen.",
+  "Enlarge screenshot": "Forstørr skjermbildet",
+  "This screenshot could not be read.": "Dette skjermbildet kunne ikke leses.",
+  "Previous": "Forrige",
+  "Next": "Neste"
 }

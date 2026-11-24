@@ -818,5 +818,15 @@
   "Unmute my mic in Yogurt": "Riattiva il mio microfono in Yogurt",
   "Mic will stay off on resume": "Il microfono resterà disattivato alla ripresa",
   "Mic mute couldn’t be confirmed.": "Impossibile confermare la disattivazione del microfono.",
-  "Mic off. Yogurt can’t hear call audio.": "Microfono disattivato. Yogurt non riceve l’audio della chiamata."
+  "Mic off. Yogurt can’t hear call audio.": "Microfono disattivato. Yogurt non riceve l’audio della chiamata.",
+  "Search meetings or run a command…": "Cerca riunioni o esegui un comando…",
+  "Screenshot": "Schermata",
+  "Coast screenshots": "Schermate di Coast",
+  "Selecting screenshots on this Mac…": "Selezione delle schermate su questo Mac…",
+  "Screenshot selection is incomplete.": "La selezione delle schermate è incompleta.",
+  "No screenshots selected for this call.": "Nessuna schermata selezionata per questa chiamata.",
+  "Enlarge screenshot": "Ingrandisci schermata",
+  "This screenshot could not be read.": "Impossibile leggere questa schermata.",
+  "Previous": "Precedente",
+  "Next": "Successiva"
 }

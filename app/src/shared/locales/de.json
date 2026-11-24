@@ -799,5 +799,15 @@
   "Unmute my mic in Yogurt": "Mein Mikrofon in Yogurt einschalten",
   "Mic will stay off on resume": "Das Mikrofon bleibt beim Fortsetzen aus",
   "Mic mute couldn’t be confirmed.": "Die Stummschaltung konnte nicht bestätigt werden.",
-  "Mic off. Yogurt can’t hear call audio.": "Mikrofon aus. Yogurt empfängt keinen Ton aus dem Gespräch."
+  "Mic off. Yogurt can’t hear call audio.": "Mikrofon aus. Yogurt empfängt keinen Ton aus dem Gespräch.",
+  "Search meetings or run a command…": "Meetings suchen oder einen Befehl ausführen…",
+  "Screenshot": "Bildschirmfoto",
+  "Coast screenshots": "Bildschirmfotos von Coast",
+  "Selecting screenshots on this Mac…": "Bildschirmfotos werden auf diesem Mac ausgewählt…",
+  "Screenshot selection is incomplete.": "Die Auswahl der Bildschirmfotos ist unvollständig.",
+  "No screenshots selected for this call.": "Für diesen Anruf wurden keine Bildschirmfotos ausgewählt.",
+  "Enlarge screenshot": "Bildschirmfoto vergrößern",
+  "This screenshot could not be read.": "Dieses Bildschirmfoto konnte nicht gelesen werden.",
+  "Previous": "Zurück",
+  "Next": "Weiter"
 }

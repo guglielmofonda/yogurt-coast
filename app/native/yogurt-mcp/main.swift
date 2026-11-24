@@ -29,7 +29,7 @@ if fd == nil && env["YOGURT_MCP_NO_LAUNCH"] == nil {
   // --started-by=ai-app: and it watches for no calls until the person opens it (#147)
   let open = Process()
   open.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-  open.arguments = ["-g", "-b", "so.yogurt.app", "--args", "--hidden", "--started-by=ai-app"]
+  open.arguments = ["-g", "-b", "local.yogurt.coast", "--args", "--hidden", "--started-by=ai-app"]
   try? open.run(); open.waitUntilExit()
   for _ in 0..<60 { if let f = connectOnce() { fd = f; break }; usleep(500_000) }
 }

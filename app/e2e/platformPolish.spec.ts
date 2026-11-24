@@ -43,7 +43,7 @@ for (const platform of ['win32', 'linux']) {
     try {
       const page = await app.firstWindow()
       await expect(page.getByTestId('home')).toBeVisible({ timeout: 15_000 })
-      expect(await fake(app, 'tray')).toEqual(expect.arrayContaining(['New recording', 'Open Yogurt', 'Settings…', 'Quit Yogurt']))
+      expect(await fake(app, 'tray')).toEqual(expect.arrayContaining(['New recording', 'Open Yogurt + Coast', 'Settings…', 'Quit Yogurt + Coast']))
       expect(await fake(app, 'trayAccelerators')).toEqual({ 'Settings…': 'Ctrl+,' })
       await fake(app, 'trayClick', 'new')
       await expect.poll(() => fake(app, 'tray')).toContain('Stop recording')

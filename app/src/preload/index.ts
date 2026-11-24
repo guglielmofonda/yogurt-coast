@@ -117,6 +117,16 @@ const api: YogurtApi = {
       return () => { ipcRenderer.removeListener('transcript:partial', on) }
     },
   },
+  coast: {
+    get: id => ipcRenderer.invoke('coast:get', id),
+    image: (id, name) => ipcRenderer.invoke('coast:image', id, name),
+    retry: id => ipcRenderer.invoke('coast:retry', id),
+    onChange: cb => {
+      const on = (_e: Electron.IpcRendererEvent, id: string) => cb(id)
+      ipcRenderer.on('coast:changed', on)
+      return () => { ipcRenderer.removeListener('coast:changed', on) }
+    },
+  },
   notes: {
     get: (id) => ipcRenderer.invoke('notes:get', id),
     setMine: (id, md, revision) => ipcRenderer.invoke('notes:set-mine', id, md, revision),

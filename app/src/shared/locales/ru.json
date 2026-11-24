@@ -827,5 +827,15 @@
   "Unmute my mic in Yogurt": "Включить мой микрофон в Yogurt",
   "Mic will stay off on resume": "При возобновлении записи микрофон останется выключенным",
   "Mic mute couldn’t be confirmed.": "Не удалось подтвердить отключение микрофона.",
-  "Mic off. Yogurt can’t hear call audio.": "Микрофон выключен. Yogurt не слышит звук звонка."
+  "Mic off. Yogurt can’t hear call audio.": "Микрофон выключен. Yogurt не слышит звук звонка.",
+  "Search meetings or run a command…": "Найти встречи или выполнить команду…",
+  "Screenshot": "Снимок экрана",
+  "Coast screenshots": "Снимки экрана из Coast",
+  "Selecting screenshots on this Mac…": "Выбор снимков экрана на этом Mac…",
+  "Screenshot selection is incomplete.": "Выбор снимков экрана не завершён.",
+  "No screenshots selected for this call.": "Для этого звонка снимки экрана не выбраны.",
+  "Enlarge screenshot": "Увеличить снимок",
+  "This screenshot could not be read.": "Не удалось прочитать этот снимок экрана.",
+  "Previous": "Назад",
+  "Next": "Далее"
 }

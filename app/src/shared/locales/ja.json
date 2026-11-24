@@ -757,5 +757,15 @@
   "Unmute my mic in Yogurt": "Yogurt で自分のマイクのミュートを解除",
   "Mic will stay off on resume": "録音を再開してもマイクはオフのままです",
   "Mic mute couldn’t be confirmed.": "マイクがミュートされたか確認できませんでした。",
-  "Mic off. Yogurt can’t hear call audio.": "マイクはオフです。Yogurt に通話音声が届いていません。"
+  "Mic off. Yogurt can’t hear call audio.": "マイクはオフです。Yogurt に通話音声が届いていません。",
+  "Search meetings or run a command…": "会議を検索、またはコマンドを実行…",
+  "Screenshot": "スクリーンショット",
+  "Coast screenshots": "Coast のスクリーンショット",
+  "Selecting screenshots on this Mac…": "この Mac でスクリーンショットを選択中…",
+  "Screenshot selection is incomplete.": "スクリーンショットの選択が完了していません。",
+  "No screenshots selected for this call.": "この通話のスクリーンショットは選択されませんでした。",
+  "Enlarge screenshot": "スクリーンショットを拡大",
+  "This screenshot could not be read.": "このスクリーンショットを読み込めませんでした。",
+  "Previous": "前へ",
+  "Next": "次へ"
 }

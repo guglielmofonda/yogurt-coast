@@ -12,6 +12,7 @@ export class FakeEngine implements Engine {
   async chat(req: ChatRequest, onToken: (text: string) => void, signal?: AbortSignal): Promise<string> {
     const prompt = req.messages.at(-1)?.content ?? ''
     fakePrompts.notes.push(prompt)
+    if (prompt.startsWith('Select screenshots to attach')) return this.stream('[1]', onToken, signal)
     if (prompt.startsWith('Suggest one existing folder')) {
       const data = JSON.parse(prompt.slice(prompt.indexOf('{')))
       // sure only of a folder the meeting's title names, like "Customer call with Acme" for Acme

@@ -67,7 +67,7 @@ it('never creates a native icon in background tests, even when toggled on', () =
   const tray = createTray({ show: false, ...d })
   tray.setVisible(false); tray.setVisible(true)
   expect(state.trays).toHaveLength(0)
-  expect(tray.items()).toContain('Open Yogurt')
+  expect(tray.items()).toContain('Open Yogurt + Coast')
   tray.click('open'); expect(d.open).toHaveBeenCalledOnce()
 })
 

@@ -757,5 +757,15 @@
   "Unmute my mic in Yogurt": "เปิดไมค์ของฉันใน Yogurt",
   "Mic will stay off on resume": "ไมค์จะยังปิดอยู่เมื่อบันทึกต่อ",
   "Mic mute couldn’t be confirmed.": "ยืนยันไม่ได้ว่าปิดไมค์แล้ว",
-  "Mic off. Yogurt can’t hear call audio.": "ไมค์ปิดอยู่ Yogurt ไม่ได้ยินเสียงการโทร"
+  "Mic off. Yogurt can’t hear call audio.": "ไมค์ปิดอยู่ Yogurt ไม่ได้ยินเสียงการโทร",
+  "Search meetings or run a command…": "ค้นหาการประชุมหรือเรียกใช้คำสั่ง…",
+  "Screenshot": "ภาพหน้าจอ",
+  "Coast screenshots": "ภาพหน้าจอจาก Coast",
+  "Selecting screenshots on this Mac…": "กำลังเลือกภาพหน้าจอบน Mac เครื่องนี้…",
+  "Screenshot selection is incomplete.": "การเลือกภาพหน้าจอยังไม่เสร็จสิ้น",
+  "No screenshots selected for this call.": "ไม่มีภาพหน้าจอที่เลือกสำหรับสายนี้",
+  "Enlarge screenshot": "ขยายภาพหน้าจอ",
+  "This screenshot could not be read.": "ไม่สามารถอ่านภาพหน้าจอนี้ได้",
+  "Previous": "ก่อนหน้า",
+  "Next": "ถัดไป"
 }

@@ -1,3 +1,4 @@
+import { desktopLabel } from '../../../shared/desktopName'
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { Check, Share, Copy } from './Icons'
 import { t } from '../../../shared/i18n'
@@ -41,7 +42,7 @@ export function AboutYogurt() {
 
   const message = error === 'copy' ? t("Yogurt couldn't copy.") : error === 'share' ? t("Yogurt couldn't open the share menu.") : ''
   return <section aria-labelledby="about-yogurt">
-    <h2 id="about-yogurt" className="settings-section-heading">{t('About Yogurt')}</h2>
+    <h2 id="about-yogurt" className="settings-section-heading">{desktopLabel(t('About Yogurt'))}</h2>
     <div className="settings-group settings-backup">
       <p className="settings-label grid">
         <span className={`col-start-1 row-start-1 ${error ? 'invisible' : ''}`}>{t('Like Yogurt? Sharing it or starring it on GitHub helps us keep building it.')}</span>

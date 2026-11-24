@@ -29,7 +29,15 @@ export type FolderMeetingChoice = Pick<Meeting, 'id' | 'title' | 'startedAt'> & 
 export type MeetingCard = StoredMeetingCard & { paused?: true }
 
 /** What the window sees of the app: window.yogurt (the preload bridge, contextIsolation on) */
+export type CoastView = { files: string[]; status: 'working' | 'retry' | 'error' | 'done' }
+
 export type YogurtApi = {
+  coast: {
+    get(id: string): Promise<CoastView | null>
+    image(id: string, file: string): Promise<string | null>
+    retry(id: string): Promise<void>
+    onChange(cb: (id: string) => void): () => void
+  }
   reportRendererError(report: RendererError): void
   platform: NodeJS.Platform
   /** the computer the screens are for: the real one, or in fake mode the one YOGURT_FAKE_PLATFORM pretends to be (shortcut keys follow it) */

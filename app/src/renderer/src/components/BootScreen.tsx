@@ -1,3 +1,4 @@
+import { desktopName } from '../../../shared/desktopName'
 import { useEffect, useId, useState } from 'react'
 import { MARK } from '../../../shared/logo'
 import { BOOT } from '../../../shared/onboarding'
@@ -10,7 +11,7 @@ export function BootScreen() {
   const id = useId().replace(/:/g, '')
   const delay = Math.max(0, BOOT.showAfterMs - performance.now())
   return (
-    <div data-testid="boot-screen" className="boot-screen" style={{ animationDelay: `${delay}ms` }} role="status" aria-label="Yogurt">
+    <div data-testid="boot-screen" className="boot-screen" style={{ animationDelay: `${delay}ms` }} role="status" aria-label={desktopName}>
       <svg width={52} height={52} viewBox="0 0 100 100" aria-hidden="true" className="boot-mark">
         <defs>
           <clipPath id={`${id}-mark`}><path d={MARK} /></clipPath>
@@ -38,7 +39,7 @@ export function MacLaunch({ active }: { active: boolean }) {
     return () => clearTimeout(timer)
   }, [active, showMark])
   return <div className="mac-launch" data-active={active || undefined} aria-hidden={!active || undefined}
-    data-testid={active ? 'boot-screen' : undefined} role="status" aria-label="Yogurt">
+    data-testid={active ? 'boot-screen' : undefined} role="status" aria-label={desktopName}>
     {showMark && <svg width={52} height={52} viewBox="0 0 100 100" aria-hidden="true" className="mac-launch-mark text-neutral-400 dark:text-white">
       <path d={MARK} fill="currentColor" />
     </svg>}

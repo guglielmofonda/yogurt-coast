@@ -18,9 +18,11 @@ export type RecordingStart = Meeting & { resume?: { part: number; startMs: numbe
 type Hook = (m: RecordingStart) => void
 let clock: { startedAt: number; before: number; pausedAt: number | null; pausedMs: number; measured: boolean } | null = null
 const starts: Hook[] = [], stops: Hook[] = [], savedStops: Hook[] = [], changes: Hook[] = [], binds: Hook[] = []
-const on = (list: Hook[]) => (fn: Hook) => { list.push(fn); return () => { const i = list.indexOf(fn); if (i >= 0) list.splice(i, 1) } }
+const pauses: ((id: string, paused: boolean, at: number) => void)[] = []
+const on = <T>(list: T[]) => (fn: T) => { list.push(fn); return () => { const i = list.indexOf(fn); if (i >= 0) list.splice(i, 1) } }
 /** called after a meeting starts (capture hooks in here) */
 export const onMeetingStart = on(starts)
+export const onMeetingPause = on(pauses)
 /** called once when capture must stop, even if saving its final state fails */
 export const onMeetingStop = on(stops)
 /** called once after the stopped state is saved; generation must wait for this */
@@ -142,6 +144,8 @@ export function pauseMeetingClock(id: string, paused: boolean) {
   const now = Date.now()
   if (paused && clock.pausedAt === null) { clock.pausedAt = now; clock.measured = true }
   else if (!paused && clock.pausedAt !== null) { clock.pausedMs += Math.max(0, now - clock.pausedAt); clock.pausedAt = null }
+  else return
+  for (const fn of pauses) fn(id, paused, now)
 }
 
 /** What ended a recording, for main.log: a Stop button (the note, the widget, the menu bar, the stop card), the call

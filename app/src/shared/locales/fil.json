@@ -799,5 +799,15 @@
   "Unmute my mic in Yogurt": "I-unmute ang mikropono ko sa Yogurt",
   "Mic will stay off on resume": "Mananatiling naka-mute ang mikropono kapag ipinagpatuloy ang pag-record",
   "Mic mute couldn’t be confirmed.": "Hindi makumpirmang naka-mute ang mikropono.",
-  "Mic off. Yogurt can’t hear call audio.": "Naka-mute ang mikropono. Hindi marinig ng Yogurt ang audio ng tawag."
+  "Mic off. Yogurt can’t hear call audio.": "Naka-mute ang mikropono. Hindi marinig ng Yogurt ang audio ng tawag.",
+  "Search meetings or run a command…": "Maghanap ng mga meeting o magpatakbo ng command…",
+  "Screenshot": "Screenshot",
+  "Coast screenshots": "Mga screenshot mula sa Coast",
+  "Selecting screenshots on this Mac…": "Pumipili ng mga screenshot sa Mac na ito…",
+  "Screenshot selection is incomplete.": "Hindi kumpleto ang pagpili ng mga screenshot.",
+  "No screenshots selected for this call.": "Walang napiling screenshot para sa tawag na ito.",
+  "Enlarge screenshot": "Palakihin ang screenshot",
+  "This screenshot could not be read.": "Hindi mabasa ang screenshot na ito.",
+  "Previous": "Nakaraan",
+  "Next": "Susunod"
 }
