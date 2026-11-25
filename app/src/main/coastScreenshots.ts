@@ -8,12 +8,12 @@ import type { Store } from './store'
 import type { Queue } from './notes/queue'
 import type { NotesModel } from './notes/model'
 import { coastClient, thumbnail } from './coastClient'
-import { chooseScreens, differentText, pixelChange, type Candidate } from './coastSelection'
+import { chooseScreens, differentText, distinctResourceViews, pixelChange, type Candidate, type Screen } from './coastSelection'
 
 type Span = [number, number]
 const fileName = /^\d{10,14}-[1-9]\d{0,15}\.png$/
 const windowMs = 80_000
-const fileOf = (f: Candidate) => `${f.at}-${f.id}.png`
+const fileOf = (f: { at: number; id: number }) => `${f.at}-${f.id}.png`
 
 export function createCoastScreenshots(o: {
   root: string; cli?: string; store: Store; model: Pick<NotesModel, 'llm'>; queue: Queue; changed(id: string): void
@@ -58,7 +58,7 @@ export function createCoastScreenshots(o: {
     } else if (!paused && live.since === null) live.since = at
   }
 
-  async function processWindow(id: string, from: number, to: number, signal: AbortSignal) {
+  async function processWindow(id: string, from: number, to: number, signal: AbortSignal, last?: Screen): Promise<Screen | undefined> {
     const m = eligible(id)
     if (!m || !o.cli || from < m.startedAt || to > m.endedAt!) throw Error('Outside the saved meeting')
     const temp = await mkdtemp(join(tmpdir(), 'yogurt-coast-'))
@@ -68,25 +68,36 @@ export function createCoastScreenshots(o: {
       const rows = await client.frames(Math.ceil(from / 1000) * 1000, Math.floor(to / 1000) * 1000)
       const existing = files(id)
       const prior = existing.filter(f => Number(f.split('-')[0]) < from).at(-1)
-      let pixels = prior ? await thumbnail(join(dir(id), prior)) : undefined
+      let previous = last && prior === fileOf(last) ? last : undefined
+      let pixels = previous?.pixels ?? (prior ? await thumbnail(join(dir(id), prior)) : undefined)
+      // After an interrupted import, recover the last saved view for comparison.
+      if (prior && pixels && !previous) {
+        const at = Number(prior.split('-')[0])
+        if (at >= m.startedAt && at + 1000 <= m.endedAt!) {
+          const row = (await client.frames(at, at + 1000).catch(() => [])).find(f => fileOf(f) === prior)
+          if (row) previous = { ...row, pixels }
+        }
+      }
       let earlier: Candidate | undefined
       const candidates: Candidate[] = []
       for (const row of rows) {
         signal.throwIfAborted()
         const path = await client.image(row.id)
         const next = await thumbnail(path), change = pixels ? pixelChange(pixels, next) : 1
-        const changedWords = earlier && (earlier.app !== row.app || differentText(earlier.title + ' ' + earlier.text, row.title + ' ' + row.text))
+        const changedWords = earlier && (earlier.app !== row.app || earlier.domain !== row.domain || differentText(earlier.title + ' ' + earlier.text, row.title + ' ' + row.text))
         if (pixels && change < 0.075 && !changedWords) continue
         const retained = join(temp, 'candidate-' + row.id + '.png')
         await copyFile(path, retained)
-        earlier = { ...row, change, path: retained }
+        earlier = { ...row, pixels: next, change, path: retained }
         candidates.push(earlier)
         pixels = next
       }
       signal.throwIfAborted()
       const note = o.store.notes(id)
-      const context = [m.title, (note.enhanced || note.mine).slice(0, 1200)].join('\n')
-      const selected = candidates.length ? await chooseScreens(await o.model.llm(signal), context, candidates, !!prior) : []
+      const context = { title: m.title, notes: note.mine, summary: note.enhanced }
+      const picks = candidates.length ? await chooseScreens(await o.model.llm(signal), context, candidates, !!prior) : []
+      const selected = distinctResourceViews(picks, note.mine, previous)
+      console.info('COAST', `selection meeting=${id} sampled=${rows.length} candidates=${candidates.length} selected=${selected.length}`)
       for (const f of selected) {
         signal.throwIfAborted()
         if (!eligible(id)) return
@@ -97,6 +108,7 @@ export function createCoastScreenshots(o: {
         if (eligible(id) && !signal.aborted) renameSync(partial, dest)
         else rmSync(partial, { force: true })
       }
+      return selected.at(-1) ?? previous
     } finally { await rm(temp, { recursive: true, force: true }) }
   }
   async function imagePath(id: string, name: string) {
@@ -129,13 +141,14 @@ export function createCoastScreenshots(o: {
     if (!(o.cli && existsSync(jobFile(id))) && !missing(id).length) return
     failed.delete(id); running.add(id); o.changed(id)
     void o.queue.enqueue(async signal => {
+      let last: Screen | undefined
       while (!signal.aborted && eligible(id)) {
         const pending = spans(id)
         if (!o.cli || !pending.length) break
         const [from, end] = pending[0]
         const to = Math.min(end, Math.floor(from / 1000) * 1000 + windowMs)
         mkdirSync(dir(id), { recursive: true, mode: 0o700 })
-        if (Math.ceil(from / 1000) < Math.floor(to / 1000)) await processWindow(id, from, to, signal)
+        if (Math.ceil(from / 1000) < Math.floor(to / 1000)) last = await processWindow(id, from, to, signal, last)
         if (signal.aborted || !eligible(id)) return
         const rest = spans(id).slice(1)
         save(id, to < end ? [[to, end], ...rest] : rest)

@@ -28,10 +28,20 @@ test('imports only after stop, retries Coast, excludes pauses, and reopens a sav
     await page.getByTestId('note-stop').click()
     const gallery = page.getByTestId('coast-screenshots')
     await expect(gallery.getByRole('button', { name: 'Try again' })).toBeVisible({ timeout: 30_000 })
+    await page.evaluate(async id => {
+      await window.yogurt.notes.setMine(id, 'https://example.test/workshop', 1)
+      await window.yogurt.notes.setEnhanced(id, 'The team discussed the workshop.', 1)
+    }, id)
     writeFileSync(join(profile, 'ready'), '')
     await gallery.getByRole('button', { name: 'Try again' }).click()
     await expect(gallery.getByRole('button', { name: 'Enlarge screenshot' })).toBeVisible({ timeout: 20_000 })
     await expect.poll(() => page.evaluate(id => window.yogurt.coast.get(id), id)).toMatchObject({ status: 'done' })
+    const evidence = await app.evaluate(() => {
+      const fake = (globalThis as unknown as { __fake__: { prompts(): { notes: string[] } } }).__fake__
+      const prompt = fake.prompts().notes.find(p => p.startsWith('Select screenshots to attach'))
+      return prompt && JSON.parse(prompt.split('\n').at(-1)!)
+    })
+    expect(evidence).toMatchObject({ notes: 'https://example.test/workshop', summary: 'The team discussed the workshop.' })
     const hits = await page.evaluate(() => window.yogurt.search.query('Juniper observatory'))
     expect(hits).toEqual(expect.arrayContaining([expect.objectContaining({ meetingId: id })]))
     const ranges = readFileSync(join(profile, 'ranges'), 'utf8').trim().split('\n').map(s => s.split('|').map(x => new Date(x).getTime()))
