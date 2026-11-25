@@ -187,9 +187,32 @@ describe('upcoming', () => {
     ])
     expect(await calendars()).toEqual([
       { id: 'work', name: 'Work', source: '', color: '#3478F6' },
-      { id: 'personal', name: 'Personal', source: '' },
       { id: 'invalid', name: 'Invalid', source: '' },
+      { id: 'personal', name: 'Personal', source: '' },
     ])
+  })
+
+  it('puts chosen calendars first, then the Mac default, account calendars, other calendars and subscriptions', async () => {
+    const rows = [
+      { id: 'sub', name: 'Holidays', kind: 'subscription' },
+      { id: 'team10', name: 'Project 10' },
+      { id: 'shared', name: 'aaa@example.test', kind: 'readOnly' },
+      { id: 'account', name: 'me@example.test', source: 'Google' },
+      { id: 'team2', name: 'Project 2' },
+      { id: 'birthday', name: 'Birthdays', kind: 'birthday' },
+      { id: 'default', name: 'Work', kind: 'default' },
+      { id: 'alias', name: 'Owner', source: 'owner@example.test' },
+      { id: 'label', name: 'Design', source: 'DESIGN' },
+    ]
+    const helper = vi.fn(async (args: string[]) => args[0] === 'calendar-status' ? { status: 'granted' } : rows)
+    setHelper(helper)
+    let ids: string[] = []
+    setCalendarSelection(() => ({ selectedCalendarIds: ids }))
+    const order = async () => (await calendars()).map(c => c.id)
+    expect(await order()).toEqual(['default', 'label', 'account', 'alias', 'team2', 'team10', 'shared', 'birthday', 'sub'])
+    ids = ['team10', 'sub']
+    expect(await order()).toEqual(['team10', 'sub', 'default', 'label', 'account', 'alias', 'team2', 'shared', 'birthday'])
+    expect(helper.mock.calls.flat()).not.toContainEqual(expect.arrayContaining(['events']))
   })
 
   it('asks the helper for the window and returns parsed events', async () => {

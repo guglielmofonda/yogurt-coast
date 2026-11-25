@@ -102,14 +102,29 @@ export function setCalendarSelection(read: () => Selection, save?: (ids: string[
   saveSelection = save
 }
 
+const calendarNames = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true })
+function calendarPriority(kind: unknown, name: string, source: string): number {
+  if (kind === 'default') return 0
+  if (kind === 'birthday' || kind === 'subscription') return 4
+  if (kind === 'readOnly') return 3
+  // EventKit exposes one default for the whole Mac. Other account calendars often use the account name or email.
+  const title = name.trim().toLowerCase()
+  return ownAddress(name) || title === source.trim().toLowerCase() || title === ownAddress(source)?.split('@')[0] ? 1 : 2
+}
+
 export async function calendars(): Promise<CalendarSource[]> {
   if (await refreshCalendarStatus() !== 'granted') return []
   try {
     if (links) return await links.calendars()
     const raw = await helper(['calendars'])
     if (!Array.isArray(raw)) throw new Error('Invalid calendars')
-    const list = raw.flatMap((r) => r && typeof r === 'object' && str(r.id) && str(r.name)
-      ? [{ id: r.id as string, name: r.name as string, source: str(r.source) ?? '', ...(typeof r.color === 'string' && /^#[0-9a-f]{6}$/i.test(r.color) ? { color: r.color } : {}) }] : [])
+    const list = raw.flatMap(r => {
+      const id = str(r?.id), name = str(r?.name)
+      if (!id || !name) return []
+      const source = str(r.source) ?? ''
+      const color = typeof r.color === 'string' && /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : undefined
+      return [{ id, name, source, priority: calendarPriority(r.kind, name, source), ...(color ? { color } : {}) }]
+    })
     const settings = calendarSelection()
     if (list.length && needsMigration(settings)) {
       // Preserve an explicit older Mac filter once. Unknown or removed sources grant no new access.
@@ -117,7 +132,10 @@ export async function calendars(): Promise<CalendarSource[]> {
       const hadMacFilter = !hidden.size || list.some(c => hidden.has(c.id))
       saveSelection?.(hadMacFilter ? list.filter(c => !hidden.has(c.id)).map(c => c.id) : [])
     }
-    return list
+    const selected = new Set(calendarSelection().selectedCalendarIds)
+    return list.sort((a, b) => Number(selected.has(b.id)) - Number(selected.has(a.id)) || a.priority - b.priority ||
+      calendarNames.compare(a.name, b.name) || calendarNames.compare(a.source, b.source) || a.id.localeCompare(b.id))
+      .map(({ priority, ...calendar }) => calendar)
   } catch { status = 'error'; return [] }
 }
 

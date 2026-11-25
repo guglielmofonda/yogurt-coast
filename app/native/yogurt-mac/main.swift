@@ -622,13 +622,18 @@ case "calendar-auth":
   out(["status": status()])
 case "calendars":
   needAccess()
+  let defaultID = store.defaultCalendarForNewEvents?.calendarIdentifier
   out(store.calendars(for: .event).map { c in
     var row = ["id": c.calendarIdentifier, "name": c.title, "source": c.source.title]
+    if c.calendarIdentifier == defaultID { row["kind"] = "default" }
+    else if c.type == .birthday { row["kind"] = "birthday" }
+    else if c.isSubscribed || c.type == .subscription { row["kind"] = "subscription" }
+    else if !c.allowsContentModifications { row["kind"] = "readOnly" }
     if let color = NSColor(cgColor: c.cgColor)?.usingColorSpace(.sRGB) {
       row["color"] = String(format: "#%02X%02X%02X", Int((color.redComponent * 255).rounded()), Int((color.greenComponent * 255).rounded()), Int((color.blueComponent * 255).rounded()))
     }
     return row
-  }.sorted { ($0["source"]! + $0["name"]!) < ($1["source"]! + $1["name"]!) })
+  })
 case "events":
   needAccess()
   guard args.count >= 3 else { fail("events FROM TO --calendars JSON") }
