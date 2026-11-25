@@ -762,7 +762,7 @@
   "Stop transcription": "Διακοπή απομαγνητοφώνησης",
   "Audio is unavailable.": "Ο ήχος δεν είναι διαθέσιμος.",
   "Add a calendar by link": "Προσθήκη ημερολογίου μέσω συνδέσμου",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Τα ημερολόγια από την εφαρμογή Ημερολόγιο του Mac εμφανίζονται αυτόματα παραπάνω.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Το Yogurt διαβάζει τα επιλεγμένα ημερολόγια σε αυτή τη συσκευή μέσω του Ημερολογίου της Apple.",
   "What's new": "Τι νέο υπάρχει",
   "New": "Νέο",
   "Star us on GitHub": "Δώστε μας ένα αστέρι στο GitHub",
@@ -818,7 +818,7 @@
   "Import a Google Desktop OAuth client file.": "Εισαγάγετε αρχείο πελάτη Google OAuth για υπολογιστές.",
   "Refresh calendars": "Ανανέωση ημερολογίων",
   "Disconnect": "Αποσύνδεση",
-  "Use Mac calendars": "Χρήση ημερολογίων Mac",
+  "Choose calendars": "Επιλογή ημερολογίων",
   "Waiting for Google…": "Αναμονή για το Google…",
   "Secure storage is unavailable.": "Ο ασφαλής χώρος αποθήκευσης δεν είναι διαθέσιμος.",
   "Allow calendar access in Google and try again.": "Επιτρέψτε την πρόσβαση στο ημερολόγιο στο Google και δοκιμάστε ξανά."

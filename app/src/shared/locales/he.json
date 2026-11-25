@@ -769,7 +769,7 @@
   "Stop transcription": "עצירת תמלול",
   "Audio is unavailable.": "האודיו אינו זמין.",
   "Add a calendar by link": "הוספת יומן באמצעות קישור",
-  "Calendars from the Mac's Calendar app appear above automatically.": "יומנים מיישום לוח השנה ב-Mac מופיעים למעלה באופן אוטומטי.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt קורא את לוחות השנה שבחרת במכשיר הזה באמצעות ״לוח שנה״ של Apple.",
   "What's new": "מה חדש",
   "New": "חדש",
   "Star us on GitHub": "תנו לנו כוכב ב-GitHub",
@@ -825,7 +825,7 @@
   "Import a Google Desktop OAuth client file.": "ייבאו קובץ לקוח Google OAuth ליישום מחשב.",
   "Refresh calendars": "רענון יומנים",
   "Disconnect": "ניתוק",
-  "Use Mac calendars": "שימוש ביומני ה־Mac",
+  "Choose calendars": "בחירת לוחות שנה",
   "Waiting for Google…": "בהמתנה ל־Google…",
   "Secure storage is unavailable.": "האחסון המאובטח אינו זמין.",
   "Allow calendar access in Google and try again.": "אפשרו גישה ליומן ב־Google ונסו שוב."

@@ -747,7 +747,7 @@
   "Stop transcription": "প্রতিলিপি বন্ধ করুন",
   "Audio is unavailable.": "অডিও উপলভ্য নেই।",
   "Add a calendar by link": "লিংক দিয়ে ক্যালেন্ডার যোগ করুন",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Mac-এর ক্যালেন্ডার অ্যাপের ক্যালেন্ডারগুলি উপরে স্বয়ংক্রিয়ভাবে দেখা যায়।",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt এই ডিভাইসে Apple Calendar ব্যবহার করে আপনার বেছে নেওয়া ক্যালেন্ডারগুলি পড়ে।",
   "What's new": "নতুন কী আছে",
   "New": "নতুন",
   "Star us on GitHub": "GitHub-এ আমাদের স্টার দিন",
@@ -803,7 +803,7 @@
   "Import a Google Desktop OAuth client file.": "Google-এর ডেস্কটপ OAuth ক্লায়েন্ট ফাইল আমদানি করুন।",
   "Refresh calendars": "ক্যালেন্ডার রিফ্রেশ করুন",
   "Disconnect": "সংযোগ বিচ্ছিন্ন করুন",
-  "Use Mac calendars": "Mac-এর ক্যালেন্ডার ব্যবহার করুন",
+  "Choose calendars": "ক্যালেন্ডার বেছে নিন",
   "Waiting for Google…": "Google-এর জন্য অপেক্ষা চলছে…",
   "Secure storage is unavailable.": "নিরাপদ স্টোরেজ পাওয়া যাচ্ছে না।",
   "Allow calendar access in Google and try again.": "Google-এ ক্যালেন্ডার অ্যাক্সেসের অনুমতি দিয়ে আবার চেষ্টা করুন।"

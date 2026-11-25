@@ -759,7 +759,7 @@
   "Stop transcription": "Itigil ang transkripsiyon",
   "Audio is unavailable.": "Hindi available ang audio.",
   "Add a calendar by link": "Magdagdag ng kalendaryo gamit ang link",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Awtomatikong lalabas sa itaas ang mga kalendaryo mula sa Calendar app ng Mac.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Binabasa ng Yogurt ang mga pinili mong kalendaryo sa device na ito gamit ang Apple Calendar.",
   "What's new": "Mga bagong tampok",
   "New": "Bago",
   "Star us on GitHub": "Bigyan kami ng star sa GitHub",
@@ -815,7 +815,7 @@
   "Import a Google Desktop OAuth client file.": "Mag-import ng Google Desktop OAuth client file.",
   "Refresh calendars": "I-refresh ang mga kalendaryo",
   "Disconnect": "Idiskonekta",
-  "Use Mac calendars": "Gamitin ang mga kalendaryo ng Mac",
+  "Choose calendars": "Pumili ng mga kalendaryo",
   "Waiting for Google…": "Naghihintay sa Google…",
   "Secure storage is unavailable.": "Hindi magamit ang secure na storage.",
   "Allow calendar access in Google and try again.": "Payagan ang access sa kalendaryo sa Google at subukan ulit."

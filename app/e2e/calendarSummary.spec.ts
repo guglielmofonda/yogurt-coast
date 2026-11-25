@@ -7,7 +7,7 @@ const before = process.env.YOGURT_UI_REVIEW === 'before'
 
 test('calendar disclosure summarizes the enabled selection and stays useful when empty or unavailable', async ({}, info) => {
   const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: {
-    ...process.env, YOGURT_FAKE: '1', YOGURT_USER_DATA: mkdtempSync(join(tmpdir(), 'yogurt-calendar-summary-')),
+    ...process.env, YOGURT_FAKE: '1', YOGURT_FAKE_SELECTED_CALENDARS: 'work,personal,family', YOGURT_USER_DATA: mkdtempSync(join(tmpdir(), 'yogurt-calendar-summary-')),
   } })
   try {
     const page = await app.firstWindow()

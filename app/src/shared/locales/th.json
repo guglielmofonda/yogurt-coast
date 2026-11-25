@@ -717,7 +717,7 @@
   "Stop transcription": "หยุดถอดเสียง",
   "Audio is unavailable.": "ไม่มีเสียงให้ใช้งาน",
   "Add a calendar by link": "เพิ่มปฏิทินด้วยลิงก์",
-  "Calendars from the Mac's Calendar app appear above automatically.": "ปฏิทินจากแอปปฏิทินบน Mac จะแสดงด้านบนโดยอัตโนมัติ",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt อ่านปฏิทินที่คุณเลือกบนอุปกรณ์นี้ผ่านแอปปฏิทินของ Apple",
   "What's new": "มีอะไรใหม่",
   "New": "ใหม่",
   "Star us on GitHub": "ให้ดาวเราบน GitHub",
@@ -773,7 +773,7 @@
   "Import a Google Desktop OAuth client file.": "นำเข้าไฟล์ไคลเอ็นต์ Google OAuth สำหรับเดสก์ท็อป",
   "Refresh calendars": "รีเฟรชปฏิทิน",
   "Disconnect": "ยกเลิกการเชื่อมต่อ",
-  "Use Mac calendars": "ใช้ปฏิทินของ Mac",
+  "Choose calendars": "เลือกปฏิทิน",
   "Waiting for Google…": "กำลังรอ Google…",
   "Secure storage is unavailable.": "พื้นที่จัดเก็บข้อมูลแบบปลอดภัยไม่พร้อมใช้งาน",
   "Allow calendar access in Google and try again.": "อนุญาตการเข้าถึงปฏิทินใน Google แล้วลองอีกครั้ง"

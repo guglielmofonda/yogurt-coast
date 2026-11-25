@@ -48,7 +48,7 @@ let calendar = process.env.YOGURT_FAKE_CALENDAR ?? 'granted'
 let eventsOverride: unknown[] | null = null
 export const setFakeCalendar = (o: { status?: string; events?: unknown[] | null }) => {
   if (o.status) calendar = o.status
-  if (o.events !== undefined) eventsOverride = o.events
+  if (o.events !== undefined) eventsOverride = o.events?.map(e => e && typeof e === 'object' ? { calendarId: 'work', calendar: 'Work', ...e } : e) ?? null
 }
 /**
  * Fake mode: microphone, call audio and notifications as YOGURT_FAKE_PERMISSIONS says (granted unless told unknown or denied).
@@ -99,8 +99,10 @@ export const fakeHelper: Helper = async (args) => {
       return list ? [...new Map(list.map((e) => [e.calendarId, { id: e.calendarId, name: e.calendar, source: e.calendarSource ?? 'Example account', color: e.calendarColor ?? '#3478F6' }])).values()] : [{ id: 'work', name: 'Work', source: 'Example account' }]
     }
     case 'events': {
-      // like the Mac's calendar: only what overlaps FROM to TO, so a wrong range or day shows in tests
-      const within = (e: unknown) => !!e && typeof e === 'object' && Date.parse(String((e as { end?: unknown }).end)) > Date.parse(args[1]) && Date.parse(String((e as { start?: unknown }).start)) < Date.parse(args[2])
+      const arg = args.indexOf('--calendars')
+      if (arg < 0) throw new Error('Missing calendar selection')
+      const selected = new Set<string>(JSON.parse(args[arg + 1]))
+      const within = (e: unknown) => !!e && typeof e === 'object' && selected.has((e as { calendarId: string }).calendarId) && Date.parse(String((e as { end?: unknown }).end)) > Date.parse(args[1]) && Date.parse(String((e as { start?: unknown }).start)) < Date.parse(args[2])
       if (eventsOverride) return eventsOverride.filter(within)
       // fixed from launch, so the same event keeps the same id while a test runs
       const start = standupAt

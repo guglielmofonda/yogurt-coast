@@ -759,7 +759,7 @@
   "Stop transcription": "Stop transskription",
   "Audio is unavailable.": "Lyden er ikke tilgængelig.",
   "Add a calendar by link": "Tilføj en kalender via et link",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Kalendere fra appen Kalender på din Mac vises automatisk ovenfor.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt læser de valgte kalendere på denne enhed via Apples Kalender.",
   "What's new": "Nyheder",
   "New": "Ny",
   "Star us on GitHub": "Giv os en stjerne på GitHub",
@@ -815,7 +815,7 @@
   "Import a Google Desktop OAuth client file.": "Importér en Google OAuth-klientfil til computer.",
   "Refresh calendars": "Opdater kalendere",
   "Disconnect": "Afbryd forbindelsen",
-  "Use Mac calendars": "Brug Mac-kalendere",
+  "Choose calendars": "Vælg kalendere",
   "Waiting for Google…": "Venter på Google…",
   "Secure storage is unavailable.": "Sikker lagring er ikke tilgængelig.",
   "Allow calendar access in Google and try again.": "Tillad kalenderadgang hos Google, og prøv igen."

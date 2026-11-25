@@ -40,7 +40,7 @@ pnpm -C app e2e    # builds, then drives the app with Playwright in fake mode
 
 ## Package Yogurt + Coast on macOS
 
-A build with Google Calendar sign-in includes the publisher’s Desktop OAuth client in `app/resources/google-calendar-client.json`. [Configure Google Calendar](google-calendar.md)
+The Mac build uses Apple Calendar without publisher credentials. An optional Windows or Linux build with direct Google sign-in includes the publisher’s Desktop OAuth client in `app/resources/google-calendar-client.json`. [Configure Google Calendar](google-calendar.md)
 
 Use a valid Apple code-signing identity from your keychain. Set `YOGURT_COAST_CERTIFICATE` to its certificate fingerprint (listed by `security find-identity -v -p codesigning`), then run:
 

@@ -53,7 +53,7 @@ import { SetupController } from './setup'
 import { fakeMeasure, measureSpeed, speedClipPath, speedStore } from './asr/speedCheck'
 import { vadModelPath, whisperServerPath } from './asr/server'
 import { openStore, type Store } from './store'
-import { calendars, eventIds, matchesEvent, setCalendarSelection, setCalendarOwnEmail, calendarStatus, createHelperRunner, helperPath, killAllHelpers, refreshCalendarStatus, requestCalendarAccess, runHelper, setCalendarLinkSource, systemCalendarStatus, setCalendarSupported, setHelper, upcoming, type CalEvent } from './calendar'
+import { calendars, eventIds, matchesEvent, setCalendarSelection, setCalendarOwnEmail, calendarStatus, createHelperRunner, helperPath, killAllHelpers, refreshCalendarStatus, requestCalendarAccess, runHelper, setCalendarLinkSource, setCalendarSupported, setHelper, upcoming, type CalEvent } from './calendar'
 import { createCalendarLinks } from './calendarLink'
 import { getCalendar } from './calendarLink/get'
 import { createSignals } from './detectSignals'
@@ -593,30 +593,30 @@ app.whenReady().then(() => {
   // a moved or reinstalled Yogurt loses its login item: put it back if the person wanted it
   if (!isFake()) syncLoginItem(settings.openAtLogin)
   // Windows and Linux: the calendar is a pasted private calendar address, kept sealed with the system keychain
-  // a Mac: the same links, next to its own calendars (Settings → Calendars → Add a calendar link)
+  // On a Mac, Apple Calendar manages all provider accounts and subscriptions.
   // no keychain (Linux without a secret service): scrambled, not encrypted, so a secret isn't readable at a glance
   const sealSecret = (plain: string) => (safeStorage.isEncryptionAvailable() ? `k:${safeStorage.encryptString(plain).toString('base64')}` : `b:${Buffer.from(plain).toString('base64')}`)
   const openSecret = (sealed: string) => (sealed.startsWith('k:') ? safeStorage.decryptString(Buffer.from(sealed.slice(2), 'base64'))
     : sealed.startsWith('b:') ? Buffer.from(sealed.slice(2), 'base64').toString() : sealed.replace(/^p:/, ''))
-  const calendarLinks = caps.calendar ? createCalendarLinks({
+  const calendarLinks = caps.calendarLink ? createCalendarLinks({
     file: join(userDataDir(), 'settings.json'), get: getCalendar, seal: sealSecret, open: openSecret,
   }) : null
   const clientName = 'google-calendar-client.json'
   const localClient = join(userDataDir(), clientName)
-  const google = createGoogleCalendar({
+  const google = calendarLinks ? createGoogleCalendar({
     file: join(userDataDir(), 'settings.json'),
     client: () => desktopClient(join(process.resourcesPath, clientName)) ?? desktopClient(join(__dirname, '../../resources', clientName)) ?? desktopClient(localClient),
     secure: () => safeStorage.isEncryptionAvailable() && (process.platform !== 'linux' || safeStorage.getSelectedStorageBackend() !== 'basic_text'),
     seal: s => safeStorage.encryptString(s).toString('base64'),
     unseal: s => safeStorage.decryptString(Buffer.from(s, 'base64')),
     grant: (c, signal) => browserGrant(c, url => shell.openExternal(url), signal),
-  })
-  app.on('will-quit', () => google.cancel())
-  if (calendarLinks) setCalendarLinkSource({
+  }) : null
+  app.on('will-quit', () => google?.cancel())
+  if (calendarLinks && google) setCalendarLinkSource({
     status: () => loadSettings(join(userDataDir(), 'settings.json')).googleCalendar ? 'granted' : calendarLinks.status(),
     calendars: async () => [...google.calendars(), ...await calendarLinks.calendars()],
     events: async (from, to, unavailable, hidden) => (await Promise.all([google.events(from, to, unavailable), calendarLinks.events(from, to, unavailable, hidden)])).flat(),
-  }, { alongside: !caps.calendarLink })
+  })
   const preferences = hookPreferences({
     recordingPillChanged: on => recordingPillChanged(on),
     file: join(userDataDir(), 'settings.json'), permissions, kinds: supportedKinds(caps), os: platform,
@@ -659,7 +659,10 @@ app.whenReady().then(() => {
   initMeetings(store)
   // the person's own names, never given to the other side: the one in Settings and the Mac's
   const settingsFile = join(userDataDir(), 'settings.json')
-  setCalendarSelection(() => loadSettings(settingsFile))
+  if (isFake() && !caps.calendarLink && process.env.YOGURT_FAKE_SELECTED_CALENDARS && settings.selectedCalendarIds === undefined && settings.hiddenCalendarIds === undefined && settings.useSystemCalendars !== false) {
+    updateSettings(settingsFile, { selectedCalendarIds: process.env.YOGURT_FAKE_SELECTED_CALENDARS.split(',') })
+  }
+  setCalendarSelection(() => loadSettings(settingsFile), ids => updateSettings(settingsFile, { selectedCalendarIds: ids }))
   setCalendarOwnEmail(email => {
     try { if (store.rememberOwnEmail(email)) win?.webContents.send('meetings:changed') }
     catch (e) { console.warn('could not save own calendar address', e) }
@@ -1252,14 +1255,15 @@ app.whenReady().then(() => {
   })
   const calendarList = async () => {
     const list = await calendars(), settings = loadSettings(settingsFile), hidden = settings.hiddenCalendarIds ?? []
-    const linkIds = new Set(calendarLinks?.list().map((l) => l.id) ?? []), googleIds = google.selectedIds(settings.googleCalendar)
-    return { status: calendarStatus(), systemStatus: systemCalendarStatus(), systemEnabled: settings.useSystemCalendars !== false,
-      google: google.info(), hideEventsWithoutCallLink: settings.hideEventsWithoutCallLink === true,
-      calendars: list.map((c) => ({ ...c, enabled: c.id.startsWith('google:') ? googleIds.has(c.id) : !hidden.includes(c.id), ...(linkIds.has(c.id) ? { link: true } : {}) })) }
+    const selected = new Set(settings.selectedCalendarIds)
+    const linkIds = new Set(calendarLinks?.list().map(l => l.id) ?? []), googleIds = google?.selectedIds(settings.googleCalendar)
+    return { status: calendarStatus(), ...(google ? { google: google.info() } : {}), hideEventsWithoutCallLink: settings.hideEventsWithoutCallLink === true,
+      calendars: list.map(c => ({ ...c, enabled: linkIds.has(c.id) ? !hidden.includes(c.id) : (googleIds ?? selected).has(c.id), ...(linkIds.has(c.id) ? { link: true } : {}) })) }
   }
   ipcMain.handle('calendar:list', calendarList)
   const calendarsChanged = () => { refreshCalendarConsumers(); win?.webContents.send('calendar:changed') }
   ipcMain.handle('calendar:google', async (_e, action: unknown) => {
+    if (!google) return { ok: false, error: 'unsupported' }
     try {
       if (action === 'connect') await google.connect()
       else if (action === 'cancel') google.cancel()
@@ -1278,21 +1282,18 @@ app.whenReady().then(() => {
       return { ok: true }
     } catch (e) { return { ok: false, error: e instanceof GoogleFailure ? e.reason : 'connection' } }
   })
-  ipcMain.handle('calendar:use-system', (_e, on: unknown) => {
-    if (typeof on !== 'boolean' || caps.calendarLink) return false
-    updateSettings(settingsFile, { useSystemCalendars: on })
-    calendarsChanged(); return true
-  })
   ipcMain.handle('calendar:set-enabled', async (_e, id: unknown, enabled: unknown) => {
     if (typeof id !== 'string' || id.length > 1024 || typeof enabled !== 'boolean') return false
-    if (id.startsWith('google:')) {
+    if (google && id.startsWith('google:')) {
       if (!google.setEnabled(id, enabled)) return false
       calendarsChanged(); return true
     }
     if (!(await calendars()).some((c) => c.id === id)) return false
-    const hidden = new Set(loadSettings(settingsFile).hiddenCalendarIds ?? [])
-    if (enabled) hidden.delete(id); else hidden.add(id)
-    updateSettings(settingsFile, { hiddenCalendarIds: [...hidden] })
+    const key = calendarLinks ? 'hiddenCalendarIds' : 'selectedCalendarIds'
+    const ids = new Set(loadSettings(settingsFile)[key])
+    if (calendarLinks ? !enabled : enabled) ids.add(id)
+    else ids.delete(id)
+    updateSettings(settingsFile, { [key]: [...ids] })
     refreshCalendarConsumers()
     win?.webContents.send('calendar:changed')
     return true
@@ -1312,7 +1313,8 @@ app.whenReady().then(() => {
       const note = meeting && withStopState(meeting)
       return { ...event, attendees: resolvePeople(store.db, event.attendees), ...(note ? { note: { id: note.id, state: note.state, ...(note.source ? { source: note.source } : {}) } } : {}) }
     })
-    return { status: calendarStatus(), events, unavailable }
+    const needsSelection = !calendarLinks && !loadSettings(settingsFile).selectedCalendarIds?.length
+    return { status: calendarStatus(), events, unavailable, needsSelection }
   }
   ipcMain.handle('calendar:day', (_e, at: unknown, purpose?: unknown) => calendarDay(at, purpose))
   const calendarComingUp = async () => {
@@ -1335,7 +1337,6 @@ app.whenReady().then(() => {
     return true
   })
   ipcMain.handle('calendar:connect', async () => {
-    if (loadSettings(settingsFile).useSystemCalendars === false) { goTo('/settings/calendars'); return refreshCalendarStatus() }
     // a calendar link is pasted in Settings' calendars: the same form as the first run's
     if (calendarLinks && caps.calendarLink) { goTo('/settings/calendar'); return refreshCalendarStatus() }
     const was = await refreshCalendarStatus()

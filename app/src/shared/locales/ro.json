@@ -776,7 +776,7 @@
   "Stop transcription": "Oprește transcrierea",
   "Audio is unavailable.": "Fișierul audio nu este disponibil.",
   "Add a calendar by link": "Adaugă un calendar prin link",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Calendarele din aplicația Calendar de pe Mac apar automat mai sus.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt citește calendarele selectate pe acest dispozitiv prin aplicația Calendar de la Apple.",
   "What's new": "Noutăți",
   "New": "Nou",
   "Star us on GitHub": "Dă-ne o stea pe GitHub",
@@ -832,7 +832,7 @@
   "Import a Google Desktop OAuth client file.": "Importă un fișier client Google OAuth pentru desktop.",
   "Refresh calendars": "Actualizează calendarele",
   "Disconnect": "Deconectează",
-  "Use Mac calendars": "Folosește calendarele de pe Mac",
+  "Choose calendars": "Alege calendarele",
   "Waiting for Google…": "Se așteaptă răspunsul Google…",
   "Secure storage is unavailable.": "Stocarea securizată nu este disponibilă.",
   "Allow calendar access in Google and try again.": "Permite accesul la calendar în Google și încearcă din nou."

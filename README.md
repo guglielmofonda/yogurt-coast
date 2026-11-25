@@ -16,11 +16,11 @@ pnpm dev
 
 After a recording stops, Yogurt checks the recorded intervals for screen changes. A local language model selects frames using visual-change scores, app and window titles, available screen text, and meeting notes. Apple Vision reads the selected images on your Mac. The images appear in the meeting note, and the text is available in search and Ask. On startup, Yogurt also reads previously attached screenshots so older notes become searchable. A paused recording excludes the paused interval.
 
-## Choose Google calendars
+## Choose calendars on your Mac
 
-Open **Agenda → Calendars → Sign in with Google**. After consent, check the calendars you want in Yogurt. The agenda, reminders and agents read events only from selected Google calendars. Newly discovered calendars start unchecked. Use **Refresh calendars** after adding one in Google.
+Open **Agenda → Calendars**, allow calendar access if prompted, and check the calendars you want. A new installation starts with every calendar unchecked. Your selection applies to the agenda, reminders, linking a meeting to a note, and calendar queries from agents. Calendars added later start unchecked too.
 
-The first Google connection turns off the default Mac calendar feed. **Use Mac calendars** lets you opt back in. If your build shows **Set up Google sign-in**, its publisher can configure the shared Desktop OAuth client once for everyone installing that build. [Publisher setup](docs/google-calendar.md)
+Yogurt reads selected events directly from Apple Calendar on your Mac. There is no Yogurt account, calendar server, or Google API key to set up. macOS handles syncing with your calendar provider. To add a missing Google, iCloud, or work account, open **Calendar → Add Account** in Apple's Calendar app, then return to the picker. [Apple’s account setup guide](https://support.apple.com/guide/calendar/add-calendars-and-calendar-accounts-icl4308d6701/mac)
 
 ## Give an agent read access
 
@@ -115,7 +115,7 @@ Transcription, screenshot selection, OCR and meeting answers run locally. Setup 
 
 <br>
 
-> The application stores recordings, transcripts, notes and screenshots in your local Yogurt profile. The models run on your computer. When you connect Google Calendar, Yogurt contacts Google for your calendar list and the events on the calendars you select. Calendar links, paired devices, and AI apps you enable can also communicate with their providers or devices.
+> The application stores recordings, transcripts, notes and screenshots in your local Yogurt profile. The models run on your computer. On Mac, Yogurt reads calendar events locally through Apple Calendar. macOS manages any sync with your provider. On Windows and Linux, optional direct calendar connections contact their providers. Paired devices and AI apps you enable can also receive the data you share with them.
 
 </details>
 

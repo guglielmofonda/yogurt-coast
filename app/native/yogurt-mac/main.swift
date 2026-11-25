@@ -3,7 +3,7 @@
 // Prints JSON; errors go to stderr with exit 1.
 //   yogurt-mac calendar-status       → {"status":"granted"|"denied"|"notDetermined"}
 //   yogurt-mac calendar-auth         → asks once (the system's own prompt), then the status
-//   yogurt-mac events FROM TO        → meetings between two ISO dates (all-day and cancelled ones left out)
+//   yogurt-mac events FROM TO --calendars JSON        → meetings between two ISO dates (all-day and cancelled ones left out)
 //   yogurt-mac mic-apps              → [{"bundleId","name","pid"}] of processes using audio input right now
 //   yogurt-mac mic-watch             → the same as mic-apps, one JSON line at start and on each change, until stdin closes
 //                                       (stdin lines "recording" / "idle" set how often it reads again: 1.5 s / 3 s):
@@ -631,22 +631,18 @@ case "calendars":
   }.sorted { ($0["source"]! + $0["name"]!) < ($1["source"]! + $1["name"]!) })
 case "events":
   needAccess()
-  guard args.count >= 3 else { fail("events FROM TO") }
+  guard args.count >= 3 else { fail("events FROM TO --calendars JSON") }
   let from = date(args[1]), to = date(args[2])
-  // ask the Mac to fetch new changes from Google, iCloud and Exchange now rather than on its own schedule (often
-  // 15 minutes); it syncs in the background, so an event added elsewhere shows on the next read, a minute later at most
-  var calendars: [EKCalendar]? = nil
-  if let i = args.firstIndex(of: "--excluding") {
-    guard i + 1 < args.count, let ids = try? JSONDecoder().decode([String].self, from: Data(args[i + 1].utf8)) else { fail("Invalid calendar selection") }
-    let hidden = Set(ids)
-    calendars = store.calendars(for: .event).filter { !hidden.contains($0.calendarIdentifier) }
-    if calendars?.isEmpty == true { out([] as [String]); exit(0) }
-  }
-  store.refreshSourcesIfNecessary()
+  guard let i = args.firstIndex(of: "--calendars"), i + 1 < args.count,
+        let ids = try? JSONDecoder().decode([String].self, from: Data(args[i + 1].utf8)) else { fail("Missing calendar selection") }
+  let selected = Set(ids)
+  guard !selected.isEmpty else { out([] as [String]); exit(0) }
+  let calendars = store.calendars(for: .event).filter { selected.contains($0.calendarIdentifier) }
+  guard !calendars.isEmpty else { out([] as [String]); exit(0) }
   let found = store.events(matching: store.predicateForEvents(withStart: from, end: to, calendars: calendars))
     .filter { !$0.isAllDay && $0.status != .canceled }
     .sorted { $0.startDate < $1.startDate }
-  // A week of hidden calendars can fill the usual 200 rows before the next visible meeting.
+  // The tray searches a full week for the next meeting with a call link.
   let events = args.dropFirst(3).contains("--full-range") ? found[...] : found.prefix(200)
   out(events.map { e in
     var o: [String: Any] = [
@@ -708,5 +704,5 @@ case "call-watch":
 case "mic-devices":
   out(["devices": inputDevices()])
 default:
-  fail("usage: yogurt-mac calendar-status | calendar-auth | events FROM TO | mic-apps | mic-watch | running-apps ID... | browser-title ID | permissions | media-auth | mic-auth | audio-auth | media-pause | media-resume ID... | mic-devices | ax-auth | call-watch MS [--pid N]... ID...")
+  fail("usage: yogurt-mac calendar-status | calendar-auth | events FROM TO --calendars JSON | mic-apps | mic-watch | running-apps ID... | browser-title ID | permissions | media-auth | mic-auth | audio-auth | media-pause | media-resume ID... | mic-devices | ax-auth | call-watch MS [--pid N]... ID...")
 }

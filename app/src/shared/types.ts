@@ -264,10 +264,9 @@ export type YogurtApi = {
   }
   /** the Mac's calendar: what is still to come today and tomorrow */
   calendar: {
-    /** status: any calendar at all; systemStatus: the Mac's own calendars, apart from calendar links. link: a calendar link (removable) */
-    list(): Promise<{ status: CalendarStatus; systemStatus?: CalendarStatus; systemEnabled?: boolean; google?: { configured: boolean; account?: string; reconnect: boolean }; calendars: (CalendarSource & { enabled: boolean; link?: boolean })[]; hideEventsWithoutCallLink: boolean }>
+    /** The Mac lists Apple Calendar sources. Link-based platforms may also offer removable subscriptions. */
+    list(): Promise<{ status: CalendarStatus; google?: { configured: boolean; account?: string; reconnect: boolean }; calendars: (CalendarSource & { enabled: boolean; link?: boolean })[]; hideEventsWithoutCallLink: boolean }>
     google(action: 'configure' | 'connect' | 'cancel' | 'refresh' | 'disconnect'): Promise<{ ok: boolean; error?: string }>
-    useSystem(on: boolean): Promise<boolean>
     setEnabled(id: string, enabled: boolean): Promise<boolean>
     setHideWithoutLink(hide: boolean): Promise<boolean>
     onChange(cb: () => void): () => void
@@ -275,7 +274,7 @@ export type YogurtApi = {
     /** not asked yet: asks; turned off: opens the Mac's settings */
     connect(): Promise<CalendarStatus>
     /** the events on the day of this time, earliest first (none without Calendar access) */
-    day(at: number, purpose?: 'link-event'): Promise<{ status: CalendarStatus; events: AgendaEvent[]; unavailable?: string[] }>
+    day(at: number, purpose?: 'link-event'): Promise<{ status: CalendarStatus; events: AgendaEvent[]; unavailable?: string[]; needsSelection?: boolean }>
     /** Windows and Linux: the calendar links connected (never their addresses) */
     links(): Promise<CalendarLinkInfo[]>
     /** connect a private calendar address; why not when it can't be */

@@ -11,6 +11,8 @@ if (existsSync(join(homedir(), '.yogurt-no-local-e2e'))) {
 process.env.YOGURT_BACKGROUND ??= '1'
 // tests read the English text, whatever this computer's language
 process.env.YOGURT_SYSTEM_LANGUAGES ??= 'en-US'
+// Most desktop fixtures start with a connected Work calendar. Picker tests opt into a fresh profile.
+process.env.YOGURT_FAKE_SELECTED_CALENDARS ??= 'work'
 // Runs happen where it's about midday, so none crosses midnight: the fake standup "in five minutes" stays today, and
 // "today" in the app and in the test is the same day. Etc/GMT+N is UTC-N (the sign is flipped), with no daylight saving.
 // Set once here; the workers and the app inherit it.

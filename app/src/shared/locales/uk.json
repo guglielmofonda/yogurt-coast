@@ -787,7 +787,7 @@
   "Stop transcription": "Зупинити транскрибування",
   "Audio is unavailable.": "Аудіо недоступне.",
   "Add a calendar by link": "Додати календар за посиланням",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Календарі з програми «Календар» на Mac автоматично з’являються вище.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt читає вибрані календарі на цьому пристрої через програму Apple «Календар».",
   "What's new": "Що нового",
   "New": "Нове",
   "Star us on GitHub": "Поставити зірку на GitHub",
@@ -843,7 +843,7 @@
   "Import a Google Desktop OAuth client file.": "Імпортуйте файл клієнта Google OAuth для настільного застосунку.",
   "Refresh calendars": "Оновити календарі",
   "Disconnect": "Від’єднати",
-  "Use Mac calendars": "Використовувати календарі Mac",
+  "Choose calendars": "Вибрати календарі",
   "Waiting for Google…": "Очікування Google…",
   "Secure storage is unavailable.": "Захищене сховище недоступне.",
   "Allow calendar access in Google and try again.": "Дозвольте доступ до календаря в Google та спробуйте ще раз."

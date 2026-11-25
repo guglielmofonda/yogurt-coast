@@ -747,7 +747,7 @@
   "Stop transcription": "Dökümü durdur",
   "Audio is unavailable.": "Ses kullanılamıyor.",
   "Add a calendar by link": "Bağlantıyla takvim ekle",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Mac’in Takvim uygulamasındaki takvimler otomatik olarak yukarıda görünür.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt, seçtiğiniz takvimleri bu aygıtta Apple Takvim aracılığıyla okur.",
   "What's new": "Yenilikler",
   "New": "Yeni",
   "Star us on GitHub": "GitHub’da bize yıldız verin",
@@ -803,7 +803,7 @@
   "Import a Google Desktop OAuth client file.": "Google masaüstü OAuth istemci dosyasını içe aktarın.",
   "Refresh calendars": "Takvimleri yenile",
   "Disconnect": "Bağlantıyı kes",
-  "Use Mac calendars": "Mac takvimlerini kullan",
+  "Choose calendars": "Takvimleri seç",
   "Waiting for Google…": "Google bekleniyor…",
   "Secure storage is unavailable.": "Güvenli depolama kullanılamıyor.",
   "Allow calendar access in Google and try again.": "Google’da takvim erişimine izin verip tekrar deneyin."

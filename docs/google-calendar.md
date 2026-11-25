@@ -1,4 +1,6 @@
-# Google Calendar sign-in
+# Google Calendar sign-in on Windows and Linux
+
+On Mac, add Google to Apple Calendar and choose the calendars in **Yogurt → Agenda → Calendars**. macOS handles the account and Yogurt reads the selected events locally.
 
 ## Connect a calendar
 
@@ -16,4 +18,4 @@ The publisher does this once per app build. People who install a configured buil
 4. Create a **Desktop app** in [Clients](https://console.cloud.google.com/auth/clients), download its JSON, and copy it to `app/resources/google-calendar-client.json` before building. That file is excluded from Git and included in the packaged application. A local build can also use **Set up Google sign-in** to import its client file. Desktop client identifiers are distributed with the app. Each user’s refresh token is separate and stays encrypted on their computer. [Desktop OAuth](https://developers.google.com/identity/protocols/oauth2/native-app)
 5. Before a public launch, configure the production consent screen, privacy policy and verified domains in Google Auth Platform, and complete the verification Google requires for reading calendar events. [Google’s sensitive-scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification)
 
-The app uses the system browser, a one-time loopback callback and PKCE. It talks directly to Google. Access tokens stay in memory. Refresh tokens require OS-protected storage. Each connection starts with an empty calendar selection. Connecting Google disables the default Mac calendar feed unless the user has already set that preference. Calendar links added separately retain their settings.
+The app uses the system browser, a one-time loopback callback and PKCE. It talks directly to Google. Access tokens stay in memory. Refresh tokens require OS-protected storage. Each connection starts with an empty calendar selection. Calendar links added separately retain their settings.

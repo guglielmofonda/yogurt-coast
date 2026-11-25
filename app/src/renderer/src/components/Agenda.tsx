@@ -21,7 +21,7 @@ type Actions = {
   onStart: (id: string) => Promise<void>
   onOpen: (id: string) => void
 }
-type Day = { at: number; status: CalendarStatus; events: AgendaEvent[]; unavailable?: string[] }
+type Day = { at: number; status: CalendarStatus; events: AgendaEvent[]; unavailable?: string[]; needsSelection?: boolean }
 
 type Inspection = { at: number; id: string; pointer: boolean }
 let lastView: { selected: number; week: number } | undefined
@@ -162,7 +162,8 @@ export function Agenda({ revision, recording, onStart, onOpen, jumpTo }: Actions
         <div data-testid="coming-up" className="agenda-events">
         {calendar.events.length === 0 ? <div className="agenda-status" data-testid={failedCalendar ? 'calendar-error' : undefined} role={failedCalendar ? 'alert' : undefined}>
           <CalendarDays size={18} aria-hidden="true" />
-          <h3>{failedCalendar ?? t('No meetings')}</h3>
+          <h3>{failedCalendar ?? (calendar.needsSelection ? t('No calendars selected.') : t('No meetings'))}</h3>
+          {!failedCalendar && calendar.needsSelection && <button className="workspace-button" onClick={() => window.yogurt.nav.go('/settings/calendars')}>{t('Choose calendars')}</button>}
           {failedCalendar && <button type="button" className="workspace-button" onClick={() => void load()}>{t('Try again')}</button>}
         </div>
           : calendar.events.map((event) => <Event key={event.id} event={event} me={me} now={now} near={event.id === primary} initial={event.id === defaultEvent?.id} selected={event.id === detail?.id} onInspect={(button, pointer) => { opener.current = button; setInspected({ at: selected, id: event.id, pointer }) }} recording={recording} />)}

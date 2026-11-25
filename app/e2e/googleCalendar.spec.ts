@@ -6,7 +6,7 @@ import { join } from 'node:path'
 test('signs in from the agenda and uses only the chosen Google calendar after reopening Settings', async () => {
   const profile = mkdtempSync(join(process.env.YOGURT_TEST_ROOT ?? tmpdir(), 'google-e2e-'))
   writeFileSync(join(profile, 'google-calendar-client.json'), JSON.stringify({ installed: { client_id: 'fixture.apps.googleusercontent.com' } }))
-  const app = await _electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: { ...process.env, YOGURT_FAKE: '1', YOGURT_USER_DATA: profile } })
+  const app = await _electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: { ...process.env, YOGURT_FAKE: '1', YOGURT_FAKE_PLATFORM: 'win32', YOGURT_USER_DATA: profile } })
   try {
     const page = await app.firstWindow()
     await expect(page.getByTestId('home')).toBeVisible()
@@ -39,7 +39,7 @@ test('signs in from the agenda and uses only the chosen Google calendar after re
     await page.getByRole('button', { name: 'Sign in with Google' }).click()
     const choices = page.getByTestId('calendar-choice')
     await expect(choices).toHaveCount(2)
-    if (process.platform === 'darwin') await expect(page.getByTestId('system-calendars')).toHaveAttribute('aria-checked', 'false')
+    await expect(page.getByTestId('system-calendars')).toHaveCount(0)
     await expect(choices.getByRole('checkbox').first()).not.toBeChecked()
     expect(await app.evaluate(() => (globalThis as unknown as { googleEventReads: string[] }).googleEventReads)).toEqual([])
     const team = choices.filter({ hasText: 'Product team' }).getByRole('checkbox')

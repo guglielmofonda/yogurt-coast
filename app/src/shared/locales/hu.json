@@ -747,7 +747,7 @@
   "Stop transcription": "Átírás leállítása",
   "Audio is unavailable.": "A hang nem érhető el.",
   "Add a calendar by link": "Naptár hozzáadása hivatkozással",
-  "Calendars from the Mac's Calendar app appear above automatically.": "A Mac Naptár appjában lévő naptárak automatikusan megjelennek fent.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "A Yogurt az Apple Naptár segítségével ezen az eszközön olvassa a kiválasztott naptárakat.",
   "What's new": "Újdonságok",
   "New": "Új",
   "Star us on GitHub": "Csillagozz meg minket a GitHubon",
@@ -803,7 +803,7 @@
   "Import a Google Desktop OAuth client file.": "Importálj egy asztali Google OAuth-ügyfélfájlt.",
   "Refresh calendars": "Naptárak frissítése",
   "Disconnect": "Kapcsolat bontása",
-  "Use Mac calendars": "A Mac naptárainak használata",
+  "Choose calendars": "Naptárak kiválasztása",
   "Waiting for Google…": "Várakozás a Google-ra…",
   "Secure storage is unavailable.": "A biztonságos tárhely nem érhető el.",
   "Allow calendar access in Google and try again.": "Engedélyezd a naptárhoz való hozzáférést a Google-ban, majd próbáld újra."

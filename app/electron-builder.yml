@@ -28,7 +28,7 @@ extraResources:
   - from: resources/vad
     to: vad
   # the Mac's menu bar icon (tray.ts reads it from Resources; @2x is picked up next to it)
-  - { from: resources, to: ., filter: ["tray.png", "tray@2x.png", "tray-titled.png", "tray-titled@2x.png", "google-calendar-client.json"] }
+  - { from: resources, to: ., filter: ["tray.png", "tray@2x.png", "tray-titled.png", "tray-titled@2x.png"] }
   # licenses of things bundled or downloaded: fonts, whisper.cpp, Silero VAD, libopus, the native recorders' crates,
   # whisper-server's headers, animate-ui, the CUDA runtime and the echo canceller (webrtcaec3.js)
   - from: resources/licenses
@@ -80,8 +80,8 @@ mac:
     LSUIElement: false
     NSMicrophoneUsageDescription: Yogurt records your voice in meetings so it can write the transcript and your notes. Nothing leaves your Mac.
     NSAudioCaptureUsageDescription: Yogurt records the sound of your calls so it can write down what others say. Nothing leaves your Mac.
-    NSCalendarsFullAccessUsageDescription: Yogurt reads your calendar to name your notes after the meeting and to know who is in it. Nothing leaves your Mac.
-    NSCalendarsUsageDescription: Yogurt reads your calendar to name your notes after the meeting and to know who is in it. Nothing leaves your Mac.
+    NSCalendarsFullAccessUsageDescription: Yogurt reads events from the calendars you choose in Apple Calendar to show your agenda and name meeting notes. It reads them locally on this Mac.
+    NSCalendarsUsageDescription: Yogurt reads events from the calendars you choose in Apple Calendar to show your agenda and name meeting notes. It reads them locally on this Mac.
     NSAppleEventsUsageDescription: Yogurt checks the browser tab's name to tell when you're in a call, and pauses your music while it records.
     # macOS 15 and later ask before an app can be found on the local network (Bonjour), which the iPhone app needs
     NSLocalNetworkUsageDescription: Yogurt lets your iPhone find this computer on your Wi-Fi so your notes can sync. Nothing goes through the internet.
@@ -106,6 +106,7 @@ win:
     - { from: resources/speed, to: speed }
     # the tray's colour icons (tray.ts; @2x next to them), a Mac uses its template tray.png
     - { from: resources, to: ., filter: ["tray-color*.png", "tray-recording*.png"] }
+    - { from: resources, to: ., filter: ["google-calendar-client.json"] }
   artifactName: Yogurt-windows-${arch}.${ext}
   # a release signs the DLLs and native modules too, not just the programs: with Windows Code Integrity on, an unsigned
   # whisper.dll or ggml.dll is blocked from loading and speech setup fails (#99)
@@ -141,6 +142,7 @@ linux:
     - { from: resources/speed, to: speed }
     # the tray's colour icons (tray.ts; @2x next to them), a Mac uses its template tray.png
     - { from: resources, to: ., filter: ["tray-color*.png", "tray-recording*.png"] }
+    - { from: resources, to: ., filter: ["google-calendar-client.json"] }
   artifactName: Yogurt-linux-${arch}.${ext}
   target:
     - target: AppImage

@@ -759,7 +759,7 @@
   "Stop transcription": "Transcriptie stoppen",
   "Audio is unavailable.": "Audio is niet beschikbaar.",
   "Add a calendar by link": "Agenda toevoegen via een link",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Agenda’s uit de Agenda-app op je Mac verschijnen automatisch hierboven.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt leest de geselecteerde agenda’s op dit apparaat via Apple Agenda.",
   "What's new": "Wat is er nieuw",
   "New": "Nieuw",
   "Star us on GitHub": "Geef ons een ster op GitHub",
@@ -815,7 +815,7 @@
   "Import a Google Desktop OAuth client file.": "Importeer een Google OAuth-clientbestand voor desktopapps.",
   "Refresh calendars": "Agenda’s vernieuwen",
   "Disconnect": "Verbinding verbreken",
-  "Use Mac calendars": "Mac-agenda’s gebruiken",
+  "Choose calendars": "Agenda’s kiezen",
   "Waiting for Google…": "Wachten op Google…",
   "Secure storage is unavailable.": "Beveiligde opslag is niet beschikbaar.",
   "Allow calendar access in Google and try again.": "Sta agendatoegang bij Google toe en probeer het opnieuw."

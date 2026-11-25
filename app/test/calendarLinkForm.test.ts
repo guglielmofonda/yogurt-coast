@@ -85,7 +85,8 @@ it('uses the same keyboard dismissal in setup while keeping its existing extra a
  expect(h.all().some(e=>e.props.className==='calendar-link-actions')).toBe(true)
  h.get('calendar-link-form').props.onKeyDown({key:'Escape',preventDefault(){},stopPropagation(){}});expect(cancel).toHaveBeenCalledOnce()
 })
-it.each([false,true])('restores Add focus after collapse and retains the mounted form (link platform %s)',async link=>{
+it('restores Add focus after collapse and retains the mounted form on a link platform',async()=>{
+ const link=true
  const view={status:'granted',calendars:[{id:'work',name:'Work',source:'Calendar',enabled:true}],hideEventsWithoutCallLink:false}
  vi.stubGlobal('window',{yogurt:{capabilities:{calendarLink:link},calendar:{list:async()=>view}},addEventListener:vi.fn(),removeEventListener:vi.fn()})
  const h=harness(CalendarSettings);await Promise.resolve();h.run()
@@ -124,7 +125,7 @@ it.each(['win32', 'linux'])('keeps focus on Meetings when an empty calendar form
  expect(settings.focus).toHaveBeenCalledWith({ preventScroll: true })
 })
 it('translates the shorter instruction, validation and privacy line in all locales',()=>{
- for(const {id} of LOCALES){setLanguage(id);for(const key of ['Copy the private iCal address from your calendar settings.','Enter an https:// or webcal:// calendar address.', 'The address stays on this computer.','Add a calendar by link',"Calendars from the Mac's Calendar app appear above automatically."]){expect(t(key).trim()).not.toBe('');if(id!=='en')expect(t(key)).not.toBe(key)}}
+ for(const {id} of LOCALES){setLanguage(id);for(const key of ['Copy the private iCal address from your calendar settings.','Enter an https:// or webcal:// calendar address.', 'The address stays on this computer.','Add a calendar by link','Yogurt reads your selected calendars on this device using Apple Calendar.','Choose calendars']){expect(t(key).trim()).not.toBe('');if(id!=='en')expect(t(key)).not.toBe(key)}}
 })
 
 it.each([false,true])('keeps per-calendar controls without a bulk disconnect (link-only %s)',async link=>{
@@ -133,10 +134,11 @@ it.each([false,true])('keeps per-calendar controls without a bulk disconnect (li
  vi.stubGlobal('window',{yogurt:{capabilities:{calendarLink:link},calendar:{list:async()=>view,setEnabled,removeLink}},addEventListener:vi.fn(),removeEventListener:vi.fn()})
  const h=harness(CalendarSettings);await Promise.resolve();h.run()
  expect(h.get('calendar-disconnect')).toBeUndefined();expect(h.get('calendar-disconnect-all')).toBeUndefined()
- expect(h.all().some(e=>e.props.children==='Add a calendar by link')).toBe(true)
- expect(h.all().some(e=>e.props.children==="Calendars from the Mac's Calendar app appear above automatically.")).toBe(!link)
+ expect(h.all().some(e=>e.props.children==='Add a calendar by link')).toBe(link)
+ expect(h.all().some(e=>e.props.children==='Yogurt reads your selected calendars on this device using Apple Calendar.')).toBe(!link)
  h.type(Checkbox).props.onChange({target:{checked:false}});await Promise.resolve();h.run()
  expect(setEnabled).toHaveBeenCalledWith('link:sample',false);expect(removeLink).not.toHaveBeenCalled()
+ if(!link){expect(h.get('calendar-link-remove')).toBeUndefined();return}
  h.get('calendar-link-remove').props.onClick({preventDefault(){}});await Promise.resolve();h.run()
  expect(removeLink).toHaveBeenCalledWith('link:sample');expect(setEnabled).toHaveBeenCalledTimes(1)
 })

@@ -5,7 +5,7 @@ import { join } from 'node:path'
 
 for (const theme of ['light', 'dark'] as const) test(`split metadata popovers stay separate in a short note (${theme})`, async () => {
   const app = await electron.launch({ args: [join(import.meta.dirname, '../out/main/index.js')], env: {
-    ...process.env, YOGURT_FAKE: '1', YOGURT_USER_DATA: mkdtempSync(join(tmpdir(), 'yogurt-e2e-')),
+    ...process.env, YOGURT_FAKE: '1', YOGURT_FAKE_SELECTED_CALENDARS: 'work,personal', YOGURT_USER_DATA: mkdtempSync(join(tmpdir(), 'yogurt-e2e-')),
   } })
   try {
     const page = await app.firstWindow()

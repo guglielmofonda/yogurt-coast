@@ -717,7 +717,7 @@
   "Stop transcription": "文字起こしを停止",
   "Audio is unavailable.": "音声を利用できません。",
   "Add a calendar by link": "リンクでカレンダーを追加",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Macのカレンダーアプリのカレンダーは上に自動で表示されます。",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt はこのデバイス上で Apple の「カレンダー」を使って、選択したカレンダーを読み取ります。",
   "What's new": "新着情報",
   "New": "新着",
   "Star us on GitHub": "GitHubでスターを付ける",
@@ -773,7 +773,7 @@
   "Import a Google Desktop OAuth client file.": "Google のデスクトップ用 OAuth クライアントファイルを読み込んでください。",
   "Refresh calendars": "カレンダーを更新",
   "Disconnect": "接続を解除",
-  "Use Mac calendars": "Mac のカレンダーを使用",
+  "Choose calendars": "カレンダーを選択",
   "Waiting for Google…": "Google の応答を待っています…",
   "Secure storage is unavailable.": "安全なストレージを利用できません。",
   "Allow calendar access in Google and try again.": "Google でカレンダーへのアクセスを許可してから、もう一度お試しください。"

@@ -717,7 +717,7 @@
   "Stop transcription": "Hentikan transkripsi",
   "Audio is unavailable.": "Audio tidak tersedia.",
   "Add a calendar by link": "Tambah kalendar melalui pautan",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Kalendar daripada app Kalendar pada Mac muncul di atas secara automatik.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt membaca kalendar yang anda pilih pada peranti ini melalui Kalendar Apple.",
   "What's new": "Perkara baharu",
   "New": "Baharu",
   "Star us on GitHub": "Beri kami bintang di GitHub",
@@ -773,7 +773,7 @@
   "Import a Google Desktop OAuth client file.": "Import fail klien OAuth desktop Google.",
   "Refresh calendars": "Muat semula kalendar",
   "Disconnect": "Putuskan sambungan",
-  "Use Mac calendars": "Gunakan kalendar Mac",
+  "Choose calendars": "Pilih kalendar",
   "Waiting for Google…": "Menunggu Google…",
   "Secure storage is unavailable.": "Storan selamat tidak tersedia.",
   "Allow calendar access in Google and try again.": "Benarkan akses kalendar dalam Google dan cuba lagi."

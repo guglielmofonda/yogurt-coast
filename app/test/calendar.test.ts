@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { loadSettings, updateSettings } from '../src/main/settings'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { calendars, calendarStatus, meetingLink, parseEvents, refreshCalendarStatus, requestCalendarAccess, setCalendarLinkSource, setCalendarSelection, setCalendarSupported, setHelper, upcoming } from '../src/main/calendar'
+import { calendars, calendarStatus, meetingLink, parseEvents, refreshCalendarStatus, requestCalendarAccess, setCalendarLinkSource, setCalendarOwnEmail, setCalendarSelection, setCalendarSupported, setHelper, upcoming } from '../src/main/calendar'
 
 const fixture = JSON.parse(readFileSync(join(__dirname, 'fixtures/helper-events.json'), 'utf8'))
 
@@ -68,8 +68,14 @@ describe('meetingLink', () => {
   })
 })
 
+const selected = { selectedCalendarIds: ['work', 'home'] }
+const nativeFixture = fixture.map((r: { calendar: string }) => ({ ...r, calendarId: r.calendar.toLowerCase() }))
+
 describe('upcoming', () => {
-  beforeEach(() => setHelper(async () => { throw new Error('no helper') }))
+  beforeEach(() => {
+    setHelper(async () => { throw new Error('no helper') })
+    setCalendarSelection(() => selected)
+  })
   afterEach(() => setCalendarSelection(() => ({})))
 
   it('reads source calendars only with permission and applies the saved selection on each read', async () => {
@@ -77,9 +83,10 @@ describe('upcoming', () => {
     const calls: string[] = []
     setHelper(async (args) => { calls.push(args[0]); return args[0] === 'calendar-status' ? { status: 'granted' } : args[0] === 'calendars' ? [{ id: 'work', name: 'Work', source: 'Example' }, null] : [row] })
     expect(await calendars()).toEqual([{ id: 'work', name: 'Work', source: 'Example' }])
-    setCalendarSelection(() => ({ hiddenCalendarIds: ['work'] }))
-    expect(await upcoming(0, 1e12)).toEqual([])
     setCalendarSelection(() => ({}))
+    expect(await upcoming(0, 1e12)).toEqual([])
+    expect(calls).not.toContain('events')
+    setCalendarSelection(() => selected)
     expect(await upcoming(0, 1e12)).toHaveLength(1)
     setHelper(async (args) => { calls.push(args[0]); return { status: 'denied' } })
     calls.length = 0
@@ -90,13 +97,13 @@ describe('upcoming', () => {
   it('defaults off, persists the filter across reads, and preserves other settings', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'calendar-filter-'))
     const file = join(dir, 'settings.json')
-    setHelper(async args => args[0] === 'calendar-status' ? { status: 'granted' } : fixture)
+    setHelper(async args => args[0] === 'calendar-status' ? { status: 'granted' } : nativeFixture)
     setCalendarSelection(() => loadSettings(file))
     try {
-      expect(await upcoming(0, 1e12)).toHaveLength(3)
-      updateSettings(file, { hiddenCalendarIds: ['excluded'], theme: 'dark' })
+      expect(await upcoming(0, 1e12)).toEqual([])
+      updateSettings(file, { ...selected, theme: 'dark' })
       updateSettings(file, { hideEventsWithoutCallLink: true })
-      expect(loadSettings(file)).toEqual({ hiddenCalendarIds: ['excluded'], theme: 'dark', hideEventsWithoutCallLink: true })
+      expect(loadSettings(file)).toEqual({ ...selected, theme: 'dark', hideEventsWithoutCallLink: true })
       expect((await upcoming(0, 1e12)).map(e => e.title)).toEqual(['Design review', 'Sync'])
       setCalendarSelection(() => loadSettings(file))
       expect(await upcoming(0, 1e12)).toHaveLength(2)
@@ -113,7 +120,7 @@ describe('upcoming', () => {
       { ...base, id: 'hidden-linked', calendarId: 'hidden' }, { ...base, id: 'hidden-call', calendarId: 'hidden', url: 'https://zoom.us/j/123456789' },
     ]
     setHelper(async args => args[0] === 'calendar-status' ? { status: 'granted' } : rows)
-    setCalendarSelection(() => ({ hideEventsWithoutCallLink, hiddenCalendarIds: ['hidden'] }))
+    setCalendarSelection(() => ({ hideEventsWithoutCallLink, ...selected }))
     const ids = (events: { id: string }[]) => events.map(e => e.id)
     expect(ids(await upcoming(0, 1e12, 'link-event'))).toEqual(['call', 'linked', 'busy'])
     expect(ids(await upcoming(0, 1e12, e => e.id.endsWith('linked')))).toEqual(hideEventsWithoutCallLink ? ['call', 'linked'] : ['call', 'linked', 'busy'])
@@ -123,12 +130,53 @@ describe('upcoming', () => {
   it('keeps noted events by alias only when requested and never restores excluded calendars', async () => {
     const row = { id: 'original', externalId: 'event', calendarId: 'work', start: '2026-11-03T18:00:00Z', end: '2026-11-03T19:00:00Z', url: 'https://example.com/document' }
     setHelper(async args => args[0] === 'calendar-status' ? { status: 'granted' } : [row, { ...row, id: 'alias' }])
-    setCalendarSelection(() => ({ hideEventsWithoutCallLink: true }))
+    setCalendarSelection(() => ({ hideEventsWithoutCallLink: true, ...selected }))
     expect(await upcoming(0, 1e12)).toEqual([])
     const keep = (event: import('../src/main/calendar').CalEvent) => event.aliases?.includes('alias') === true
     expect(await upcoming(0, 1e12, keep)).toHaveLength(1)
-    setCalendarSelection(() => ({ hideEventsWithoutCallLink: true, hiddenCalendarIds: ['work'] }))
+    setCalendarSelection(() => ({ hideEventsWithoutCallLink: true, selectedCalendarIds: [] }))
     expect(await upcoming(0, 1e12, keep)).toEqual([])
+  })
+
+  it.each([
+    [{ hiddenCalendarIds: ['home'] }, ['work']],
+    [{ hiddenCalendarIds: [] }, ['work', 'home']],
+    [{ hiddenCalendarIds: ['unknown-link'] }, []],
+    [{ hiddenCalendarIds: ['home'], useSystemCalendars: false }, []],
+  ] as const)('preserves only a previous explicit Mac choice (%j)', async (legacy, expected) => {
+    let saved: string[] | undefined
+    let sources = ['work', 'home']
+    setCalendarSelection(() => ({ ...legacy, hiddenCalendarIds: [...legacy.hiddenCalendarIds], selectedCalendarIds: saved }), ids => { saved = ids })
+    const reads: string[][] = []
+    setHelper(async args => {
+      if (args[0] === 'calendar-status') return { status: 'granted' }
+      if (args[0] === 'calendars') return sources.map(id => ({ id, name: id }))
+      reads.push(JSON.parse(args[args.indexOf('--calendars') + 1]))
+      return []
+    })
+    await upcoming(0, 1000)
+    sources = [...sources, 'new']
+    await calendars()
+    await upcoming(0, 1000)
+    expect(saved ?? []).toEqual(expected)
+    expect(reads).toEqual(expected.length ? [expected, expected] : [])
+  })
+
+  it('discards deselected and unidentified EventKit rows before remembering their addresses', async () => {
+    let ids = ['work', 'home']
+    setCalendarSelection(() => ({ selectedCalendarIds: ids }))
+    const remember = vi.fn()
+    setCalendarOwnEmail(remember)
+    setHelper(async args => {
+      if (args[0] === 'calendar-status') return { status: 'granted' }
+      ids = ['work']
+      return [{ ...nativeFixture[0], me: 'work@example.test' },
+        { ...nativeFixture[1], me: 'private@example.test' }, { ...fixture[2], me: 'unidentified@example.test' }]
+    })
+    try {
+      expect((await upcoming(0, 1e12)).map(e => e.title)).toEqual(['Design review'])
+      expect(remember.mock.calls).toEqual([['work@example.test']])
+    } finally { setCalendarOwnEmail(() => {}) }
   })
 
   it('keeps native calendar colours and ignores missing or invalid colour values', async () => {
@@ -146,17 +194,17 @@ describe('upcoming', () => {
 
   it('asks the helper for the window and returns parsed events', async () => {
     const calls: string[][] = []
-    setHelper(async (args) => { calls.push(args); return args[0] === 'calendar-status' ? { status: 'granted' } : fixture })
+    setHelper(async (args) => { calls.push(args); return args[0] === 'calendar-status' ? { status: 'granted' } : nativeFixture })
     const ev = await upcoming(Date.parse('2026-10-29T14:00:00Z'), Date.parse('2026-10-29T18:00:00Z'))
     expect(ev.map((e) => e.title)).toEqual(['Design review', 'Coffee', 'Sync'])
-    expect(calls.find((c) => c[0] === 'events')).toEqual(['events', '2026-10-29T14:00:00.000Z', '2026-10-29T18:00:00.000Z'])
+    expect(calls.find((c) => c[0] === 'events')).toEqual(['events', '2026-10-29T14:00:00.000Z', '2026-10-29T18:00:00.000Z', '--calendars', JSON.stringify(selected.selectedCalendarIds)])
   })
 
   it('reads past 200 hidden events for the tray lookahead', async () => {
     const call = { id: 'call', title: 'Weekly sync', url: 'https://meet.google.com/test', calendarId: 'work', start: '2026-11-26T17:00:00Z', end: '2026-11-26T18:00:00Z' }
     const hidden = Array.from({ length: 200 }, (_, i) => ({ ...call, id: String(i), calendarId: 'hidden', start: '2026-11-20T17:00:00Z', end: '2026-11-20T18:00:00Z' }))
     setHelper(async args => args[0] === 'calendar-status' ? { status: 'granted' } : args.includes('--full-range') ? [...hidden, call] : hidden)
-    setCalendarSelection(() => ({ hiddenCalendarIds: ['hidden'], hideEventsWithoutCallLink: true }))
+    setCalendarSelection(() => ({ ...selected, hideEventsWithoutCallLink: true }))
     const events = await upcoming(Date.parse('2026-11-19T20:00:00Z'), Date.parse('2026-11-27T08:00:00Z'), undefined, undefined, { fullRange: true })
     expect(events.map(e => e.title)).toEqual(['Weekly sync'])
   })
@@ -232,55 +280,32 @@ describe('Windows and Linux: the calendar comes from calendar links, not the sys
   })
 })
 
-describe('a Mac: calendar links sit alongside the built-in calendar (Settings → Calendars → Add a calendar link)', () => {
-  afterEach(() => { setCalendarLinkSource(null); setCalendarSupported(true); setCalendarSelection(() => ({})) })
-  it('does not ask the system calendar for events or permissions when Google replaces it', async () => {
+describe('independent calendar sources', () => {
+  afterEach(() => { setCalendarLinkSource(null); setCalendarSelection(() => ({})) })
+
+  it('keeps native queries off after upgrading from a direct connection until the person chooses an Apple calendar', async () => {
+    let chosen: string[] | undefined
+    const ask = vi.fn(async (args: string[]) => args[0] === 'calendar-status' ? { status: 'granted' }
+      : args[0] === 'calendars' ? [{ id: 'work', name: 'Work', source: 'Office' }] : nativeFixture)
+    setHelper(ask)
+    setCalendarSelection(() => ({ useSystemCalendars: false, selectedCalendarIds: chosen }))
+    expect(await upcoming(0, 1000)).toEqual([])
+    expect(ask.mock.calls.some(([args]) => args[0] === 'events')).toBe(false)
+    expect((await calendars()).map(c => c.id)).toEqual(['work'])
+    chosen = ['work']
+    expect((await upcoming(0, 1000)).map(e => e.title)).toEqual(['Design review', 'Sync'])
+  })
+
+  it.each(['calendar inventory', 'events'])('a failed %s read from a link provider never falls back to the system calendar', async failure => {
     const helper = vi.fn()
     setHelper(helper)
-    setCalendarSelection(() => ({ useSystemCalendars: false }))
-    setCalendarLinkSource({ status: () => 'granted', calendars: async () => [], events: async () => [] }, { alongside: true })
-    expect(await refreshCalendarStatus()).toBe('granted')
-    expect(await calendars()).toEqual([])
-    expect(await upcoming(1, 2)).toEqual([])
-    expect(await requestCalendarAccess()).toBe('granted')
-    expect(helper).not.toHaveBeenCalled()
-  })
-  const linkEvent = { id: 'x|1', externalId: 'x', title: 'Book club', start: '2026-11-17T20:00:00.000Z', end: '2026-11-17T21:00:00.000Z', attendees: [], url: null, location: null, notes: null, calendarId: 'l1', calendar: 'Club', calendarSource: 'Calendar link', me: null }
-  const macRow = { id: 'm1', title: 'Standup', start: '2026-11-17T17:00:00.000Z', end: '2026-11-17T17:15:00.000Z', attendees: [], calendarId: 'work', calendar: 'Work' }
-  const links = (linked: boolean) => ({ status: () => (linked ? 'granted' as const : 'notDetermined' as const), calendars: async () => (linked ? [{ id: 'l1', name: 'Club', source: 'example.com' }] : []), events: async () => (linked ? [linkEvent] : []) })
-  const day = [Date.parse('2026-11-17T00:00:00Z'), Date.parse('2026-11-18T00:00:00Z')] as const
-
-  it.each(['calendar-status', 'events'])('keeps a healthy linked calendar when the Mac %s read fails', async failure => {
-    setHelper(async args => {
-      if (args[0] === failure) throw new Error('Calendar is unavailable')
-      return args[0] === 'calendar-status' ? { status: 'granted' } : []
+    setCalendarLinkSource({ status: () => 'granted',
+      calendars: async () => { throw new Error('Link unavailable') },
+      events: async () => { throw new Error('Link unavailable') },
     })
-    setCalendarLinkSource(links(true), { alongside: true })
-    const unavailable: string[] = []
-    expect((await upcoming(...day, undefined, unavailable)).map(event => event.title)).toEqual(['Book club'])
-    expect(unavailable).toEqual(['Calendar'])
-    expect(calendarStatus()).toBe('granted')
-  })
-  it('both: the Mac calendars and the links, their events together', async () => {
-    setHelper(async (args) => args[0] === 'calendar-status' ? { status: 'granted' } : args[0] === 'calendars' ? [{ id: 'work', name: 'Work', source: 'iCloud' }] : [macRow])
-    setCalendarLinkSource(links(true), { alongside: true })
-    expect(await refreshCalendarStatus()).toBe('granted')
-    expect((await calendars()).map((c) => c.name)).toEqual(['Work', 'Club'])
-    expect((await upcoming(...day)).map((e) => e.title).sort()).toEqual(['Book club', 'Standup'])
-  })
-  it('a link alone, without the Mac calendar allowed, still fills the agenda; the Mac is still asked with its own prompt', async () => {
-    const asked: string[] = []
-    setHelper(async (args) => { asked.push(args[0]); return args[0] === 'calendar-status' || args[0] === 'calendar-auth' ? { status: 'notDetermined' } : [] })
-    setCalendarLinkSource(links(true), { alongside: true })
-    expect(await refreshCalendarStatus()).toBe('granted')
-    expect((await upcoming(...day)).map((e) => e.title)).toEqual(['Book club'])
-    await requestCalendarAccess()
-    expect(asked).toContain('calendar-auth')
-  })
-  it('no link: exactly the Mac as before', async () => {
-    setHelper(async (args) => args[0] === 'calendar-status' ? { status: 'denied' } : [])
-    setCalendarLinkSource(links(false), { alongside: true })
-    expect(await refreshCalendarStatus()).toBe('denied')
+    expect(await (failure === 'events' ? upcoming(0, 1000) : calendars())).toEqual([])
+    expect(calendarStatus()).toBe('error')
+    expect(helper).not.toHaveBeenCalled()
   })
 })
 

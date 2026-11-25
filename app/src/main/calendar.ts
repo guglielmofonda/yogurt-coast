@@ -1,7 +1,6 @@
 import { execFile, type ChildProcess } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { t } from '../shared/i18n'
 import { helperFile } from '../shared/platform'
 import type { Person } from './store'
 import type { Settings } from './settings'
@@ -74,54 +73,52 @@ export const setCalendarSupported = (on: boolean) => { supported = on; if (!on) 
  */
 export type CalendarLinkSource = { status(): 'granted' | 'notDetermined'; calendars(): Promise<CalendarSource[]>; events(fromMs: number, toMs: number, unavailable?: string[], hidden?: string[]): Promise<unknown[]> }
 let links: CalendarLinkSource | null = null
-/** a Mac: links are added next to the Mac's own calendars (Settings), never instead of them */
-let alongside = false
-/** a Mac's own calendar access, apart from the links */
-let macStatus: CalendarStatus = 'notDetermined'
-export const setCalendarLinkSource = (s: CalendarLinkSource | null, o: { alongside?: boolean } = {}) => {
-  links = s; alongside = !!s && !!o.alongside
-  if (s && !alongside) status = s.status()
+export const setCalendarLinkSource = (source: CalendarLinkSource | null) => {
+  links = source
+  if (source) status = source.status()
 }
-/** the Mac's own calendar access, apart from any links (Settings shows both) */
-export const systemCalendarStatus = (): CalendarStatus => (links && !alongside ? 'unsupported' : macStatus)
-/** with links alongside, a connected link is a calendar even while the Mac's own one isn't allowed */
-const overall = (mac: CalendarStatus): CalendarStatus => (links && mac !== 'granted' && links.status() === 'granted' ? 'granted' : mac)
 
-export async function refreshCalendarStatus(): Promise<CalendarStatus> {
-  if (links && (!alongside || calendarSelection().useSystemCalendars === false)) return status = links.status()
-  if (!supported) macStatus = 'unsupported'
-  else try { macStatus = asStatus(await helper(['calendar-status'])) } catch { macStatus = 'error' }
-  return status = overall(macStatus)
+async function readStatus(command: 'calendar-status' | 'calendar-auth'): Promise<CalendarStatus> {
+  if (links) return status = links.status()
+  if (!supported) return status = 'unsupported'
+  try { return status = asStatus(await helper([command])) } catch { return status = 'error' }
 }
-/** Asks once with the system's own prompt */
-export async function requestCalendarAccess(): Promise<CalendarStatus> {
-  // Only the system calendar uses a native permission prompt.
-  if (links && (!alongside || calendarSelection().useSystemCalendars === false)) return status = links.status()
-  if (!supported) macStatus = 'unsupported'
-  else try { macStatus = asStatus(await helper(['calendar-auth'])) } catch { macStatus = 'error' }
-  return status = overall(macStatus)
-}
+export const refreshCalendarStatus = () => readStatus('calendar-status')
+export const requestCalendarAccess = () => readStatus('calendar-auth')
 
 // Links that start a call; anything else in an invite (docs, agendas) is not one
 const LINK = /https?:\/\/(?:[\w-]+\.)?(?:zoom\.us|zoomgov\.com|meet\.google\.com|teams\.microsoft\.com|teams\.live\.com|webex\.com|whereby\.com|facetime\.apple\.com|discord\.gg|around\.co|gotomeeting\.com)\/[^\s<>"')]*/i
 export const meetingLink = (text: string | undefined | null): string | null => text?.match(LINK)?.[0] ?? null
 
 const str = (v: unknown) => (typeof v === 'string' && v ? v : null)
-let calendarSelection = (): Pick<Settings, 'hiddenCalendarIds' | 'hideEventsWithoutCallLink' | 'useSystemCalendars'> => ({})
+type Selection = Pick<Settings, 'hiddenCalendarIds' | 'selectedCalendarIds' | 'hideEventsWithoutCallLink' | 'useSystemCalendars'>
+let calendarSelection = (): Selection => ({})
+let saveSelection: ((ids: string[]) => void) | undefined
+const needsMigration = (s: Selection) => s.selectedCalendarIds === undefined && s.useSystemCalendars !== false && Array.isArray(s.hiddenCalendarIds)
 let rememberOwnEmail = (_email: string) => {}
 export const setCalendarOwnEmail = (remember: typeof rememberOwnEmail) => { rememberOwnEmail = remember }
-export const setCalendarSelection = (read: typeof calendarSelection) => { calendarSelection = read }
+export function setCalendarSelection(read: () => Selection, save?: (ids: string[]) => void) {
+  calendarSelection = read
+  saveSelection = save
+}
 
 export async function calendars(): Promise<CalendarSource[]> {
   if (await refreshCalendarStatus() !== 'granted') return []
-  const linked = links ? await links.calendars() : []
-  if ((links && !alongside) || calendarSelection().useSystemCalendars === false || macStatus !== 'granted') return linked
   try {
+    if (links) return await links.calendars()
     const raw = await helper(['calendars'])
     if (!Array.isArray(raw)) throw new Error('Invalid calendars')
-    return [...raw.flatMap((r) => r && typeof r === 'object' && str(r.id) && str(r.name)
-      ? [{ id: r.id as string, name: r.name as string, source: str(r.source) ?? '', ...(typeof r.color === 'string' && /^#[0-9a-f]{6}$/i.test(r.color) ? { color: r.color } : {}) }] : []), ...linked]
-  } catch { status = 'error'; return linked }
+    const list = raw.flatMap((r) => r && typeof r === 'object' && str(r.id) && str(r.name)
+      ? [{ id: r.id as string, name: r.name as string, source: str(r.source) ?? '', ...(typeof r.color === 'string' && /^#[0-9a-f]{6}$/i.test(r.color) ? { color: r.color } : {}) }] : [])
+    const settings = calendarSelection()
+    if (list.length && needsMigration(settings)) {
+      // Preserve an explicit older Mac filter once. Unknown or removed sources grant no new access.
+      const hidden = new Set(settings.hiddenCalendarIds)
+      const hadMacFilter = !hidden.size || list.some(c => hidden.has(c.id))
+      saveSelection?.(hadMacFilter ? list.filter(c => !hidden.has(c.id)).map(c => c.id) : [])
+    }
+    return list
+  } catch { status = 'error'; return [] }
 }
 
 export function parseEvents(raw: unknown, hidden: string[] = []): CalEvent[] {
@@ -164,18 +161,21 @@ export async function upcoming(fromMs: number, toMs: number, keep?: 'link-event'
   if (await refreshCalendarStatus() !== 'granted') return []
   try {
     const selection = calendarSelection()
-    const fromMac = selection.useSystemCalendars !== false && (!links || (alongside && macStatus === 'granted'))
-    const mac = fromMac ? await helper(['events', new Date(fromMs).toISOString(), new Date(toMs).toISOString(), ...(fullRange ? ['--full-range'] : []),
-      ...(selection.hiddenCalendarIds?.length ? ['--excluding', JSON.stringify(selection.hiddenCalendarIds)] : [])]).catch(() => {
-      macStatus = 'error'
-      status = overall(macStatus)
-      return []
-    }) : []
-    if (selection.useSystemCalendars !== false && alongside && macStatus === 'error' && links?.status() === 'granted') unavailable?.push(t('Calendar'))
-    const linked = links ? await links.events(fromMs, toMs, unavailable, selection.hiddenCalendarIds) : []
-    const latest = calendarSelection()
-    const events = parseEvents([...linked, ...(latest.useSystemCalendars !== false && Array.isArray(mac) ? mac : [])], latest.hiddenCalendarIds)
-    if (keep === 'link-event' || selection.hideEventsWithoutCallLink !== true) return events
+    let events: CalEvent[]
+    if (links) {
+      const raw = await links.events(fromMs, toMs, unavailable, selection.hiddenCalendarIds)
+      events = parseEvents(raw, calendarSelection().hiddenCalendarIds)
+    } else {
+      if (needsMigration(selection)) await calendars()
+      const ids = calendarSelection().selectedCalendarIds
+      if (!Array.isArray(ids) || !ids.length) return []
+      const raw = await helper(['events', new Date(fromMs).toISOString(), new Date(toMs).toISOString(),
+        '--calendars', JSON.stringify(ids), ...(fullRange ? ['--full-range'] : [])])
+      // Selection can change while EventKit is answering. Filter before saving attendees or refreshing notes.
+      const current = new Set(calendarSelection().selectedCalendarIds)
+      events = parseEvents(Array.isArray(raw) ? raw.filter(row => row && current.has(row.calendarId)) : [])
+    }
+    if (keep === 'link-event' || calendarSelection().hideEventsWithoutCallLink !== true) return events
     return events.filter(event => event.url !== null || keep?.(event))
   } catch { status = 'error'; return [] }
 }

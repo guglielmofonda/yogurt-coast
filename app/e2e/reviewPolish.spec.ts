@@ -20,7 +20,7 @@ const fake = (app: ElectronApplication, fn: string, arg?: unknown) => app.evalua
   (globalThis as unknown as { __fake__: Record<string, (arg: unknown) => unknown> }).__fake__[fn as string](arg), [fn, arg])
 
 test('calendar selection persists, filters matching copies, and keeps separate time slots', async () => {
-  const { app, page, dir } = await launch()
+  const { app, page, dir } = await launch(false, { YOGURT_FAKE_SELECTED_CALENDARS: 'work,personal' })
   try {
     const at = new Date(); at.setHours(10, 0, 0, 0)
     const row = { id: 'work-copy', externalId: 'one-event', title: 'Lap Swim', calendarId: 'work', calendar: 'Work', calendarSource: 'Example account', start: at.toISOString(), end: new Date(+at + 3600000).toISOString() }
@@ -34,7 +34,7 @@ test('calendar selection persists, filters matching copies, and keeps separate t
     await calendars.click()
     await expect(page.getByTestId('calendar-choice')).toHaveCount(2)
     await page.getByTestId('calendar-choice').filter({ hasText: 'Work' }).getByRole('checkbox').uncheck()
-    await expect.poll(() => JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8')).hiddenCalendarIds).toEqual(['work'])
+    await expect.poll(() => JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8')).selectedCalendarIds).toEqual(['personal'])
     await calendars.click()
     await calendars.press('Enter')
     await expect(page.getByTestId('calendar-choice').filter({ hasText: 'Work' }).getByRole('checkbox')).not.toBeChecked()

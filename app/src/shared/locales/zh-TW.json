@@ -717,7 +717,7 @@
   "Stop transcription": "停止轉錄",
   "Audio is unavailable.": "音訊無法使用。",
   "Add a calendar by link": "透過連結加入行事曆",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Mac 行事曆 App 中的行事曆會自動顯示在上方。",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt 透過 Apple「行事曆」在此裝置上讀取你選取的行事曆。",
   "What's new": "最新消息",
   "New": "新",
   "Star us on GitHub": "在 GitHub 上給我們一顆星",
@@ -773,7 +773,7 @@
   "Import a Google Desktop OAuth client file.": "匯入 Google 桌面版 OAuth 用戶端檔案。",
   "Refresh calendars": "重新整理日曆",
   "Disconnect": "中斷連線",
-  "Use Mac calendars": "使用 Mac 行事曆",
+  "Choose calendars": "選擇行事曆",
   "Waiting for Google…": "正在等候 Google…",
   "Secure storage is unavailable.": "無法使用安全儲存空間。",
   "Allow calendar access in Google and try again.": "請在 Google 中允許存取日曆，然後再試一次。"

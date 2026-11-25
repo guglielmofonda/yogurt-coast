@@ -765,7 +765,7 @@
   "Stop transcription": "Pysäytä litterointi",
   "Audio is unavailable.": "Ääni ei ole saatavilla.",
   "Add a calendar by link": "Lisää kalenteri linkillä",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Macin Kalenteri-apin kalenterit näkyvät automaattisesti yllä.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt lukee valitsemasi kalenterit tällä laitteella Applen Kalenterin kautta.",
   "What's new": "Uutta",
   "New": "Uusi",
   "Star us on GitHub": "Anna meille tähti GitHubissa",
@@ -821,7 +821,7 @@
   "Import a Google Desktop OAuth client file.": "Tuo Googlen työpöytäsovelluksen OAuth-asiakastiedosto.",
   "Refresh calendars": "Päivitä kalenterit",
   "Disconnect": "Katkaise yhteys",
-  "Use Mac calendars": "Käytä Macin kalentereita",
+  "Choose calendars": "Valitse kalenterit",
   "Waiting for Google…": "Odotetaan Googlea…",
   "Secure storage is unavailable.": "Suojattu tallennustila ei ole käytettävissä.",
   "Allow calendar access in Google and try again.": "Salli kalenterin käyttö Googlessa ja yritä uudelleen."

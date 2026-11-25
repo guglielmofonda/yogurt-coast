@@ -772,7 +772,7 @@
   "Stop transcription": "Detener transcripción",
   "Audio is unavailable.": "El audio no está disponible.",
   "Add a calendar by link": "Añadir un calendario mediante un enlace",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Los calendarios de la app Calendario del Mac aparecen arriba automáticamente.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt lee los calendarios que eliges en este dispositivo mediante Calendario de Apple.",
   "What's new": "Novedades",
   "New": "Nuevo",
   "Star us on GitHub": "Danos una estrella en GitHub",
@@ -828,7 +828,7 @@
   "Import a Google Desktop OAuth client file.": "Importa un archivo de cliente OAuth de Google para escritorio.",
   "Refresh calendars": "Actualizar calendarios",
   "Disconnect": "Desconectar",
-  "Use Mac calendars": "Usar los calendarios del Mac",
+  "Choose calendars": "Elegir calendarios",
   "Waiting for Google…": "Esperando a Google…",
   "Secure storage is unavailable.": "El almacenamiento seguro no está disponible.",
   "Allow calendar access in Google and try again.": "Permite el acceso al calendario en Google y vuelve a intentarlo."

@@ -717,7 +717,7 @@
   "Stop transcription": "Dừng chép lời",
   "Audio is unavailable.": "Âm thanh không khả dụng.",
   "Add a calendar by link": "Thêm lịch bằng liên kết",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Lịch từ ứng dụng Lịch trên Mac tự động xuất hiện ở trên.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt đọc các lịch bạn chọn ngay trên thiết bị này qua ứng dụng Lịch của Apple.",
   "What's new": "Có gì mới",
   "New": "Mới",
   "Star us on GitHub": "Tặng sao trên GitHub",
@@ -773,7 +773,7 @@
   "Import a Google Desktop OAuth client file.": "Nhập tệp ứng dụng OAuth Google dành cho máy tính.",
   "Refresh calendars": "Làm mới lịch",
   "Disconnect": "Ngắt kết nối",
-  "Use Mac calendars": "Dùng lịch trên máy Mac",
+  "Choose calendars": "Chọn lịch",
   "Waiting for Google…": "Đang chờ Google…",
   "Secure storage is unavailable.": "Bộ nhớ an toàn không khả dụng.",
   "Allow calendar access in Google and try again.": "Cho phép truy cập lịch trong Google rồi thử lại."

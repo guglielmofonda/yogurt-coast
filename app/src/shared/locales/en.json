@@ -286,7 +286,7 @@
   "Enter an https:// or webcal:// calendar address.": "Enter an https:// or webcal:// calendar address.",
   "The address stays on this computer.": "The address stays on this computer.",
   "Add a calendar by link": "Add a calendar by link",
-  "Calendars from the Mac's Calendar app appear above automatically.": "Calendars from the Mac's Calendar app appear above automatically.",
+  "Yogurt reads your selected calendars on this device using Apple Calendar.": "Yogurt reads your selected calendars on this device using Apple Calendar.",
   "What's new": "What's new",
   "New": "New",
   "Star us on GitHub": "Star us on GitHub",
@@ -306,5 +306,6 @@
   "Mute my mic": "Mute my mic",
   "Mic on in Yogurt": "Mic on in Yogurt",
   "Mic mute couldn’t be confirmed.": "Mic mute couldn’t be confirmed.",
-  "Mic off. Yogurt can’t hear call audio.": "Mic off. Yogurt can’t hear call audio."
+  "Mic off. Yogurt can’t hear call audio.": "Mic off. Yogurt can’t hear call audio.",
+  "Choose calendars": "Choose calendars"
 }

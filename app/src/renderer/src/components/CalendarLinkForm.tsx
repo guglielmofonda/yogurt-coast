@@ -38,7 +38,6 @@ const ERRORS = {
 export function CalendarLinkForm({ onConnected, onCancel, onBusyChange, autoFocus, variant = 'settings', extra, only }: {
   onConnected(name: string): void; onCancel?(): void; onBusyChange?(busy: boolean): void
   autoFocus?: boolean; variant?: 'settings' | 'onboarding'; extra?: ReactNode
-  /** A Mac adds its accounts in Calendar; only other links are pasted here. */
   only?: Provider
 }) {
   const [provider, setProvider] = useState<Provider>(only ?? 'google')
