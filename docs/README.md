@@ -1,79 +1,61 @@
-# Yogurt help
+# Using Yogurt + Coast
 
-Yogurt records your microphone and call audio, transcribes the meeting, and writes a Summary alongside your own notes. Processing stays on your computer. No bot joins the call.
+Start with the [Mac build instructions](building.md#run-on-your-mac). Yogurt + Coast runs without a publisher account or a meeting bot.
 
-## Install
+## Attach screenshots after a call
 
-Download Yogurt from [GitHub Releases](https://github.com/FrigadeHQ/yogurt/releases/latest). Every computer needs at least 8 GB of memory.
+1. Install **Coast Local** in **Applications**, open it, allow screen recording, and enable its local CLI bridge. Keep Coast running while you use the screenshot feature. [Get Coast Local](https://coast.app/)
+2. Open Yogurt + Coast and finish the local model setup. If you installed Coast after opening Yogurt, quit and reopen Yogurt so it detects the bridge.
+3. Choose **Start recording**. Take notes as usual. When recording stops, Yogurt asks Coast for frames from the recorded intervals and skips pauses. A local model uses screen changes, window titles, available text, and meeting context to select useful frames.
+4. Open the finished meeting’s **My notes** tab and scroll to **Coast screenshots**. Click an image to enlarge it. Use **Previous** and **Next** when several images were selected.
 
-- **Mac:** Apple Silicon, macOS 14.4 or later. Open the DMG, drag Yogurt into Applications, then open it from Applications.
-- **Windows:** Windows 10 version 2004 or later, x64. Run the `.exe` installer. It's signed by Frigade Inc.
-- **Linux:** x64, Ubuntu 22.04 or a compatible newer system, with PulseAudio or PipeWire. Make the `.AppImage` executable in its file properties, then open it. If it doesn't open, install FUSE 2 first: `sudo apt install libfuse2` on Ubuntu 22.04, `sudo apt install libfuse2t64` on 24.04 and newer. GNOME needs the AppIndicator extension to show the tray icon.
+Coast controls when it captures your screen. The recording window controls which frames Yogurt imports. If the gallery says **Screenshot selection is incomplete**, check that Coast is running and its local bridge is available, then click **Try again**. **No screenshots selected for this call** means processing finished with an empty selection.
 
-On first run, Yogurt downloads the models it needs. Windows and Linux also check transcription speed and stop setup if the computer cannot keep up. Recording works as soon as setup finishes. The notes model keeps downloading in the background, and notes and questions work offline once it's in. Calendar access and speaker names from calls are available on Mac only.
+## Find what was on screen
 
-## Mac permissions
+Apple Vision extracts text from each attached image. Press **⌘K** and enter a phrase from a slide or demo. A result labeled **Screenshot** shows the matching text and opens the meeting. In **Ask**, try a question about the same detail and follow its source back to the meeting.
 
-Microphone and call audio access let Yogurt hear both sides of a meeting. Allow them during setup, or open Settings in Yogurt to change them later. macOS lists call audio under Screen & System Audio Recording.
+![Searching for 37 credits finds the Pilot planning meeting. Its Screenshot result quotes the budget from the slide.](assets/coast-search.webp)
 
-The other permissions are optional:
+In this fictional example, the slide is the only place the budget appears. Saved images and their text live in Yogurt’s profile on your Mac, by default `~/Library/Application Support/Yogurt`.
 
-- **Calendar:** show upcoming meetings and use their titles and attendees.
-- **Notifications:** offer to take notes when a call starts.
-- **Accessibility:** read speaker names from supported call apps.
+## Choose calendars
 
-If a permission is off, use its button in Yogurt's Settings to open the right system pane. After changing it, return to Yogurt. Recording always waits for your click.
+Open **Agenda → Calendars**, grant macOS calendar access, and check the calendars you want Yogurt to use. New installations start with an empty selection. Newly discovered calendars also start unchecked. Checked calendars appear first. Your selection applies to the agenda, reminders, meeting matching, and calendar queries from agents.
 
-## Linux: Bluetooth headsets
+For Google, iCloud, or another account, add the account in Apple’s **Calendar → Add Account**, then return to the picker. macOS handles sign-in and provider sync. To narrow your agenda further, turn on **Hide events without a call link**. [Apple’s calendar account guide](https://support.apple.com/guide/calendar/add-calendars-and-calendar-accounts-icl4308d6701/mac)
 
-With PipeWire, a Bluetooth headset switches from music mode to hands-free mode when an app records from its microphone. The headset's sound output is rebuilt during the switch, so the call app can lose its devices for a moment, and both sides sound lower quality while hands-free is on. Yogurt keeps recording through the switch.
+## Connect an agent
 
-If your call keeps dropping its devices, turn the automatic switch off and use your computer's built-in microphone. Create `~/.config/wireplumber/wireplumber.conf.d/51-no-bt-autoswitch.conf` with:
+Keep Yogurt + Coast open. In **Settings → AI apps**, turn on **Let AI apps read your meetings**. Leave **Let AI apps make changes** off for a query-only setup. Read access covers notes, transcripts, saved recordings, and screenshot text. The commands below also start the MCP helper with `--read-only`.
 
+### Codex on the same Mac
+
+For a packaged build in Applications, run:
+
+```sh
+codex mcp add yogurt-coast -- "/Applications/Yogurt + Coast.app/Contents/Resources/bin/yogurt-mcp" --read-only
 ```
-wireplumber.settings = {
-  bluetooth.autoswitch-to-headset-profile = false
-}
+
+If you use `pnpm dev`, run this instead from the root of the checkout:
+
+```sh
+codex mcp add yogurt-coast -- "$PWD/app/resources/bin/yogurt-mcp" --read-only
 ```
 
-Then run `systemctl --user restart wireplumber` and reconnect the headset. This is for WirePlumber 0.5 and newer (`wireplumber --version`). On 0.4, set `["media-role.use-headset-profile"] = false` in `bluetooth_policy.policy` in a copy of `policy.lua.d/10-default-policy.lua` under `~/.config/wireplumber/`.
+Open a new Codex chat. Ask it to search Yogurt for a term on a slide and quote the matching screen text with its capture time. The server provides `search`, `get_screenshot_text`, and `ask`, alongside meeting and calendar tools.
 
-## Privacy
+### Hermes on another computer
 
-Audio, transcripts, notes, and questions are processed locally. Yogurt does not upload your meetings, and there is no telemetry.
+Use an existing SSH connection to the Mac holding your meetings. In this example its SSH alias is `meeting-mac`. With the packaged app open there, run the following on the Hermes computer:
 
-Yogurt connects to the internet to download models from Hugging Face, to get Apple's optional on-device speech assets (on a Mac), and to check GitHub for updates. After setup it keeps downloading in the background: first a smaller notes model, then the best one your computer can run, which can be large (about 14 GB on a Mac with 64 GB of memory, about 63 GB with 96 GB or more). Updates download in the background and install when you quit. Links open in your browser. Copying and exporting does not upload your content.
+```sh
+hermes mcp add yogurt-coast --command /usr/bin/ssh --args -T meeting-mac '"/Applications/Yogurt + Coast.app/Contents/Resources/bin/yogurt-mcp" --read-only'
+hermes mcp test yogurt-coast
+```
 
-If you [connect an AI app](#connect-an-ai-app), it may send what it reads to its own online model.
-
-## Your data
-
-Meetings, recordings, settings and downloaded models live here:
-
-| Computer | Folder |
-| --- | --- |
-| Mac | `~/Library/Application Support/Yogurt` |
-| Windows | `%APPDATA%\Yogurt` |
-| Linux | `~/.config/Yogurt` (or `$XDG_CONFIG_HOME/Yogurt` if set) |
-
-## Backup and restore
-
-Finish any recording, then open **Settings → Backup** to export your meetings and audio to one ZIP file. Meetings in the Trash are not included.
-
-Import a backup from the same section. It adds meetings that are missing and leaves existing meetings unchanged. Backups work across Mac, Windows and Linux.
-
-## Connect an AI app
-
-In **Settings → AI apps**, turn on access, copy the helper command, and add it as a local MCP server in your AI app. MCP lets that app read your meetings, notes and transcripts; it cannot change them. Yogurt does not edit the other app's configuration.
-
-Access is off by default. A connected AI app may send what it reads to its own online model. Turn access off in Yogurt to stop further reads.
-
-## Uninstall
-
-Quit Yogurt first. On Mac, move Yogurt from Applications to the Trash. On Windows, uninstall it from Settings → Apps. On Linux, delete the AppImage.
-
-Removing the app keeps your data. To remove that too, export a backup if you want one, then delete the Yogurt data folder listed above. This permanently removes your local meetings, recordings, settings and models.
+For a source build, substitute the absolute helper path on the meeting Mac. Start a new Hermes session or use `/reload-mcp`. Keep the meeting Mac awake and reachable. SSH carries the query and its results between the two computers. A hosted model configured in either agent can receive the meeting content the agent retrieves.
 
 ## Report a problem
 
-[Open a GitHub issue](https://github.com/FrigadeHQ/yogurt/issues) with your operating system, Yogurt version, what you did, what you expected and what happened. Leave private meeting content out of screenshots and reports.
+Include your macOS version, the fork commit you built, and what happened. Use fictional notes or screenshots if you need to show an example. [Open an issue in Yogurt + Coast](https://github.com/guglielmofonda/yogurt-coast/issues)

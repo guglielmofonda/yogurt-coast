@@ -1,67 +1,57 @@
-# Build and run Yogurt locally
+# Build Yogurt + Coast
 
-## You need
+This fork currently ships as source. You can run it directly on a Mac, or build a local app bundle for Applications.
 
-- Node.js 24 and pnpm 10.7.0
-- CMake
-- **Mac:** Xcode Command Line Tools
-- **Windows:** Rust, the Vulkan SDK, Visual Studio C++ Build Tools
-- **Linux:** Rust, the Vulkan SDK, `libpulse-dev`, `pkg-config`. On Ubuntu 24.04 or newer, these packages can stand in for the Vulkan SDK:
+## Run on your Mac
 
-  ```sh
-  sudo apt install libpulse-dev pkg-config libvulkan-dev glslc spirv-headers
-  ```
+Use an Apple silicon Mac with at least 8 GB of memory and macOS 14.4 or later. To add screenshots, also install a version of Coast Local compatible with your macOS version. Coast is optional for recording and transcription. [Set up Coast Local](README.md#attach-screenshots-after-a-call)
 
-On Linux, clone into a folder whose path has no spaces: Electron's sandbox can't start from one.
+1. Install Node.js 24, pnpm 10.7.0, CMake, and Apple’s Xcode Command Line Tools (`xcode-select --install`).
+2. Clone the fork and build the native audio, transcription, calendar, OCR, and MCP helpers:
 
-## Run it
+   ```sh
+   git clone https://github.com/guglielmofonda/yogurt-coast.git
+   cd yogurt-coast
+   pnpm install --frozen-lockfile
+   pnpm -C app native
+   ```
 
-```sh
-git clone https://github.com/guglielmofonda/yogurt-coast.git
-cd yogurt-coast
-pnpm install --frozen-lockfile
-pnpm -C app native   # builds the audio, system and transcription helpers (first time, and after they change)
-pnpm dev             # opens Yogurt from source
-```
+3. Quit any running copy of Yogurt, then start the fork:
 
-The first run downloads the AI models, like the installed app.
+   ```sh
+   pnpm dev
+   ```
 
-- **Separate profile:** `YOGURT_USER_DATA=/tmp/yogurt-dev pnpm dev` keeps your real meetings out of it.
-- **Without models:** `YOGURT_FAKE=1 pnpm dev` swaps in a fake transcriber, notes model and call audio, so the whole app runs in seconds.
-- **Linux sandbox:** on Ubuntu 24.04 and other systems that turn off unprivileged user namespaces, Electron's sandbox helper must be owned by root. `pnpm dev` prints the two `sudo` commands when it isn't, and they're needed again after `node_modules` is reinstalled.
-
-## Test
-
-```sh
-pnpm -C app typecheck
-pnpm -C app test   # unit tests
-pnpm -C app e2e    # builds, then drives the app with Playwright in fake mode
-```
+   Complete model downloads and allow microphone and system audio access when prompted. To use a separate meeting library, set `YOGURT_USER_DATA` to an absolute directory before starting the app. The default profile is shared with upstream Yogurt.
 
 ## Package Yogurt + Coast on macOS
 
-The Mac build uses Apple Calendar without publisher credentials. An optional Windows or Linux build with direct Google sign-in includes the publisher’s Desktop OAuth client in `app/resources/google-calendar-client.json`. [Configure Google Calendar](google-calendar.md)
-
-Use a valid Apple code-signing identity from your keychain. Set `YOGURT_COAST_CERTIFICATE` to its certificate fingerprint (listed by `security find-identity -v -p codesigning`), then run:
+After the setup above, choose a valid Apple code-signing identity from your keychain. Find its fingerprint with `security find-identity -v -p codesigning`, then build:
 
 ```sh
+export YOGURT_COAST_CERTIFICATE="YOUR_CERTIFICATE_FINGERPRINT"
 pnpm -C app build
 pnpm -C app package:coast
 ```
 
-Open `app/dist/mac-arm64/Yogurt + Coast.app` or copy it to Applications. The local package keeps upstream's Yogurt profile. Quit the other copy before opening it. This signing path produces a local build without notarization or an update feed.
+The bundle is at `app/dist/mac-arm64/Yogurt + Coast.app`. Quit the source app before opening the bundle. Copy it into Applications to use the installed paths in the [user guide](README.md#connect-an-agent). This local build is signed, unnotarized, and has automatic updates disabled.
+
+## Test a change
+
+```sh
+pnpm -C app typecheck
+pnpm -C app test
+pnpm -C app e2e
+```
+
+The end-to-end suite uses isolated profiles. The Coast screenshot test records a simulated call, skips its paused interval, imports a fixture slide, and checks that the meeting can be found by text on that slide.
 
 ## Connect Hermes on another computer
 
-If the Hermes computer already has authenticated SSH access to your Mac, configure the Mac as an SSH host named `meeting-mac` and run this on the Hermes computer:
+The [Hermes setup guide](README.md#hermes-on-another-computer) covers read-only access over SSH.
 
-```sh
-hermes mcp add yogurt-coast --command /usr/bin/ssh --args -T meeting-mac '"/Applications/Yogurt + Coast.app/Contents/Resources/bin/yogurt-mcp" --read-only'
-hermes mcp test yogurt-coast
-```
+## Other platforms
 
-Use a new Hermes session or run `/reload-mcp` in an open one. The Mac holding the meetings must be awake and reachable.
+The Coast screenshot workflow and Apple Calendar picker require macOS. The inherited Windows and Linux targets have their own calendar options. [Windows and Linux calendar setup](google-calendar.md)
 
-## Upstream release process
-
-`sh app/scripts/release.sh X.Y.Z` sets the version, tags it and pushes. GitHub Actions builds Mac (signed and notarized), Windows and Linux, and publishes one release once all three pass. Installed copies update from it.
+To work on those targets, install Node.js 24, pnpm 10.7.0, CMake, Rust, and the Vulkan SDK. Windows also needs Visual Studio C++ Build Tools. Linux needs `libpulse-dev` and `pkg-config`. On Ubuntu 24.04 or later, `libvulkan-dev`, `glslc`, and `spirv-headers` can replace the Vulkan SDK. Clone into a path without spaces on Linux. If Electron’s sandbox needs configuration, `pnpm dev` prints the commands for your installation.

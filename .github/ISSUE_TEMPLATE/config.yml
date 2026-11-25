@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Questions and help → Join Discord
-    url: https://yogurt.so/discord
-    about: Ask questions about using Yogurt.
+  - name: Yogurt + Coast user guide
+    url: https://github.com/guglielmofonda/yogurt-coast/blob/main/docs/README.md
+    about: Set up screenshots, calendars, and read-only meeting access for agents.

@@ -1,240 +1,26 @@
 # Yogurt + Coast
 
-Search what was on screen during a call alongside what people said. This macOS fork of [Yogurt](https://github.com/FrigadeHQ/yogurt) attaches selected screenshots from Coast Local to finished meeting notes.
+Find a slide you saw in a meeting, even if nobody said its contents aloud. Yogurt + Coast is a macOS fork of Yogurt that puts selected screenshots beside your notes and makes the words on screen searchable.
 
-## Run on your Mac
+**Run it on your Mac from source.** [Build instructions](docs/building.md#run-on-your-mac) · [User guide](docs/README.md) · [Connect Codex or Hermes](docs/README.md#connect-an-agent)
 
-Use an Apple silicon Mac with macOS 14.4 or newer, Xcode Command Line Tools, CMake, Node.js 24, and pnpm 10.7.0. Install Coast Local in Applications, allow screen capture, and enable its local CLI bridge. Open Yogurt + Coast and let its local notes model finish downloading.
+## From a call to a searchable note
 
-```sh
-git clone https://github.com/guglielmofonda/yogurt-coast.git
-cd yogurt-coast
-pnpm install --frozen-lockfile
-pnpm -C app native
-pnpm dev
-```
+1. Start a recording with Coast Local running. Yogurt records the conversation and lets you take notes.
+2. Stop recording. Yogurt looks for screen changes during the recorded intervals. A local language model chooses useful moments, such as a new slide, a demo step, or a link shared in chat. Open **My notes → Coast screenshots** to see them with capture times.
+3. Press **⌘K** to search for words in an image, or use **Ask** to get an answer with a screenshot reference. Apple Vision reads the selected images on your Mac.
 
-After a recording stops, Yogurt checks the recorded intervals for screen changes. A local language model selects frames using visual-change scores, app and window titles, available screen text, and meeting notes. Apple Vision reads the selected images on your Mac. The images appear in the meeting note, and the text is available in search and Ask. On startup, Yogurt also reads previously attached screenshots so older notes become searchable. A paused recording excludes the paused interval.
+![A finished Pilot planning note with a timestamped Coast screenshot showing the Juniper Observatory slide and its launch budget of 37 credits.](docs/assets/coast-meeting.webp)
 
-## Choose calendars on your Mac
+In this fictional meeting, searching for **37 credits** brings up *Pilot planning*. The number appears only on the slide. [See the search result](docs/README.md#find-what-was-on-screen)
 
-Open **Agenda → Calendars**, allow calendar access if prompted, and check the calendars you want. A new installation starts with every calendar unchecked. Your selection applies to the agenda, reminders, linking a meeting to a note, and calendar queries from agents. Calendars added later start unchecked too.
+## Calendars and agent access
 
-Yogurt reads selected events directly from Apple Calendar on your Mac. There is no Yogurt account, calendar server, or Google API key to set up. macOS handles syncing with your calendar provider. To add a missing Google, iCloud, or work account, open **Calendar → Add Account** in Apple's Calendar app, then return to the picker. [Apple’s account setup guide](https://support.apple.com/guide/calendar/add-calendars-and-calendar-accounts-icl4308d6701/mac)
+- **Calendars.** In **Agenda → Calendars**, choose individual calendars from the accounts already in Apple Calendar, including Google and iCloud. Checked calendars come first, followed by the Mac’s default and likely main account calendars. Your choices apply to the agenda, reminders, meeting matching, and agent calendar queries.
+- **Agents.** Give Codex on your Mac or Hermes on another computer read-only access through the Model Context Protocol (MCP). An agent can find a meeting, read timestamped screen text, and ask questions across your notes. [Agent setup](docs/README.md#connect-an-agent)
 
-## Give an agent read access
+## Where your data goes
 
-In Settings → AI apps, enable **Let AI apps read your meetings**. For an installed build, register its read-only helper with Codex:
+Recording, transcription, screenshot selection, OCR, and Yogurt’s own meeting Q&A run on your Mac without a Yogurt account or backend. Setup downloads the models. Coast Local manages its own capture history. Yogurt copies selected images into its local meeting library. macOS handles calendar sync with your providers. If you connect an agent that uses a hosted model, the meeting content it reads can reach that provider. [Screenshot selection](app/src/main/coastSelection.ts) · [Apple Vision OCR](app/native/yogurt-mac/ScreenText.swift) · [MCP tools](app/src/main/mcp/server.ts)
 
-```sh
-codex mcp add yogurt-coast -- "/Applications/Yogurt + Coast.app/Contents/Resources/bin/yogurt-mcp" --read-only
-```
-
-For a source build, use the absolute path to `app/resources/bin/yogurt-mcp` in the checkout and keep the app running. Agents can use `search` to find screen text, `get_screenshot_text` to read it with capture times, and `ask` for an answer with sources. The read-only connection rejects edits even if other agents are allowed to make changes. If the agent uses a hosted model, meeting content it retrieves can reach that provider.
-
-This fork is distributed as source. The [build instructions](docs/building.md) cover local packaging and connecting a remote agent over SSH. The fork package has no automatic update feed.
-
-## What it does
-
-- **Live transcripts.** Yogurt records calls and turns speech into text as you talk.
-- **Meeting summaries.** Yogurt writes up the conversation and any notes you add.
-- **Private by default.** Your audio, transcripts and AI processing stay on your computer.
-- **Free and open source.** You can use Yogurt without an account.
-- **Who said what.** Yogurt names speakers from Zoom, Teams and Meet on Mac, Windows and Linux.
-- **Languages.** Multi-language mode transcribes 99 languages, follows each side of the call in its own language, and keeps up when someone switches languages mid-meeting.
-- **Recording reminders.** Yogurt offers to record when a supported call starts.
-- **Answers with sources.** Yogurt answers questions across meetings and links to the source.
-- **Folders and search.** You can find meetings by folder, title, notes or transcript.
-- **Copy and export.** You can copy notes or transcripts, or save both as Markdown.
-- **Local MCP server.** When you turn this on, apps on your computer can read your notes, transcripts, saved audio and each meeting's calendar details (attendees' names and emails).
-- **Automatic stop.** By default, Yogurt stops recording when it detects that your call has ended. A recording you start yourself with New note asks first instead, since it may not be a call.
-
-## Watch the demo
-
-https://github.com/user-attachments/assets/da16b894-beb1-491a-89e1-fd10666dc9b8
-
-## How it works
-
-1. **Record.** Start recording your microphone and call audio; you can add your own notes.
-2. **Transcribe.** Yogurt uses whisper.cpp and, on supported Macs, Apple SpeechAnalyzer.
-3. **Summarize and ask.** A local open-weight model runs through llama.cpp.
-
-Transcription, screenshot selection, OCR and meeting answers run locally. Setup downloads the models. Sharing a result with an AI client follows that client’s provider settings.
-
-<details><summary>Where your meetings, recordings, settings and models are stored</summary>
-
-- Mac uses `~/Library/Application Support/Yogurt`.
-- Windows uses `%APPDATA%\Yogurt`.
-- Linux uses `~/.config/Yogurt`, or `$XDG_CONFIG_HOME/Yogurt` if set.
-
-</details>
-
-## FAQ
-
-<details><summary><strong>What kind of computer do I need?</strong></summary>
-
-<br>
-
-> A Mac with Apple silicon and macOS 14.4 or newer, a 64-bit PC with Windows 10 (version 2004) or newer, or a 64-bit Linux computer with Ubuntu 22.04 or newer. Each needs at least 8 GB of memory. If your computer is too slow, Yogurt tells you during setup. On Windows and Linux, you connect your calendar with a private calendar link.
-
-</details>
-
-<details><summary><strong>Does Yogurt join my meetings?</strong></summary>
-
-<br>
-
-> No. Yogurt records your microphone and the sound playing on your computer. No bot joins the call, so let the other people on the call know you’re recording.
-
-</details>
-
-<details><summary><strong>Are recordings saved?</strong></summary>
-
-<br>
-
-> Audio is saved by default, and you can turn this off for future meetings in Settings.
-
-</details>
-
-<details><summary><strong>Is Yogurt free?</strong></summary>
-
-<br>
-
-> Yes. Yogurt is free and open source under the MIT license. No account is needed.
-
-</details>
-
-<details><summary><strong>Does Yogurt work offline?</strong></summary>
-
-<br>
-
-> Yes. After a one-time download of the AI models, transcription and summaries run locally on your computer.
-
-</details>
-
-<details><summary><strong>Does Yogurt train AI on my meetings? Can anyone at Yogurt read them?</strong></summary>
-
-<br>
-
-> The application stores recordings, transcripts, notes and screenshots in your local Yogurt profile. The models run on your computer. On Mac, Yogurt reads calendar events locally through Apple Calendar. macOS manages any sync with your provider. On Windows and Linux, optional direct calendar connections contact their providers. Paired devices and AI apps you enable can also receive the data you share with them.
-
-</details>
-
-<details><summary><strong>Is Yogurt safe for confidential meetings?</strong></summary>
-
-<br>
-
-> Yogurt keeps everything on your computer: audio, transcripts and notes are never uploaded, and transcription and summaries run offline. That makes it a good fit for client calls, therapy sessions, legal work and board meetings where audio can't go to a cloud service. You can also turn off saving audio in **Settings**, and Yogurt is open source, so anyone can check what it does. Follow your own rules on getting consent to record.
-
-</details>
-
-<details><summary><strong>How much memory do I need?</strong></summary>
-
-<br>
-
-> At least 8 GB. Yogurt checks your computer during setup and picks the best transcription and notes models it can run well. With 16 GB or more, Yogurt can usually run a larger notes model that writes better notes.
-
-</details>
-
-<details><summary><strong>Can I turn an existing recording into notes?</strong></summary>
-
-<br>
-
-> Yes. Use **Upload a file** to add an MP3, M4A or WAV recording. Yogurt transcribes it on your computer and writes notes, the same as for a live meeting.
-
-</details>
-
-<details><summary><strong>Can I ask questions across all my meetings?</strong></summary>
-
-<br>
-
-> Yes. Use **Ask** to ask about one meeting, a folder, or all your meetings at once, for example "what did we decide about pricing?". Answers point to the meetings they came from, and everything runs on your computer.
-
-</details>
-
-<details><summary><strong>How accurate is it compared to cloud transcription?</strong></summary>
-
-<br>
-
-> Yogurt uses Whisper large-v3-turbo on computers that can run it, the same family of models many cloud services use, so English accuracy is close to cloud transcription. Smaller computers get a smaller Whisper model, which is faster but makes more mistakes, especially outside English. You can add names and words to a custom vocabulary so they're spelled right.
-
-</details>
-
-<details><summary><strong>How much does setup download?</strong></summary>
-
-<br>
-
-> It depends on your computer. Yogurt sets up transcription first, then downloads the notes models selected for your computer. Recording works once setup finishes, and notes and questions work offline once the notes model is in.
-
-</details>
-
-<details><summary><strong>How do I connect my assistant app?</strong></summary>
-
-<br>
-
-> In **Settings → AI apps**, turn on access, copy the helper command, and add it as a local MCP server in your assistant app. Access is off by default. The app can read your meetings (including their calendar details: the event, and attendees' names and emails), notes and transcripts, but cannot change them. It may send what it reads to its own online model. Turn access off in Yogurt to stop further reads.
-
-</details>
-
-<details><summary><strong>Can other apps read my notes through MCP?</strong></summary>
-
-<br>
-
-> Access is off until you enable it in **Settings → AI apps**. Apps get read-only access to meetings (with their calendar event and attendees' names and emails), notes and transcripts. Mac and Linux use a socket in your profile folder with `0600` permissions, so only your user account can open it. Windows uses a named pipe with a new random name each launch, stored only in your profile folder. There is no per-app token, so any app running under your account can read while access is on. Settings shows connected apps by their self-reported names.
-
-</details>
-
-<details><summary><strong>Which AI models does Yogurt use?</strong></summary>
-
-<br>
-
-> Transcription uses Whisper through whisper.cpp, with large-v3-turbo or a smaller model depending on your computer. On supported Macs, Apple SpeechAnalyzer supplies live words while Whisper produces the saved transcript. Summaries and answers use a local open-weight model from the Gemma 4, gpt-oss or Qwen3 families, chosen for your hardware and run through llama.cpp. The app uses Electron and needs no account.
-
-</details>
-
-<details><summary><strong>Which languages does Yogurt support?</strong></summary>
-
-<br>
-
-> Pick **Multi-language** in **Settings → Language → Spoken language** to transcribe 99 languages. You can also switch from the **English** menu in a note’s footer before or during recording. English only is the default, and it’s the fastest and most accurate choice for English meetings.
->
-> In Multi-language mode, you and the other side of the call can each speak your own language, and Yogurt follows along when someone switches languages mid-meeting. Summaries follow the meeting’s main language, or the one you pick in **Settings → Summary language**. Answers in Ask follow your question’s language. Settings also offers 32 app languages.
-
-</details>
-
-<details><summary><strong>Which call apps does Yogurt work with?</strong></summary>
-
-<br>
-
-> You can record calls in any app because Yogurt captures your microphone and system audio. Call detection covers Zoom, Teams and Meet. On Mac, Yogurt can also read their speaker names with Accessibility permission, when the call app shows who is speaking.
-
-</details>
-
-<details><summary><strong>How does Yogurt know a call has started?</strong></summary>
-
-<br>
-
-> It checks which apps are using your microphone. For browser calls, it also checks the tab title or a nearby calendar event with a call link. This triggers an offer to record; recording starts only when you choose to.
-
-</details>
-
-<details><summary><strong>How do I connect my calendar?</strong></summary>
-
-<br>
-
-> Open Agenda → Calendars to connect a Google account and select individual calendars. You can also enable the calendars that macOS already knows about.
-
-</details>
-
-## Support
-
-- [Help](docs/README.md)
-- [Discord](https://yogurt.so/discord)
-- [Upstream Yogurt issues](https://github.com/FrigadeHQ/yogurt/issues)
-
-## Development
-
-- [Build and run locally](docs/building.md)
-
----
-
-Made by [Frigade](https://frigade.com?utm_source=github&utm_medium=readme&utm_campaign=yogurt), [MIT license](LICENSE).
+This fork builds on Frigade’s work on local recording, transcription, summaries, and meeting search. Coast Local is installed separately. [Upstream Yogurt](https://github.com/FrigadeHQ/yogurt) · [Coast Local](https://coast.app/) · [MIT license](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
