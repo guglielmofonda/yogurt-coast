@@ -88,15 +88,15 @@ export const systemCalendarStatus = (): CalendarStatus => (links && !alongside ?
 const overall = (mac: CalendarStatus): CalendarStatus => (links && mac !== 'granted' && links.status() === 'granted' ? 'granted' : mac)
 
 export async function refreshCalendarStatus(): Promise<CalendarStatus> {
-  if (links && !alongside) return status = links.status()
+  if (links && (!alongside || calendarSelection().useSystemCalendars === false)) return status = links.status()
   if (!supported) macStatus = 'unsupported'
   else try { macStatus = asStatus(await helper(['calendar-status'])) } catch { macStatus = 'error' }
   return status = overall(macStatus)
 }
 /** Asks once with the system's own prompt */
 export async function requestCalendarAccess(): Promise<CalendarStatus> {
-  // a link has no prompt: it is connected when one is pasted (Settings or the first run)
-  if (links && !alongside) return status = links.status()
+  // Only the system calendar uses a native permission prompt.
+  if (links && (!alongside || calendarSelection().useSystemCalendars === false)) return status = links.status()
   if (!supported) macStatus = 'unsupported'
   else try { macStatus = asStatus(await helper(['calendar-auth'])) } catch { macStatus = 'error' }
   return status = overall(macStatus)
@@ -107,7 +107,7 @@ const LINK = /https?:\/\/(?:[\w-]+\.)?(?:zoom\.us|zoomgov\.com|meet\.google\.com
 export const meetingLink = (text: string | undefined | null): string | null => text?.match(LINK)?.[0] ?? null
 
 const str = (v: unknown) => (typeof v === 'string' && v ? v : null)
-let calendarSelection = (): Pick<Settings, 'hiddenCalendarIds' | 'hideEventsWithoutCallLink'> => ({})
+let calendarSelection = (): Pick<Settings, 'hiddenCalendarIds' | 'hideEventsWithoutCallLink' | 'useSystemCalendars'> => ({})
 let rememberOwnEmail = (_email: string) => {}
 export const setCalendarOwnEmail = (remember: typeof rememberOwnEmail) => { rememberOwnEmail = remember }
 export const setCalendarSelection = (read: typeof calendarSelection) => { calendarSelection = read }
@@ -115,7 +115,7 @@ export const setCalendarSelection = (read: typeof calendarSelection) => { calend
 export async function calendars(): Promise<CalendarSource[]> {
   if (await refreshCalendarStatus() !== 'granted') return []
   const linked = links ? await links.calendars() : []
-  if ((links && !alongside) || macStatus !== 'granted') return linked
+  if ((links && !alongside) || calendarSelection().useSystemCalendars === false || macStatus !== 'granted') return linked
   try {
     const raw = await helper(['calendars'])
     if (!Array.isArray(raw)) throw new Error('Invalid calendars')
@@ -163,16 +163,18 @@ export function parseEvents(raw: unknown, hidden: string[] = []): CalEvent[] {
 export async function upcoming(fromMs: number, toMs: number, keep?: 'link-event' | ((event: CalEvent) => boolean), unavailable?: string[], { fullRange = false } = {}): Promise<CalEvent[]> {
   if (await refreshCalendarStatus() !== 'granted') return []
   try {
-    const fromMac = !links || (alongside && macStatus === 'granted')
-    const mac = fromMac ? await helper(['events', new Date(fromMs).toISOString(), new Date(toMs).toISOString(), ...(fullRange ? ['--full-range'] : [])]).catch(() => {
+    const selection = calendarSelection()
+    const fromMac = selection.useSystemCalendars !== false && (!links || (alongside && macStatus === 'granted'))
+    const mac = fromMac ? await helper(['events', new Date(fromMs).toISOString(), new Date(toMs).toISOString(), ...(fullRange ? ['--full-range'] : []),
+      ...(selection.hiddenCalendarIds?.length ? ['--excluding', JSON.stringify(selection.hiddenCalendarIds)] : [])]).catch(() => {
       macStatus = 'error'
       status = overall(macStatus)
       return []
     }) : []
-    if (alongside && macStatus === 'error' && links?.status() === 'granted') unavailable?.push(t('Calendar'))
-    const selection = calendarSelection()
-    const raw = [...(links ? await links.events(fromMs, toMs, unavailable, selection.hiddenCalendarIds) : []), ...(Array.isArray(mac) ? mac : [])]
-    const events = parseEvents(raw, selection.hiddenCalendarIds)
+    if (selection.useSystemCalendars !== false && alongside && macStatus === 'error' && links?.status() === 'granted') unavailable?.push(t('Calendar'))
+    const linked = links ? await links.events(fromMs, toMs, unavailable, selection.hiddenCalendarIds) : []
+    const latest = calendarSelection()
+    const events = parseEvents([...linked, ...(latest.useSystemCalendars !== false && Array.isArray(mac) ? mac : [])], latest.hiddenCalendarIds)
     if (keep === 'link-event' || selection.hideEventsWithoutCallLink !== true) return events
     return events.filter(event => event.url !== null || keep?.(event))
   } catch { status = 'error'; return [] }

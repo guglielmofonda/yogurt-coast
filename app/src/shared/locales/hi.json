@@ -796,5 +796,15 @@
   "Enlarge screenshot": "स्क्रीनशॉट बड़ा करें",
   "This screenshot could not be read.": "यह स्क्रीनशॉट पढ़ा नहीं जा सका।",
   "Previous": "पिछला",
-  "Next": "अगला"
+  "Next": "अगला",
+  "Sign in with Google": "Google से साइन इन करें",
+  "Set up Google sign-in": "Google साइन-इन सेट अप करें",
+  "Choose which Google calendars appear in Yogurt.": "चुनें कि Yogurt में कौन से Google कैलेंडर दिखें।",
+  "Import a Google Desktop OAuth client file.": "Google डेस्कटॉप OAuth क्लाइंट फ़ाइल इंपोर्ट करें।",
+  "Refresh calendars": "कैलेंडर रीफ़्रेश करें",
+  "Disconnect": "डिसकनेक्ट करें",
+  "Use Mac calendars": "Mac के कैलेंडर इस्तेमाल करें",
+  "Waiting for Google…": "Google का इंतज़ार है…",
+  "Secure storage is unavailable.": "सुरक्षित स्टोरेज उपलब्ध नहीं है।",
+  "Allow calendar access in Google and try again.": "Google में कैलेंडर ऐक्सेस की अनुमति दें और फिर कोशिश करें।"
 }

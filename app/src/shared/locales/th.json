@@ -766,5 +766,15 @@
   "Enlarge screenshot": "ขยายภาพหน้าจอ",
   "This screenshot could not be read.": "ไม่สามารถอ่านภาพหน้าจอนี้ได้",
   "Previous": "ก่อนหน้า",
-  "Next": "ถัดไป"
+  "Next": "ถัดไป",
+  "Sign in with Google": "ลงชื่อเข้าใช้ด้วย Google",
+  "Set up Google sign-in": "ตั้งค่าการลงชื่อเข้าใช้ Google",
+  "Choose which Google calendars appear in Yogurt.": "เลือกปฏิทิน Google ที่จะแสดงใน Yogurt",
+  "Import a Google Desktop OAuth client file.": "นำเข้าไฟล์ไคลเอ็นต์ Google OAuth สำหรับเดสก์ท็อป",
+  "Refresh calendars": "รีเฟรชปฏิทิน",
+  "Disconnect": "ยกเลิกการเชื่อมต่อ",
+  "Use Mac calendars": "ใช้ปฏิทินของ Mac",
+  "Waiting for Google…": "กำลังรอ Google…",
+  "Secure storage is unavailable.": "พื้นที่จัดเก็บข้อมูลแบบปลอดภัยไม่พร้อมใช้งาน",
+  "Allow calendar access in Google and try again.": "อนุญาตการเข้าถึงปฏิทินใน Google แล้วลองอีกครั้ง"
 }

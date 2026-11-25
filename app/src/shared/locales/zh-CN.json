@@ -766,5 +766,15 @@
   "Enlarge screenshot": "放大截屏",
   "This screenshot could not be read.": "无法读取此截屏。",
   "Previous": "上一张",
-  "Next": "下一张"
+  "Next": "下一张",
+  "Sign in with Google": "使用 Google 登录",
+  "Set up Google sign-in": "设置 Google 登录",
+  "Choose which Google calendars appear in Yogurt.": "选择要在 Yogurt 中显示的 Google 日历。",
+  "Import a Google Desktop OAuth client file.": "导入 Google 桌面 OAuth 客户端文件。",
+  "Refresh calendars": "刷新日历",
+  "Disconnect": "断开连接",
+  "Use Mac calendars": "使用 Mac 日历",
+  "Waiting for Google…": "正在等待 Google…",
+  "Secure storage is unavailable.": "安全存储不可用。",
+  "Allow calendar access in Google and try again.": "请在 Google 中允许访问日历，然后重试。"
 }

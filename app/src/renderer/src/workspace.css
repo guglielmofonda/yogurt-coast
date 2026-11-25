@@ -223,6 +223,7 @@
 .agenda-scroll { margin-inline:calc(-1 * var(--agenda-inset));padding-inline:var(--agenda-inset);flex:1;min-height:80px;overflow-y:auto;overscroll-behavior:contain;padding-block:16px;scroll-padding-block:16px; }
 
 .agenda-header { display:flex;align-items:center;justify-content:space-between;gap:12px; }
+.agenda-header-actions { display:flex;align-items:center;gap:4px; }
 .agenda-header>h2 { font-weight:550;font-size:13px;letter-spacing:-.1px; }
 .agenda-navigation { margin-top:24px;display:flex;gap:4px;align-items:center; }
 .agenda-month { margin-inline-end:auto;min-width:0;font-size:11px;font-weight:500;color:var(--written); }

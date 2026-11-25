@@ -256,7 +256,7 @@ export function Settings({ revision = 0, focus }: { revision?: number; focus?: s
             {supportedKinds(window.yogurt.capabilities).map((k) => <PermissionRow key={k} kind={k} status={perms?.[k]} onAsk={() => void window.yogurt.permissions.request(k).then(reload)} />)}
           </ul></LoadingContent>
 
-          {window.yogurt.capabilities.calendar && <CalendarSettings connect={focus === 'calendar'} />}
+          {window.yogurt.capabilities.calendar && <CalendarSettings connect={focus === 'calendar'} manage={focus === 'calendars'} />}
 
           <h2 className="settings-section-heading">{t('Language')}</h2>
           <div data-testid="settings-language" className="settings-group">

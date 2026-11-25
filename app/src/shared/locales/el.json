@@ -811,5 +811,15 @@
   "Enlarge screenshot": "Μεγέθυνση στιγμιοτύπου",
   "This screenshot could not be read.": "Δεν ήταν δυνατή η ανάγνωση αυτού του στιγμιοτύπου.",
   "Previous": "Προηγούμενο",
-  "Next": "Επόμενο"
+  "Next": "Επόμενο",
+  "Sign in with Google": "Σύνδεση με Google",
+  "Set up Google sign-in": "Ρύθμιση σύνδεσης με Google",
+  "Choose which Google calendars appear in Yogurt.": "Επιλέξτε ποια ημερολόγια Google θα εμφανίζονται στο Yogurt.",
+  "Import a Google Desktop OAuth client file.": "Εισαγάγετε αρχείο πελάτη Google OAuth για υπολογιστές.",
+  "Refresh calendars": "Ανανέωση ημερολογίων",
+  "Disconnect": "Αποσύνδεση",
+  "Use Mac calendars": "Χρήση ημερολογίων Mac",
+  "Waiting for Google…": "Αναμονή για το Google…",
+  "Secure storage is unavailable.": "Ο ασφαλής χώρος αποθήκευσης δεν είναι διαθέσιμος.",
+  "Allow calendar access in Google and try again.": "Επιτρέψτε την πρόσβαση στο ημερολόγιο στο Google και δοκιμάστε ξανά."
 }

@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { loadSettings, updateSettings } from '../src/main/settings'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { calendars, calendarStatus, meetingLink, parseEvents, refreshCalendarStatus, requestCalendarAccess, setCalendarLinkSource, setCalendarSelection, setCalendarSupported, setHelper, upcoming } from '../src/main/calendar'
 
 const fixture = JSON.parse(readFileSync(join(__dirname, 'fixtures/helper-events.json'), 'utf8'))
@@ -234,6 +234,17 @@ describe('Windows and Linux: the calendar comes from calendar links, not the sys
 
 describe('a Mac: calendar links sit alongside the built-in calendar (Settings → Calendars → Add a calendar link)', () => {
   afterEach(() => { setCalendarLinkSource(null); setCalendarSupported(true); setCalendarSelection(() => ({})) })
+  it('does not ask the system calendar for events or permissions when Google replaces it', async () => {
+    const helper = vi.fn()
+    setHelper(helper)
+    setCalendarSelection(() => ({ useSystemCalendars: false }))
+    setCalendarLinkSource({ status: () => 'granted', calendars: async () => [], events: async () => [] }, { alongside: true })
+    expect(await refreshCalendarStatus()).toBe('granted')
+    expect(await calendars()).toEqual([])
+    expect(await upcoming(1, 2)).toEqual([])
+    expect(await requestCalendarAccess()).toBe('granted')
+    expect(helper).not.toHaveBeenCalled()
+  })
   const linkEvent = { id: 'x|1', externalId: 'x', title: 'Book club', start: '2026-11-17T20:00:00.000Z', end: '2026-11-17T21:00:00.000Z', attendees: [], url: null, location: null, notes: null, calendarId: 'l1', calendar: 'Club', calendarSource: 'Calendar link', me: null }
   const macRow = { id: 'm1', title: 'Standup', start: '2026-11-17T17:00:00.000Z', end: '2026-11-17T17:15:00.000Z', attendees: [], calendarId: 'work', calendar: 'Work' }
   const links = (linked: boolean) => ({ status: () => (linked ? 'granted' as const : 'notDetermined' as const), calendars: async () => (linked ? [{ id: 'l1', name: 'Club', source: 'example.com' }] : []), events: async () => (linked ? [linkEvent] : []) })

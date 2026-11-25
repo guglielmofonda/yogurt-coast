@@ -808,5 +808,15 @@
   "Enlarge screenshot": "Forstør skærmbillede",
   "This screenshot could not be read.": "Dette skærmbillede kunne ikke læses.",
   "Previous": "Forrige",
-  "Next": "Næste"
+  "Next": "Næste",
+  "Sign in with Google": "Log ind med Google",
+  "Set up Google sign-in": "Konfigurer Google-login",
+  "Choose which Google calendars appear in Yogurt.": "Vælg, hvilke Google-kalendere der vises i Yogurt.",
+  "Import a Google Desktop OAuth client file.": "Importér en Google OAuth-klientfil til computer.",
+  "Refresh calendars": "Opdater kalendere",
+  "Disconnect": "Afbryd forbindelsen",
+  "Use Mac calendars": "Brug Mac-kalendere",
+  "Waiting for Google…": "Venter på Google…",
+  "Secure storage is unavailable.": "Sikker lagring er ikke tilgængelig.",
+  "Allow calendar access in Google and try again.": "Tillad kalenderadgang hos Google, og prøv igen."
 }

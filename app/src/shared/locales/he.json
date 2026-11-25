@@ -818,5 +818,15 @@
   "Enlarge screenshot": "הגדלת צילום המסך",
   "This screenshot could not be read.": "לא ניתן לקרוא את צילום המסך הזה.",
   "Previous": "הקודם",
-  "Next": "הבא"
+  "Next": "הבא",
+  "Sign in with Google": "כניסה באמצעות Google",
+  "Set up Google sign-in": "הגדרת כניסה באמצעות Google",
+  "Choose which Google calendars appear in Yogurt.": "בחרו אילו יומני Google יופיעו ב־Yogurt.",
+  "Import a Google Desktop OAuth client file.": "ייבאו קובץ לקוח Google OAuth ליישום מחשב.",
+  "Refresh calendars": "רענון יומנים",
+  "Disconnect": "ניתוק",
+  "Use Mac calendars": "שימוש ביומני ה־Mac",
+  "Waiting for Google…": "בהמתנה ל־Google…",
+  "Secure storage is unavailable.": "האחסון המאובטח אינו זמין.",
+  "Allow calendar access in Google and try again.": "אפשרו גישה ליומן ב־Google ונסו שוב."
 }

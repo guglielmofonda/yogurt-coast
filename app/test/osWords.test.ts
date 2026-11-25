@@ -36,6 +36,7 @@ describe('Mac text', () => {
     'Saved on this Mac',
     'Selecting screenshots on this Mac…',
     'This conversation is removed from this Mac for good. Your meetings stay as they are.',
+    'Use Mac calendars',
     'Uses the microphone your Mac is set to',
     'Yogurt needs a Mac with at least 8 GB of memory.',
     "Your Mac's sound",

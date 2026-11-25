@@ -796,5 +796,15 @@
   "Enlarge screenshot": "Képernyőkép nagyítása",
   "This screenshot could not be read.": "Ez a képernyőkép nem olvasható.",
   "Previous": "Előző",
-  "Next": "Következő"
+  "Next": "Következő",
+  "Sign in with Google": "Bejelentkezés Google-fiókkal",
+  "Set up Google sign-in": "Google-bejelentkezés beállítása",
+  "Choose which Google calendars appear in Yogurt.": "Válaszd ki a Yogurtban megjelenő Google-naptárakat.",
+  "Import a Google Desktop OAuth client file.": "Importálj egy asztali Google OAuth-ügyfélfájlt.",
+  "Refresh calendars": "Naptárak frissítése",
+  "Disconnect": "Kapcsolat bontása",
+  "Use Mac calendars": "A Mac naptárainak használata",
+  "Waiting for Google…": "Várakozás a Google-ra…",
+  "Secure storage is unavailable.": "A biztonságos tárhely nem érhető el.",
+  "Allow calendar access in Google and try again.": "Engedélyezd a naptárhoz való hozzáférést a Google-ban, majd próbáld újra."
 }

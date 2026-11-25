@@ -8,24 +8,29 @@ import { moreItems, t } from '../../../shared/i18n'
 
 let expanded = false
 
-export function CalendarSettings({ connect = false }: { connect?: boolean } = {}) {
+export function CalendarSettings({ connect = false, manage = false }: { connect?: boolean; manage?: boolean } = {}) {
   // Windows and Linux: calendars are pasted calendar links, connected and removed here (and in the first run)
   const link = !!globalThis.window?.yogurt?.capabilities?.calendarLink
   const [view, setView] = useState<Awaited<ReturnType<typeof window.yogurt.calendar.list>>>()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
-  const [open, setOpen] = useState(expanded || link)
+  const [open, setOpen] = useState(manage || expanded || link)
   const [form, setForm] = useState<'closed' | 'automatic' | 'requested'>('closed')
   const adding = form !== 'closed'
   const addButton = useRef<HTMLButtonElement>(null), restoreFocus = useRef(false)
+  const section = useRef<HTMLElement>(null)
+  const [signingIn, setSigningIn] = useState(false)
+  const [googleError, setGoogleError] = useState('')
+  useEffect(() => { if (manage) { setOpen(true); section.current?.scrollIntoView({ block: 'start' }) } }, [manage, !!view])
+
   const closeForm = () => { restoreFocus.current = true; setForm('closed') }
   useEffect(() => {
     if (!adding && !busy && restoreFocus.current) { restoreFocus.current = false; addButton.current?.focus({ preventScroll: true }) }
   }, [adding, busy])
   useEffect(() => {
     // Offer the empty-state form without taking focus from navigation or a Settings deep link.
-    if (link && view && view.status !== 'error' && !view.calendars.length) setForm(current => current === 'closed' ? 'automatic' : current)
-  }, [link, view?.status, view?.calendars.length])
+    if (!manage && link && view && view.status !== 'error' && !view.calendars.length) setForm(current => current === 'closed' ? 'automatic' : current)
+  }, [manage, link, view?.status, view?.calendars.length])
   useEffect(() => {
     if (connect) { setOpen(true); setForm('requested') }
   }, [connect])
@@ -49,6 +54,23 @@ export function CalendarSettings({ connect = false }: { connect?: boolean } = {}
       if (!await window.yogurt.calendar.setHideWithoutLink(hide)) throw new Error('Calendar unavailable')
     } catch { setError(true); reload() } finally { setBusy(false) }
   }
+  const googleAction = async (action: 'configure' | 'connect' | 'refresh' | 'disconnect') => {
+    setBusy(true); setSigningIn(action === 'connect'); setGoogleError('')
+    try {
+      const result = await window.yogurt.calendar.google(action)
+      if (!result.ok && result.error !== 'cancelled') {
+        setGoogleError(result.error === 'setup' ? t('Import a Google Desktop OAuth client file.')
+          : result.error === 'storage' ? t('Secure storage is unavailable.')
+          : result.error === 'permission' ? t('Allow calendar access in Google and try again.') : t("Couldn't update your calendars. Try again."))
+      }
+    } catch { setGoogleError(t("Couldn't update your calendars. Try again.")) }
+    finally { setBusy(false); setSigningIn(false); reload() }
+  }
+  const system = async () => {
+    setBusy(true); setError(false)
+    try { if (!await window.yogurt.calendar.useSystem(view?.systemEnabled === false)) throw Error() }
+    catch { setError(true) } finally { setBusy(false); reload() }
+  }
   const selected = view?.calendars.filter(c => c.enabled) ?? []
   // the Mac's own calendars, apart from calendar links next to them
   const sys = view?.systemStatus ?? view?.status
@@ -64,7 +86,7 @@ export function CalendarSettings({ connect = false }: { connect?: boolean } = {}
     : selected.length === 1 ? [selected[0].name, selected[0].source].filter(Boolean).join(' · ')
     : `${selected[0].name} ${moreItems(selected.length - 1)}`
   const readFailed = view?.status === 'error' || sys === 'error'
-  return <section data-testid="calendar-settings">
+  return <section ref={section} data-testid="calendar-settings">
     <h2 className="settings-section-heading">{t('Calendars')}</h2>
     <div className="settings-group">
       <button type="button" data-testid="calendar-settings-toggle" aria-expanded={open} aria-controls="settings-calendar-list" onClick={() => { expanded = !open; setOpen(expanded) }} className="settings-row settings-disclosure">
@@ -75,17 +97,36 @@ export function CalendarSettings({ connect = false }: { connect?: boolean } = {}
         <ChevronDown size={16} aria-hidden="true" />
       </button>
       <div id="settings-calendar-list" className="accordion" data-open={open} inert={!open || undefined}><div className="settings-calendar-list">
-        <LoadingContent pending={!view} skeleton={<Loading layout="calendars" />}>{view && <>{(view.status === 'error' || !link && sys !== 'granted') && <div className="settings-row">
+        <LoadingContent pending={!view} skeleton={<Loading layout="calendars" />}>{view && <>
+          {view.google && <div className="settings-row" data-testid="google-calendar">
+            <div className="settings-row-copy"><p className="settings-label">Google Calendar</p>
+              <p className="settings-description" dir="auto">{signingIn ? t('Waiting for Google…') : view.google.account || (view.google.configured ? t('Choose which Google calendars appear in Yogurt.') : t('Import a Google Desktop OAuth client file.'))}</p>
+            </div>
+            {signingIn ? <button type="button" className="workspace-button" onClick={() => void window.yogurt.calendar.google('cancel')}>{t('Cancel')}</button>
+              : view.google.account && !view.google.reconnect ? <>
+                <button type="button" className="workspace-button" disabled={busy} onClick={() => void googleAction('refresh')}>{t('Refresh calendars')}</button>
+                <button type="button" className="text-action" disabled={busy} onClick={() => void googleAction('disconnect')}>{t('Disconnect')}</button>
+              </> : <button type="button" className="workspace-button primary" disabled={busy} data-testid="google-sign-in" onClick={() => void googleAction(view.google?.configured ? 'connect' : 'configure')}>{view.google.configured ? t('Sign in with Google') : t('Set up Google sign-in')}</button>}
+          </div>}
+          {googleError && <p role="alert" className="settings-row text-danger">{googleError}</p>}
+          {view.google?.account && view.google.reconnect && <button type="button" className="settings-row text-action" disabled={busy} onClick={() => void googleAction('disconnect')}>{t('Disconnect')}</button>}
+          {(view.systemEnabled !== false || link) && (view.status === 'error' || !link && sys !== 'granted') && <div className="settings-row">
             <p className="settings-description settings-row-copy">{readFailed ? t("Yogurt couldn't read your calendars.") : t('Allow calendar access to choose your calendars.')}</p>
             <button className="workspace-button" onClick={() => { if (readFailed) reload(); else void window.yogurt.calendar.connect().then(reload) }}>{readFailed ? t('Try again') : t('Connect calendar')}</button>
           </div>}
-          {!link && sys === 'granted' && !view.calendars.some((c) => !c.link) && <p className="settings-row settings-description">{t('No calendars found on this Mac.')}</p>}
+          {!link && view.systemEnabled !== false && sys === 'granted' && !view.calendars.some((c) => !c.link && !c.id.startsWith('google:')) && <p className="settings-row settings-description">{t('No calendars found on this Mac.')}</p>}
           {view.calendars.map((c) => <label key={c.id} data-testid="calendar-choice" className="settings-row settings-calendar-choice">
             <span className="settings-calendar-dot" style={{ backgroundColor: c.color }} aria-hidden="true" />
-            <span className="settings-row-copy"><span className="settings-label">{c.name}</span><span className="settings-description block">{c.source}</span></span>
+            <span className="settings-row-copy"><span className="settings-label">{c.name}</span>{!c.id.startsWith('google:') && <span className="settings-description block">{c.source}</span>}</span>
             <Checkbox checked={c.enabled} disabled={busy} onChange={(e) => void choose(c.id, e.target.checked)} />
             {c.link && <button type="button" data-testid="calendar-link-remove" className="workspace-button shrink-0" disabled={busy} onClick={(e) => { e.preventDefault(); void removeLink(c.id) }}>{t('Remove')}</button>}
-          </label>)}</>}</LoadingContent>
+          </label>)}
+          {!link && view.systemEnabled !== undefined && <div className="settings-row">
+            <span className="settings-label settings-row-copy">{t('Use Mac calendars')}</span>
+            <button type="button" role="switch" data-testid="system-calendars" aria-label={t('Use Mac calendars')} aria-checked={view.systemEnabled}
+              disabled={busy} onClick={() => void system()} className="settings-toggle"><span className="settings-toggle-knob" /></button>
+          </div>}
+        </>}</LoadingContent>
         {view && view.status !== 'error' && <div className="settings-calendar-add">
           <button ref={addButton} type="button" data-testid="calendar-link-add" className="settings-row settings-disclosure"
             aria-expanded={adding} aria-controls="settings-calendar-add" disabled={busy}
@@ -111,7 +152,7 @@ export function CalendarSettings({ connect = false }: { connect?: boolean } = {}
               aria-label={t('Hide events without a call link')} aria-describedby="calendar-call-link-description" disabled={busy}
               onClick={() => void hideWithoutLink()} className="settings-toggle"><span className="settings-toggle-knob" /></button>
           </div>
-          {!link && <div className="settings-row">
+          {!link && view.systemEnabled !== false && <div className="settings-row">
             <span className="settings-row-copy"><span className="settings-label">{t('Calendar access')}</span><span className="settings-description block">{t('Remove Yogurt’s access in System Settings.')}</span></span>
             <button type="button" className="workspace-button shrink-0" onClick={() => void window.yogurt.permissions.open('calendar')}>{t('Open System Settings')}</button>
           </div>}

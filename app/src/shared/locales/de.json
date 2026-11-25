@@ -808,5 +808,15 @@
   "Enlarge screenshot": "Bildschirmfoto vergrößern",
   "This screenshot could not be read.": "Dieses Bildschirmfoto konnte nicht gelesen werden.",
   "Previous": "Zurück",
-  "Next": "Weiter"
+  "Next": "Weiter",
+  "Sign in with Google": "Mit Google anmelden",
+  "Set up Google sign-in": "Google-Anmeldung einrichten",
+  "Choose which Google calendars appear in Yogurt.": "Wähle die Google-Kalender aus, die Yogurt anzeigen soll.",
+  "Import a Google Desktop OAuth client file.": "Importiere die Datei eines Google OAuth-Desktopclients.",
+  "Refresh calendars": "Kalender aktualisieren",
+  "Disconnect": "Verbindung trennen",
+  "Use Mac calendars": "Mac-Kalender verwenden",
+  "Waiting for Google…": "Warten auf Google…",
+  "Secure storage is unavailable.": "Der sichere Speicher ist nicht verfügbar.",
+  "Allow calendar access in Google and try again.": "Erlaube bei Google den Kalenderzugriff und versuche es erneut."
 }

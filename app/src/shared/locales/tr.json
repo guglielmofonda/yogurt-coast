@@ -796,5 +796,15 @@
   "Enlarge screenshot": "Ekran görüntüsünü büyüt",
   "This screenshot could not be read.": "Bu ekran görüntüsü okunamadı.",
   "Previous": "Önceki",
-  "Next": "Sonraki"
+  "Next": "Sonraki",
+  "Sign in with Google": "Google ile oturum aç",
+  "Set up Google sign-in": "Google ile oturum açmayı ayarla",
+  "Choose which Google calendars appear in Yogurt.": "Yogurt’ta görünecek Google takvimlerini seçin.",
+  "Import a Google Desktop OAuth client file.": "Google masaüstü OAuth istemci dosyasını içe aktarın.",
+  "Refresh calendars": "Takvimleri yenile",
+  "Disconnect": "Bağlantıyı kes",
+  "Use Mac calendars": "Mac takvimlerini kullan",
+  "Waiting for Google…": "Google bekleniyor…",
+  "Secure storage is unavailable.": "Güvenli depolama kullanılamıyor.",
+  "Allow calendar access in Google and try again.": "Google’da takvim erişimine izin verip tekrar deneyin."
 }

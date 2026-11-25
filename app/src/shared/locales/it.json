@@ -827,5 +827,15 @@
   "Enlarge screenshot": "Ingrandisci schermata",
   "This screenshot could not be read.": "Impossibile leggere questa schermata.",
   "Previous": "Precedente",
-  "Next": "Successiva"
+  "Next": "Successiva",
+  "Sign in with Google": "Accedi con Google",
+  "Set up Google sign-in": "Configura l’accesso con Google",
+  "Choose which Google calendars appear in Yogurt.": "Scegli quali calendari Google visualizzare in Yogurt.",
+  "Import a Google Desktop OAuth client file.": "Importa un file client OAuth di Google per app desktop.",
+  "Refresh calendars": "Aggiorna calendari",
+  "Disconnect": "Disconnetti",
+  "Use Mac calendars": "Usa i calendari del Mac",
+  "Waiting for Google…": "In attesa di Google…",
+  "Secure storage is unavailable.": "L’archivio sicuro non è disponibile.",
+  "Allow calendar access in Google and try again.": "Consenti l’accesso al calendario su Google e riprova."
 }

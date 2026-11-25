@@ -836,5 +836,15 @@
   "Enlarge screenshot": "Збільшити знімок",
   "This screenshot could not be read.": "Не вдалося прочитати цей знімок екрана.",
   "Previous": "Попередній",
-  "Next": "Наступний"
+  "Next": "Наступний",
+  "Sign in with Google": "Увійти через Google",
+  "Set up Google sign-in": "Налаштувати вхід через Google",
+  "Choose which Google calendars appear in Yogurt.": "Виберіть календарі Google для відображення в Yogurt.",
+  "Import a Google Desktop OAuth client file.": "Імпортуйте файл клієнта Google OAuth для настільного застосунку.",
+  "Refresh calendars": "Оновити календарі",
+  "Disconnect": "Від’єднати",
+  "Use Mac calendars": "Використовувати календарі Mac",
+  "Waiting for Google…": "Очікування Google…",
+  "Secure storage is unavailable.": "Захищене сховище недоступне.",
+  "Allow calendar access in Google and try again.": "Дозвольте доступ до календаря в Google та спробуйте ще раз."
 }

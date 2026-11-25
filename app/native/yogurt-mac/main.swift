@@ -635,8 +635,15 @@ case "events":
   let from = date(args[1]), to = date(args[2])
   // ask the Mac to fetch new changes from Google, iCloud and Exchange now rather than on its own schedule (often
   // 15 minutes); it syncs in the background, so an event added elsewhere shows on the next read, a minute later at most
+  var calendars: [EKCalendar]? = nil
+  if let i = args.firstIndex(of: "--excluding") {
+    guard i + 1 < args.count, let ids = try? JSONDecoder().decode([String].self, from: Data(args[i + 1].utf8)) else { fail("Invalid calendar selection") }
+    let hidden = Set(ids)
+    calendars = store.calendars(for: .event).filter { !hidden.contains($0.calendarIdentifier) }
+    if calendars?.isEmpty == true { out([] as [String]); exit(0) }
+  }
   store.refreshSourcesIfNecessary()
-  let found = store.events(matching: store.predicateForEvents(withStart: from, end: to, calendars: nil))
+  let found = store.events(matching: store.predicateForEvents(withStart: from, end: to, calendars: calendars))
     .filter { !$0.isAllDay && $0.status != .canceled }
     .sorted { $0.startDate < $1.startDate }
   // A week of hidden calendars can fill the usual 200 rows before the next visible meeting.

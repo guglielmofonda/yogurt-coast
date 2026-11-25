@@ -814,5 +814,15 @@
   "Enlarge screenshot": "Suurenna kuvakaappausta",
   "This screenshot could not be read.": "Tätä kuvakaappausta ei voitu lukea.",
   "Previous": "Edellinen",
-  "Next": "Seuraava"
+  "Next": "Seuraava",
+  "Sign in with Google": "Kirjaudu Googlella",
+  "Set up Google sign-in": "Määritä Google-kirjautuminen",
+  "Choose which Google calendars appear in Yogurt.": "Valitse Yogurtissa näytettävät Google-kalenterit.",
+  "Import a Google Desktop OAuth client file.": "Tuo Googlen työpöytäsovelluksen OAuth-asiakastiedosto.",
+  "Refresh calendars": "Päivitä kalenterit",
+  "Disconnect": "Katkaise yhteys",
+  "Use Mac calendars": "Käytä Macin kalentereita",
+  "Waiting for Google…": "Odotetaan Googlea…",
+  "Secure storage is unavailable.": "Suojattu tallennustila ei ole käytettävissä.",
+  "Allow calendar access in Google and try again.": "Salli kalenterin käyttö Googlessa ja yritä uudelleen."
 }

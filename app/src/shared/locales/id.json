@@ -766,5 +766,15 @@
   "Enlarge screenshot": "Perbesar tangkapan layar",
   "This screenshot could not be read.": "Tangkapan layar ini tidak dapat dibaca.",
   "Previous": "Sebelumnya",
-  "Next": "Berikutnya"
+  "Next": "Berikutnya",
+  "Sign in with Google": "Login dengan Google",
+  "Set up Google sign-in": "Siapkan login Google",
+  "Choose which Google calendars appear in Yogurt.": "Pilih kalender Google yang muncul di Yogurt.",
+  "Import a Google Desktop OAuth client file.": "Impor file klien OAuth desktop Google.",
+  "Refresh calendars": "Muat ulang kalender",
+  "Disconnect": "Putuskan koneksi",
+  "Use Mac calendars": "Gunakan kalender Mac",
+  "Waiting for Google…": "Menunggu Google…",
+  "Secure storage is unavailable.": "Penyimpanan aman tidak tersedia.",
+  "Allow calendar access in Google and try again.": "Izinkan akses kalender di Google lalu coba lagi."
 }

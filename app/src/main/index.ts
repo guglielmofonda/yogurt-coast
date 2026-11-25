@@ -1,3 +1,5 @@
+import { createGoogleCalendar } from './googleCalendar'
+import { browserGrant, desktopClient, GoogleFailure } from './googleCalendar/oauth'
 import { desktopName } from '../shared/desktopName'
 import { importPhoneRecording } from './companion/phoneImport'
 import { loadWindowState, placeWindow, saveWindowState } from './windowState'
@@ -24,7 +26,7 @@ import { resumesNote } from '../shared/agendaNote'
 import { relaunchOptions, stripAppImageEnv } from './relaunch'
 import { capabilities, micListHelper, platformOf, supportedKinds } from '../shared/platform'
 import { app, BrowserWindow, dialog, ipcMain, nativeTheme, Notification, protocol, safeStorage, screen, shell } from 'electron'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import { basename, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -599,7 +601,22 @@ app.whenReady().then(() => {
   const calendarLinks = caps.calendar ? createCalendarLinks({
     file: join(userDataDir(), 'settings.json'), get: getCalendar, seal: sealSecret, open: openSecret,
   }) : null
-  if (calendarLinks) setCalendarLinkSource(calendarLinks, { alongside: !caps.calendarLink })
+  const clientName = 'google-calendar-client.json'
+  const localClient = join(userDataDir(), clientName)
+  const google = createGoogleCalendar({
+    file: join(userDataDir(), 'settings.json'),
+    client: () => desktopClient(join(process.resourcesPath, clientName)) ?? desktopClient(join(__dirname, '../../resources', clientName)) ?? desktopClient(localClient),
+    secure: () => safeStorage.isEncryptionAvailable() && (process.platform !== 'linux' || safeStorage.getSelectedStorageBackend() !== 'basic_text'),
+    seal: s => safeStorage.encryptString(s).toString('base64'),
+    unseal: s => safeStorage.decryptString(Buffer.from(s, 'base64')),
+    grant: (c, signal) => browserGrant(c, url => shell.openExternal(url), signal),
+  })
+  app.on('will-quit', () => google.cancel())
+  if (calendarLinks) setCalendarLinkSource({
+    status: () => loadSettings(join(userDataDir(), 'settings.json')).googleCalendar ? 'granted' : calendarLinks.status(),
+    calendars: async () => [...google.calendars(), ...await calendarLinks.calendars()],
+    events: async (from, to, unavailable, hidden) => (await Promise.all([google.events(from, to, unavailable), calendarLinks.events(from, to, unavailable, hidden)])).flat(),
+  }, { alongside: !caps.calendarLink })
   const preferences = hookPreferences({
     recordingPillChanged: on => recordingPillChanged(on),
     file: join(userDataDir(), 'settings.json'), permissions, kinds: supportedKinds(caps), os: platform,
@@ -1235,13 +1252,43 @@ app.whenReady().then(() => {
   })
   const calendarList = async () => {
     const list = await calendars(), settings = loadSettings(settingsFile), hidden = settings.hiddenCalendarIds ?? []
-    const linkIds = new Set(calendarLinks?.list().map((l) => l.id) ?? [])
-    return { status: calendarStatus(), systemStatus: systemCalendarStatus(), hideEventsWithoutCallLink: settings.hideEventsWithoutCallLink === true,
-      calendars: list.map((c) => ({ ...c, enabled: !hidden.includes(c.id), ...(linkIds.has(c.id) ? { link: true } : {}) })) }
+    const linkIds = new Set(calendarLinks?.list().map((l) => l.id) ?? []), googleIds = google.selectedIds(settings.googleCalendar)
+    return { status: calendarStatus(), systemStatus: systemCalendarStatus(), systemEnabled: settings.useSystemCalendars !== false,
+      google: google.info(), hideEventsWithoutCallLink: settings.hideEventsWithoutCallLink === true,
+      calendars: list.map((c) => ({ ...c, enabled: c.id.startsWith('google:') ? googleIds.has(c.id) : !hidden.includes(c.id), ...(linkIds.has(c.id) ? { link: true } : {}) })) }
   }
   ipcMain.handle('calendar:list', calendarList)
+  const calendarsChanged = () => { refreshCalendarConsumers(); win?.webContents.send('calendar:changed') }
+  ipcMain.handle('calendar:google', async (_e, action: unknown) => {
+    try {
+      if (action === 'connect') await google.connect()
+      else if (action === 'cancel') google.cancel()
+      else if (action === 'refresh') await google.refresh()
+      else if (action === 'disconnect') google.disconnect()
+      else if (action === 'configure') {
+        if (google.info().configured) return { ok: true }
+        const picked = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'Google Desktop OAuth client', extensions: ['json'] }] })
+        if (picked.canceled) return { ok: false, error: 'cancelled' }
+        const client = desktopClient(picked.filePaths[0])
+        if (!client) return { ok: false, error: 'setup' }
+        writeFileSync(localClient + '.part', JSON.stringify({ installed: client }), { mode: 0o600 })
+        renameSync(localClient + '.part', localClient)
+      } else return { ok: false, error: 'connection' }
+      calendarsChanged()
+      return { ok: true }
+    } catch (e) { return { ok: false, error: e instanceof GoogleFailure ? e.reason : 'connection' } }
+  })
+  ipcMain.handle('calendar:use-system', (_e, on: unknown) => {
+    if (typeof on !== 'boolean' || caps.calendarLink) return false
+    updateSettings(settingsFile, { useSystemCalendars: on })
+    calendarsChanged(); return true
+  })
   ipcMain.handle('calendar:set-enabled', async (_e, id: unknown, enabled: unknown) => {
     if (typeof id !== 'string' || id.length > 1024 || typeof enabled !== 'boolean') return false
+    if (id.startsWith('google:')) {
+      if (!google.setEnabled(id, enabled)) return false
+      calendarsChanged(); return true
+    }
     if (!(await calendars()).some((c) => c.id === id)) return false
     const hidden = new Set(loadSettings(settingsFile).hiddenCalendarIds ?? [])
     if (enabled) hidden.delete(id); else hidden.add(id)
@@ -1288,6 +1335,7 @@ app.whenReady().then(() => {
     return true
   })
   ipcMain.handle('calendar:connect', async () => {
+    if (loadSettings(settingsFile).useSystemCalendars === false) { goTo('/settings/calendars'); return refreshCalendarStatus() }
     // a calendar link is pasted in Settings' calendars: the same form as the first run's
     if (calendarLinks && caps.calendarLink) { goTo('/settings/calendar'); return refreshCalendarStatus() }
     const was = await refreshCalendarStatus()

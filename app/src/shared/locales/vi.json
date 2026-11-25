@@ -766,5 +766,15 @@
   "Enlarge screenshot": "Phóng to ảnh chụp màn hình",
   "This screenshot could not be read.": "Không thể đọc ảnh chụp màn hình này.",
   "Previous": "Trước",
-  "Next": "Tiếp"
+  "Next": "Tiếp",
+  "Sign in with Google": "Đăng nhập bằng Google",
+  "Set up Google sign-in": "Thiết lập đăng nhập Google",
+  "Choose which Google calendars appear in Yogurt.": "Chọn những lịch Google sẽ hiển thị trong Yogurt.",
+  "Import a Google Desktop OAuth client file.": "Nhập tệp ứng dụng OAuth Google dành cho máy tính.",
+  "Refresh calendars": "Làm mới lịch",
+  "Disconnect": "Ngắt kết nối",
+  "Use Mac calendars": "Dùng lịch trên máy Mac",
+  "Waiting for Google…": "Đang chờ Google…",
+  "Secure storage is unavailable.": "Bộ nhớ an toàn không khả dụng.",
+  "Allow calendar access in Google and try again.": "Cho phép truy cập lịch trong Google rồi thử lại."
 }

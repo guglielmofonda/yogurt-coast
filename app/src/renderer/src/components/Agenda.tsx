@@ -3,7 +3,7 @@ import { InlineError } from './InlineError'
 import { ScrollFade } from './ScrollFade'
 import { LoadingContent } from './LoadingContent'
 import { LevelBars } from './LevelBars'
-import { CalendarDays, ChevronLeft, ChevronRight, Clock, ExternalLink, FileText, Mic, UsersRound, X } from './Icons'
+import { CalendarDays, ChevronLeft, ChevronRight, Clock, ExternalLink, FileText, Mic, SlidersHorizontal, UsersRound, X } from './Icons'
 import type { AgendaEvent, CalendarStatus, MeetingCard } from '../../../shared/types'
 import { rememberedScroll, useScrollMemory } from '../useScrollMemory'
 import { language, t } from '../../../shared/i18n'
@@ -128,7 +128,10 @@ export function Agenda({ revision, recording, onStart, onOpen, jumpTo }: Actions
   return <aside ref={narrowScroll} className="native-agenda" aria-label={t('Agenda')}>
     <div className="agenda-header">
       <h2>{t('Agenda')}</h2>
-      <button className="workspace-button" onClick={() => { const at = shiftDay(Date.now(), 0); setSelected(at); setWeekAnchor(at); setInspected(undefined); setJump(n => n + 1) }}>{t('Today')}</button>
+      <div className="agenda-header-actions">
+        <button type="button" className="workspace-button" data-testid="agenda-calendars" onClick={() => window.yogurt.nav.go('/settings/calendars')}><SlidersHorizontal size={13} aria-hidden="true" />{t('Calendars')}</button>
+        <button className="workspace-button" onClick={() => { const at = shiftDay(Date.now(), 0); setSelected(at); setWeekAnchor(at); setInspected(undefined); setJump(n => n + 1) }}>{t('Today')}</button>
+      </div>
     </div>
     <div className="agenda-navigation">
       <span className="agenda-month">{new Date(weekAnchor).toLocaleDateString(language(), { month: 'long', year: 'numeric' })}</span>

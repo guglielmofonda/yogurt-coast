@@ -825,5 +825,15 @@
   "Enlarge screenshot": "Mărește captura",
   "This screenshot could not be read.": "Această captură nu a putut fi citită.",
   "Previous": "Înapoi",
-  "Next": "Înainte"
+  "Next": "Înainte",
+  "Sign in with Google": "Conectează-te cu Google",
+  "Set up Google sign-in": "Configurează conectarea cu Google",
+  "Choose which Google calendars appear in Yogurt.": "Alege calendarele Google care apar în Yogurt.",
+  "Import a Google Desktop OAuth client file.": "Importă un fișier client Google OAuth pentru desktop.",
+  "Refresh calendars": "Actualizează calendarele",
+  "Disconnect": "Deconectează",
+  "Use Mac calendars": "Folosește calendarele de pe Mac",
+  "Waiting for Google…": "Se așteaptă răspunsul Google…",
+  "Secure storage is unavailable.": "Stocarea securizată nu este disponibilă.",
+  "Allow calendar access in Google and try again.": "Permite accesul la calendar în Google și încearcă din nou."
 }

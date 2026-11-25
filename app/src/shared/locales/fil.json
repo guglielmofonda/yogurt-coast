@@ -808,5 +808,15 @@
   "Enlarge screenshot": "Palakihin ang screenshot",
   "This screenshot could not be read.": "Hindi mabasa ang screenshot na ito.",
   "Previous": "Nakaraan",
-  "Next": "Susunod"
+  "Next": "Susunod",
+  "Sign in with Google": "Mag-sign in gamit ang Google",
+  "Set up Google sign-in": "I-set up ang pag-sign in sa Google",
+  "Choose which Google calendars appear in Yogurt.": "Piliin kung aling mga kalendaryo ng Google ang lalabas sa Yogurt.",
+  "Import a Google Desktop OAuth client file.": "Mag-import ng Google Desktop OAuth client file.",
+  "Refresh calendars": "I-refresh ang mga kalendaryo",
+  "Disconnect": "Idiskonekta",
+  "Use Mac calendars": "Gamitin ang mga kalendaryo ng Mac",
+  "Waiting for Google…": "Naghihintay sa Google…",
+  "Secure storage is unavailable.": "Hindi magamit ang secure na storage.",
+  "Allow calendar access in Google and try again.": "Payagan ang access sa kalendaryo sa Google at subukan ulit."
 }

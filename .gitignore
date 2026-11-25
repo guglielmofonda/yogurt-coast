@@ -52,3 +52,5 @@ ios/YogurtKit/.swiftpm/
 docs/superpowers/
 AGENTS.md
 CLAUDE.md
+
+/app/resources/google-calendar-client.json

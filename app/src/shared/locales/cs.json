@@ -839,5 +839,15 @@
   "Enlarge screenshot": "Zvětšit snímek",
   "This screenshot could not be read.": "Tento snímek nelze načíst.",
   "Previous": "Předchozí",
-  "Next": "Další"
+  "Next": "Další",
+  "Sign in with Google": "Přihlásit se přes Google",
+  "Set up Google sign-in": "Nastavit přihlášení přes Google",
+  "Choose which Google calendars appear in Yogurt.": "Vyberte kalendáře Google, které se mají v Yogurt zobrazit.",
+  "Import a Google Desktop OAuth client file.": "Importujte soubor klienta Google OAuth pro počítače.",
+  "Refresh calendars": "Obnovit kalendáře",
+  "Disconnect": "Odpojit",
+  "Use Mac calendars": "Používat kalendáře Macu",
+  "Waiting for Google…": "Čekání na Google…",
+  "Secure storage is unavailable.": "Zabezpečené úložiště není dostupné.",
+  "Allow calendar access in Google and try again.": "Povolte přístup ke kalendáři v Googlu a zkuste to znovu."
 }

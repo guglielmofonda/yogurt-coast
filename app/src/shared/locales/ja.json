@@ -766,5 +766,15 @@
   "Enlarge screenshot": "スクリーンショットを拡大",
   "This screenshot could not be read.": "このスクリーンショットを読み込めませんでした。",
   "Previous": "前へ",
-  "Next": "次へ"
+  "Next": "次へ",
+  "Sign in with Google": "Google でログイン",
+  "Set up Google sign-in": "Google ログインを設定",
+  "Choose which Google calendars appear in Yogurt.": "Yogurt に表示する Google カレンダーを選択してください。",
+  "Import a Google Desktop OAuth client file.": "Google のデスクトップ用 OAuth クライアントファイルを読み込んでください。",
+  "Refresh calendars": "カレンダーを更新",
+  "Disconnect": "接続を解除",
+  "Use Mac calendars": "Mac のカレンダーを使用",
+  "Waiting for Google…": "Google の応答を待っています…",
+  "Secure storage is unavailable.": "安全なストレージを利用できません。",
+  "Allow calendar access in Google and try again.": "Google でカレンダーへのアクセスを許可してから、もう一度お試しください。"
 }

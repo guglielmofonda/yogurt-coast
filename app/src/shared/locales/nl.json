@@ -808,5 +808,15 @@
   "Enlarge screenshot": "Schermafbeelding vergroten",
   "This screenshot could not be read.": "Deze schermafbeelding kon niet worden gelezen.",
   "Previous": "Vorige",
-  "Next": "Volgende"
+  "Next": "Volgende",
+  "Sign in with Google": "Inloggen met Google",
+  "Set up Google sign-in": "Inloggen met Google instellen",
+  "Choose which Google calendars appear in Yogurt.": "Kies welke Google-agenda’s in Yogurt verschijnen.",
+  "Import a Google Desktop OAuth client file.": "Importeer een Google OAuth-clientbestand voor desktopapps.",
+  "Refresh calendars": "Agenda’s vernieuwen",
+  "Disconnect": "Verbinding verbreken",
+  "Use Mac calendars": "Mac-agenda’s gebruiken",
+  "Waiting for Google…": "Wachten op Google…",
+  "Secure storage is unavailable.": "Beveiligde opslag is niet beschikbaar.",
+  "Allow calendar access in Google and try again.": "Sta agendatoegang bij Google toe en probeer het opnieuw."
 }
