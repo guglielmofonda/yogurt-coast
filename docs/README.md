@@ -15,9 +15,9 @@ Coast controls when it captures your screen. The recording window controls which
 
 Apple Vision extracts text from each attached image. Press **⌘K** and enter a phrase from a slide or demo. A result labeled **Screenshot** shows the matching text and opens the meeting. In **Ask**, try a question about the same detail and follow its source back to the meeting.
 
-![Searching for 37 credits finds the Pilot planning meeting. Its Screenshot result quotes the budget from the slide.](assets/coast-search.webp)
+![Searching for Tidal Atlas finds the Fieldwork cover review. Its Screenshot result quotes the cover title.](assets/coast-search.webp)
 
-In this fictional example, the slide is the only place the budget appears. Saved images and their text live in Yogurt’s profile on your Mac, by default `~/Library/Application Support/Yogurt`.
+In this fictional design review, the shared cover proof is the only place the words “Tidal Atlas” appear. Saved images and their text live in Yogurt’s profile on your Mac, by default `~/Library/Application Support/Yogurt`.
 
 ## Choose calendars
 

@@ -1,26 +1,65 @@
-# Yogurt + Coast
+<p align="center">
+  <img src="app/build/icons/128x128.png" width="76" height="76" alt="" />
+</p>
 
-Find a slide you saw in a meeting, even if nobody said its contents aloud. Yogurt + Coast is a macOS fork of Yogurt that puts selected screenshots beside your notes and makes the words on screen searchable.
+<h1 align="center">Yogurt + Coast</h1>
 
-**Run it on your Mac from source.** [Build instructions](docs/building.md#run-on-your-mac) · [User guide](docs/README.md) · [Connect Codex or Hermes](docs/README.md#connect-an-agent)
+<p align="center">
+  <strong>An open-source, local alternative to Granola, with screen context.</strong><br />
+  Your Mac turns calls into notes you can search by what people said and what they showed you.
+</p>
 
-## From a call to a searchable note
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#search-a-shared-screen">Search a shared screen</a> ·
+  <a href="#everyday-controls">Everyday controls</a> ·
+  <a href="docs/README.md#connect-an-agent">Connect an agent</a>
+</p>
 
-1. Start a recording with Coast Local running. Yogurt records the conversation and lets you take notes.
-2. Stop recording. Yogurt looks for screen changes during the recorded intervals. A local language model chooses useful moments, such as a new slide, a demo step, or a link shared in chat. Open **My notes → Coast screenshots** to see them with capture times.
-3. Press **⌘K** to search for words in an image, or use **Ask** to get an answer with a screenshot reference. Apple Vision reads the selected images on your Mac.
+![The Fieldwork cover review in Yogurt. The second of two Coast screenshots shows the Tidal Atlas cover marked “Approved for print.”](docs/assets/coast-meeting.webp)
 
-![A finished Pilot planning note with a timestamped Coast screenshot showing the Juniper Observatory slide and its launch budget of 37 credits.](docs/assets/coast-meeting.webp)
+In this fictional design review, the note says to send the selected cover to print. Its name, **Tidal Atlas**, appears only on the shared proof. Yogurt keeps that proof with the meeting.
 
-In this fictional meeting, searching for **37 credits** brings up *Pilot planning*. The number appears only on the slide. [See the search result](docs/README.md#find-what-was-on-screen)
+## Search a shared screen
 
-## Calendars and agent access
+After recording stops, a local model picks useful screens from the call, such as a new slide, a demo step, or a link in chat. It skips paused intervals. Apple Vision reads the text in each saved image.
 
-- **Calendars.** In **Agenda → Calendars**, choose individual calendars from the accounts already in Apple Calendar, including Google and iCloud. Checked calendars come first, followed by the Mac’s default and likely main account calendars. Your choices apply to the agenda, reminders, meeting matching, and agent calendar queries.
-- **Agents.** Give Codex on your Mac or Hermes on another computer read-only access through the Model Context Protocol (MCP). An agent can find a meeting, read timestamped screen text, and ask questions across your notes. [Agent setup](docs/README.md#connect-an-agent)
+Press **⌘K** and enter words you remember seeing. Searching for **Tidal Atlas** finds the cover review even though the title never appears in the transcript or typed notes.
 
-## Where your data goes
+<p align="center">
+  <img src="docs/assets/coast-search.webp" width="700" alt="The search for Tidal Atlas returns Fieldwork cover review with a result labeled Screenshot and the matching words from the cover." />
+</p>
 
-Recording, transcription, screenshot selection, OCR, and Yogurt’s own meeting Q&A run on your Mac without a Yogurt account or backend. Setup downloads the models. Coast Local manages its own capture history. Yogurt copies selected images into its local meeting library. macOS handles calendar sync with your providers. If you connect an agent that uses a hosted model, the meeting content it reads can reach that provider. [Screenshot selection](app/src/main/coastSelection.ts) · [Apple Vision OCR](app/native/yogurt-mac/ScreenText.swift) · [MCP tools](app/src/main/mcp/server.ts)
+## Quick start
 
-This fork builds on Frigade’s work on local recording, transcription, summaries, and meeting search. Coast Local is installed separately. [Upstream Yogurt](https://github.com/FrigadeHQ/yogurt) · [Coast Local](https://coast.app/) · [MIT license](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
+The fork ships as source. It requires an Apple silicon Mac with macOS 14.4 or later and at least 8 GB of memory. Install Node.js 24, pnpm 10.7.0, CMake, and Xcode Command Line Tools. [Mac build guide](docs/building.md#run-on-your-mac)
+
+1. **Set up screen capture.** Install Coast Local in Applications, grant screen recording access, enable its local CLI bridge, and leave it running. [Get Coast Local](https://coast.app/)
+2. **Launch the fork.** Quit any existing copy of Yogurt first. Both builds use the same default meeting library.
+
+   ```sh
+   git clone https://github.com/guglielmofonda/yogurt-coast.git
+   cd yogurt-coast
+   pnpm install --frozen-lockfile
+   pnpm -C app native
+   pnpm dev
+   ```
+
+3. **Record your first call.** Let the local models download, then choose **Start recording**. After you stop, open **My notes → Coast screenshots**.
+
+## Everyday controls
+
+| Task | Where to go |
+| --- | --- |
+| Revisit a slide or demo | Open **My notes → Coast screenshots**. Browse by capture time or click an image to enlarge it. |
+| Ask about a decision | Open **Ask**. Answers can cite the transcript or the screenshot where the detail appeared. |
+| Choose your calendars | Open **Agenda → Calendars** and check the calendars you want. Google and iCloud accounts already in Apple Calendar work here. |
+| Give your agent read access | Enable **Settings → AI apps → Let AI apps read your meetings**. Connect Codex locally or Hermes over SSH with the read-only MCP helper. [Agent setup](docs/README.md#connect-an-agent) |
+
+## What stays on your Mac
+
+Recording, transcription, summaries, screenshot selection, OCR, and Yogurt’s own Q&A run locally. No Yogurt account or meeting bot is required. Coast Local manages its capture history separately. Yogurt copies the selected images into your meeting library.
+
+Setup downloads models, and macOS syncs calendars with the providers you choose. If you connect an agent that uses a hosted model, the meeting content it retrieves can reach that provider. [User guide](docs/README.md) · [Screenshot selection code](app/src/main/coastSelection.ts) · [OCR code](app/native/yogurt-mac/ScreenText.swift)
+
+Yogurt + Coast builds on Frigade’s open-source Yogurt. The example cover uses Lena River Delta imagery from USGS/NASA Landsat. [Upstream Yogurt](https://github.com/FrigadeHQ/yogurt) · [MIT license](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md) · [Image credit](https://science.nasa.gov/earth/earth-observatory/lena-river-delta-2704/)
