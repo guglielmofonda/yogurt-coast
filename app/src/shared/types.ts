@@ -407,7 +407,7 @@ export type StartResult = { id: string; alreadyRecording?: true; resumeRequested
 /** one meeting found: parts is a piece of its notes or transcript, hit on the words matched */
 export type SearchResult = {
   meetingId: string; title: string; startedAt: number; attendees: Person[]; folder?: Pick<Folder, 'id' | 'name' | 'color'>
-  preview: string; parts: SnippetPart[]; confident?: boolean
+  preview: string; parts: SnippetPart[]; confident?: boolean; screenCapturedAt?: number
 }
 
 /**

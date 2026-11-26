@@ -24,7 +24,7 @@ test('keyboard regeneration focuses the optional note, respects Search, and rest
   const { app, page, editor, trigger, exact } = await launchEdited()
   try {
     await expect(page.getByRole('tablist')).toHaveCount(1)
-    await expect(page.getByRole('tablist').getByRole('tab')).toHaveText(['Transcript', 'My notes', 'Summary'])
+    await expect(page.getByRole('tablist').getByRole('tab')).toHaveText(['Transcript', 'My notes', 'Summary', 'Screenshots'])
     await expect(page.getByTestId('note-view-menu')).toHaveCount(0)
     await expect(page.getByRole('textbox', { name: 'Summary', exact: true })).toBeVisible()
     await trigger.focus()

@@ -57,14 +57,16 @@ function useAutosave(id: string, side: NoteSide, text: string, saved?: NoteSaveR
   return { change: (md: string) => saver.change(md), flush: () => saver.flush(), status: saver.status, reason: saver.reason }
 }
 
-const readingViews = new Map<string, { primary: 'transcript' | 'notes'; view: 'mine' | 'enhanced' }>()
+type MeetingTab = 'transcript' | 'notes' | 'screenshots'
+export type NoteTarget = { ms: number | null; match?: string; screenCapturedAt?: number }
+const readingViews = new Map<string, { primary: MeetingTab; view: 'mine' | 'enhanced' }>()
 
 /** A meeting keeps its reading tab when revisited; an explicit source or recording action can still switch it. */
 export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResumeRequested }: {
   onSource: (s: LibrarySource, match?: string) => void
   id: string; onTitleChange: (meeting: Pick<MeetingView, 'id' | 'title'>) => void
   /** A citation target: null ms selects notes; seq identifies each Open action. */
-  at?: { ms: number | null; match?: string; seq: number }
+  at?: NoteTarget & { seq: number }
   folderSuggestion?: FolderSuggestion
   onResumeRequested?: () => void
 }) {
@@ -120,8 +122,9 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
   /** the person picked a side themselves: it is never switched for them after that */
   const picked = useRef(readingViews.has(id))
   const typing = useRef(false)
-  const [primaryState, setPrimary] = useState<'transcript' | 'notes'>(() => readingViews.get(id)?.primary ?? 'notes')
-  const primary = instantSummary ? 'notes' : primaryState
+  const [primaryState, setPrimary] = useState<MeetingTab>(() => readingViews.get(id)?.primary ?? 'notes')
+  const screenshotsAvailable = m?.id === id && (m.state === 'stopped' || m.state === 'done') && !m.stopSavePending && m.trashedAt == null
+  const primary = instantSummary || (primaryState === 'screenshots' && !screenshotsAvailable) ? 'notes' : primaryState
   const readingScroll = useScrollMemory<HTMLElement>(`note/${id}/${view}`, !!m && !!notes && primary === 'notes')
   useEffect(() => { if (m && notes) readingViews.set(id, { primary, view }) }, [id, m, notes, primary, view])
   const [transcriptVisited, setTranscriptVisited] = useState(primary === 'transcript')
@@ -133,7 +136,6 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
   useEffect(() => () => { tabRequest.current++; panelTransition.current?.skipTransition() }, [id])
   const primaryTabs = useRef<HTMLDivElement>(null)
   const transcriptButton = useRef<HTMLButtonElement>(null)
-  const notesButton = useRef<HTMLButtonElement>(null)
   const summaryButton = useRef<HTMLButtonElement>(null)
   const [rewriteOpen, setRewriteOpen] = useState(false)
   const [editedHere, setEditedHere] = useState(false)
@@ -155,12 +157,20 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
     if (!at || !notes || !m || sourceDone.current === at.seq) return
     sourceDone.current = at.seq
     picked.current = true
+    requestFinish(false)
+    ++tabRequest.current
+    panelTransition.current?.skipTransition()
+    if (at.screenCapturedAt != null && screenshotsAvailable) {
+      setPrimary('screenshots')
+      setRewriteOpen(false)
+      return
+    }
     setPrimary(at.ms === null ? 'notes' : 'transcript')
     if (at.ms === null) {
       const inSummary = at.match && citationTargetIndex([notes.enhanced ?? ''], at.match) >= 0
       setView(hasEnhanced && (inSummary || !at.match) ? 'enhanced' : 'mine')
     }
-  }, [at?.seq, notes, m, hasEnhanced])
+  }, [at?.seq, notes, m, hasEnhanced, screenshotsAvailable])
 
   // the recorder's hints (the widget shows them too), while this meeting records
   const togglePause = async () => {
@@ -247,7 +257,7 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
     const tabs = primaryTabs.current
     if (!tabs) return
     const position = () => {
-      const active = (primary === 'transcript' ? transcriptButton : view === 'enhanced' && summaryButton.current ? summaryButton : notesButton).current
+      const active = tabs.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')
       if (!active) return
       const tab = active.getBoundingClientRect(), row = tabs.getBoundingClientRect()
       const x = getComputedStyle(tabs).direction === 'rtl' ? tab.right - row.right : tab.left - row.left
@@ -257,9 +267,9 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
     position()
     const resize = new ResizeObserver(position)
     resize.observe(tabs)
-    for (const button of [transcriptButton.current, notesButton.current, summaryButton.current]) if (button) resize.observe(button)
+    tabs.querySelectorAll('[role="tab"]').forEach(button => resize.observe(button))
     return () => resize.disconnect()
-  }, [primary, view, m?.state, notes?.status])
+  }, [primary, view, m?.state, notes?.status, screenshotsAvailable])
 
   const summarizing = finishing || summaryPending
   const resumeHandled = useRef(false)
@@ -285,14 +295,14 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
   const resumeLabel = summaryPending ? t('Stop summarizing') : t('Resume recording')
 
   const pick = (v: 'mine' | 'enhanced') => { picked.current = true; setView(v); mineSave.flush(); enhancedSave.flush() }
-  const pickPrimary = (next: 'transcript' | 'notes', pointer = false) => {
+  const pickPrimary = (next: MeetingTab, pointer = false) => {
     setTabPointer(pointer)
     if (next === primaryState) return
     setPrimary(next)
-    if (next === 'transcript') setRewriteOpen(false)
+    if (next !== 'notes') setRewriteOpen(false)
     void mineSave.flush(); void enhancedSave.flush()
   }
-  const pickTab = (next: 'transcript' | 'notes', side?: 'mine' | 'enhanced', pointer = false) => {
+  const pickTab = (next: MeetingTab, side?: 'mine' | 'enhanced', pointer = false) => {
     requestFinish(false)
     const request = ++tabRequest.current
     panelTransition.current?.skipTransition()
@@ -313,7 +323,7 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
   const primaryKey = (e: KeyboardEvent<HTMLButtonElement>) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return
     e.preventDefault()
-    const buttons = [transcriptButton.current, notesButton.current, ...(hasEnhanced ? [summaryButton.current] : [])]
+    const buttons = Array.from(primaryTabs.current!.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
     const direction = getComputedStyle(e.currentTarget).direction === 'rtl' ? -1 : 1
     const step = e.key === 'ArrowRight' ? direction : -direction
     const index = buttons.indexOf(e.currentTarget)
@@ -438,7 +448,7 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
               tabIndex={primary === 'transcript' ? 0 : -1} onKeyDown={primaryKey} onClick={(e) => pickTab('transcript', undefined, e.detail > 0)}>
               {t('Transcript')}
             </button>
-            <button ref={notesButton} id="note-notes-tab" data-testid="note-notes-tab" role="tab" aria-selected={primary === 'notes' && shown === 'mine'} aria-controls="note-notes-panel"
+            <button id="note-notes-tab" data-testid="note-notes-tab" role="tab" aria-selected={primary === 'notes' && shown === 'mine'} aria-controls="note-notes-panel"
               data-version={shown} tabIndex={primary === 'notes' && shown === 'mine' ? 0 : -1} onKeyDown={primaryKey}
               onClick={(e) => pickTab('notes', 'mine', e.detail > 0)}>
               {t('My notes')}
@@ -448,6 +458,10 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
               tabIndex={primary === 'notes' && shown === 'enhanced' ? 0 : -1} onKeyDown={primaryKey}
               onClick={(e) => pickTab('notes', 'enhanced', e.detail > 0)}>
               {t('Summary')}{summaryPending && <span className="summary-writing-mark" aria-hidden="true" />}
+            </button>}
+            {screenshotsAvailable && <button id="note-screenshots-tab" data-testid="note-screenshots-tab" role="tab" aria-selected={primary === 'screenshots'} aria-controls="note-screenshots-panel"
+              tabIndex={primary === 'screenshots' ? 0 : -1} onKeyDown={primaryKey} onClick={(e) => pickTab('screenshots', undefined, e.detail > 0)}>
+              {t('Screenshots')}
             </button>}
             </div>
             {hasEnhanced && summaryPending && <span id="note-summary-phase" hidden>{notes.status === 'waiting' ? t('Preparing…') : t('Writing the summary')}</span>}
@@ -460,12 +474,16 @@ export function Note({ id, onTitleChange, at, folderSuggestion, onSource, onResu
           <div ref={panels} className="note-panels">
           <NoteReadingPane active={primary === 'notes'} summary={shown === 'enhanced'} generating={shown === 'enhanced' && ['waiting', 'rewriting', 'handoff', 'reset', 'streaming'].includes(summaryState)} resetting={shown === 'enhanced' && summaryState === 'reset'} writing={shown === 'enhanced' && summaryState === 'streaming'} scroll={readingScroll}>
                 {shown === 'mine' ? <Editor
-                  focus={primary === 'notes' && at?.ms === null ? at : undefined} testId="note-mine" label={t('My notes')} className="min-h-[40vh]" markdown={notes.mine} placeholder={t('You can add notes here to guide the summary.')}
+                  focus={primary === 'notes' && at?.ms === null && at.screenCapturedAt == null ? at : undefined} testId="note-mine" label={t('My notes')} className="min-h-[40vh]" markdown={notes.mine} placeholder={t('You can add notes here to guide the summary.')}
                   onChange={(md) => { typing.current = true; const next = { ...current.current!, mine: md }; current.current = next; setNotes(next); mineSave.change(md) }}
                   onBlur={() => { typing.current = false; mineSave.flush() }}
-                /> : <Enhanced key={id} presentation={summaryState} focus={primary === 'notes' && at?.ms === null ? at : undefined} notes={notes} disabled={starting} onChange={(md) => { setEditedHere(true); const next = { ...current.current!, enhanced: md }; current.current = next; setNotes(next); enhancedSave.change(md) }} onBlur={enhancedSave.flush} onRetry={requestRewrite} />}
-                {!recording && !m.stopSavePending && <CoastScreenshots key={id} id={id} />}
+                /> : <Enhanced key={id} presentation={summaryState} focus={primary === 'notes' && at?.ms === null && at.screenCapturedAt == null ? at : undefined} notes={notes} disabled={starting} onChange={(md) => { setEditedHere(true); const next = { ...current.current!, enhanced: md }; current.current = next; setNotes(next); enhancedSave.change(md) }} onBlur={enhancedSave.flush} onRetry={requestRewrite} />}
           </NoteReadingPane>
+          {screenshotsAvailable && <section hidden={primary !== 'screenshots'} id="note-screenshots-panel" role="tabpanel" aria-labelledby="note-screenshots-tab" tabIndex={0} className="note-content note-notes-pane">
+            <div className="note-page-width note-notes-body">
+              <CoastScreenshots id={id} active={primary === 'screenshots'} target={at} />
+            </div>
+          </section>}
           {(primary === 'transcript' || transcriptVisited) && <section hidden={primary !== 'transcript'} id="note-transcript-panel" role="tabpanel" aria-labelledby="note-transcript-tab" className="note-content note-transcript-pane">
             <Transcript notice={
               hasAudio && (m.transcriptionPending || !hasTranscript) || m.transcriptionState === 'waiting-model' || m.transcriptionState === 'waiting-recording'

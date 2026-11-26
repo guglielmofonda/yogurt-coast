@@ -52,7 +52,7 @@ export function SourceCitationCard({ source, sentence, triggerId, open, animate,
         {item.atMs !== null && <><span aria-hidden="true">·</span><time className="citation-moment">{clock(preview.match.atMs ?? item.atMs)}</time></>}
       </div>
       {preview.match.text && <blockquote className="citation-quote" data-testid="citation-excerpt" dir="auto"><q>{preview.before.text && <span className="citation-context">{preview.before.text} </span>}<span className="citation-match">{preview.match.text}</span>{preview.after.text && <span className="citation-context"> {preview.after.text}</span>}</q></blockquote>}
-      <div className="citation-footer"><button className="ghost-btn" data-testid="citation-open" aria-label={t('Open {source}', { source: title })} onClick={() => onOpen(preview.match.text, item, preview.match.atMs)}>{item.atMs !== null ? t('Open in transcript') : t('Open note')}<ArrowUpRight size={12} aria-hidden="true" /></button></div>
+      <div className="citation-footer"><button className="ghost-btn" data-testid="citation-open" aria-label={t('Open {source}', { source: title })} onClick={() => onOpen(preview.match.text, item, preview.match.atMs)}>{item.screenAtMs != null ? t('Open screenshot') : item.atMs !== null ? t('Open in transcript') : t('Open note')}<ArrowUpRight size={12} aria-hidden="true" /></button></div>
     </section>
   }
   return <Popover.Portal container={anchor?.closest('dialog') ?? undefined}>

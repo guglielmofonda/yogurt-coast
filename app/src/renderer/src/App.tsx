@@ -5,7 +5,7 @@ import { StartRecording } from './components/StartRecording'
 import { useEffect, useRef, useState } from 'react'
 import { rememberScrollPositions } from './useScrollMemory'
 import { Onboarding } from './screens/Onboarding'
-import { Note } from './screens/Note'
+import { Note, type NoteTarget } from './screens/Note'
 import { Home } from './screens/Home'
 import { Settings } from './screens/Settings'
 import { Shortcuts } from './components/Shortcuts'
@@ -181,12 +181,15 @@ export function App() {
     window.addEventListener('mouseup', onMouse, true)
     return () => { window.removeEventListener('keydown', onKey, true); window.removeEventListener('mouseup', onMouse, true) }
   }, [ready, holding])
-  const open = (id: string) => { setSearching(false); go(`/note/${id}`) }
-  /** A citation opens its matching notes paragraph or transcript segment. */
-  const [jump, setJump] = useState<{ id: string; ms: number | null; match?: string; seq: number }>()
+  const [jump, setJump] = useState<NoteTarget & { id: string; seq: number }>()
+  const jumpSeq = useRef(0)
+  const open = (id: string, target?: NoteTarget) => {
+    setJump(target && { ...target, id, seq: ++jumpSeq.current })
+    setSearching(false)
+    go(`/note/${id}`)
+  }
   const openSource = (s: LibrarySource, match?: string) => {
-    setJump((cur) => ({ id: s.meetingId, ms: s.atMs, match, seq: (cur?.seq ?? 0) + 1 }))
-    open(s.meetingId)
+    open(s.meetingId, { ms: s.atMs, match, screenCapturedAt: s.screenAtMs == null ? undefined : s.startedAt + s.screenAtMs })
   }
 
   const noteId = route.startsWith('/note/') ? route.slice(6) : null
@@ -217,7 +220,7 @@ export function App() {
     {mac && <MacLaunch active={launching} />}
     <div data-testid="app-shell" inert={launching || undefined} className={starting ? 'app-shell flex h-full flex-col bg-bg' : `app-shell h-full text-ink ${ready ? 'bg-transparent' : 'bg-bg'}`}>
       {page}
-      {inWorkspace && searching && <Search folder={folder} folders={folders} onOpen={open} onNavigate={go} onShortcuts={openShortcuts} onSettingsChange={() => setSettingsRevision((v) => v + 1)} onClose={() => setSearching(false)} sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => toggleSidebar()} />}
+      {inWorkspace && searching && <Search folder={folder} folders={folders} onOpen={(id, at) => open(id, at == null ? undefined : { ms: null, screenCapturedAt: at })} onNavigate={go} onShortcuts={openShortcuts} onSettingsChange={() => setSettingsRevision((v) => v + 1)} onClose={() => setSearching(false)} sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => toggleSidebar()} />}
       {inWorkspace && shortcuts && <Shortcuts onClose={() => setShortcuts(false)} />}
       {inWorkspace && <TrashToast go={go} />}
     </div>

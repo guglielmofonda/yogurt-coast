@@ -7,13 +7,13 @@ Start with the [Mac build instructions](building.md#run-on-your-mac). Yogurt + C
 1. Install **Coast Local** in **Applications**, open it, allow screen recording, and enable its local CLI bridge. Keep Coast running while you use the screenshot feature. [Get Coast Local](https://coast.app/)
 2. Open Yogurt + Coast and finish the local model setup. If you installed Coast after opening Yogurt, quit and reopen Yogurt so it detects the bridge.
 3. Choose **Start recording**. Take notes as usual. When recording stops, Yogurt asks Coast for frames from the recorded intervals and skips pauses. A local model uses screen changes, window titles, available text, and meeting context to select useful frames.
-4. Open the finished meeting’s **My notes** tab and scroll to **Coast screenshots**. Click an image to enlarge it. Use **Previous** and **Next** when several images were selected.
+4. Open the finished meeting’s **Screenshots** tab. Click an image to enlarge it. Use **Previous** and **Next** when several images were selected.
 
 Coast controls when it captures your screen. The recording window controls which frames Yogurt imports. If the gallery says **Screenshot selection is incomplete**, check that Coast is running and its local bridge is available, then click **Try again**. **No screenshots selected for this call** means processing finished with an empty selection.
 
 ## Find what was on screen
 
-Apple Vision extracts text from each attached image. Press **⌘K** and enter a phrase from a slide or demo. A result labeled **Screenshot** shows the matching text and opens the meeting. In **Ask**, try a question about the same detail and follow its source back to the meeting.
+Apple Vision extracts text from each attached image. Press **⌘K** and enter a phrase from a slide or demo. A result labeled **Screenshot** shows the matching text and opens that image in **Screenshots**. In **Ask**, choose **Open screenshot** on a screenshot citation to see its source.
 
 ![Searching for Tidal Atlas finds the Fieldwork cover review. Its Screenshot result quotes the cover title.](assets/coast-search.webp)
 

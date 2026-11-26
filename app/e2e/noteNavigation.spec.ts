@@ -14,7 +14,7 @@ async function launch() {
   return { app, page }
 }
 
-test('post-call navigation shows Transcript, My notes and Summary without hidden version choices', async () => {
+test('post-call navigation includes Screenshots and supports keyboard navigation through all four tabs', async () => {
   const { app, page } = await launch()
   try {
     await app.evaluate(() => (globalThis as unknown as { __fake__: { manyMeetings(n: number): void } }).__fake__.manyMeetings(1))
@@ -22,14 +22,21 @@ test('post-call navigation shows Transcript, My notes and Summary without hidden
     await page.getByTestId('past-note').click()
     const tabs = page.getByRole('tablist', { name: 'Meeting view' })
     await expect(page.getByRole('tablist')).toHaveCount(1)
-    await expect(tabs.getByRole('tab')).toHaveText(['Transcript', 'My notes', 'Summary'])
+    await expect(tabs.getByRole('tab')).toHaveText(['Transcript', 'My notes', 'Summary', 'Screenshots'])
     const mine = page.getByTestId('note-notes-tab'), summary = page.getByTestId('note-summary-tab')
     await expect(summary).toHaveAttribute('aria-selected', 'true')
     await summary.press('ArrowLeft')
     await expect(mine).toBeFocused()
     await expect(mine).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByTestId('note-mine')).toBeVisible()
+    const screenshots = tabs.getByRole('tab', { name: 'Screenshots' })
     await mine.press('End')
+    await expect(screenshots).toBeFocused()
+    const panel = page.getByRole('tabpanel', { name: 'Screenshots' })
+    await expect(panel).toHaveText('No screenshots were saved for this meeting.')
+    await expect(page.getByRole('tabpanel', { name: 'My notes' })).toBeHidden()
+    await screenshots.press('ArrowLeft')
+    await expect(panel).toBeHidden()
     await expect(summary).toBeFocused()
     await expect(summary).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByTestId('note-enhanced-editor')).toBeVisible()
@@ -79,7 +86,7 @@ test('primary tabs preserve the editor and its latest text through pause, resume
     await expect(notes).toHaveAttribute('data-version', 'enhanced')
     await selectNoteVersion(page, 'mine')
     await expect(editor).toHaveText(exact)
-    await expect(page.getByRole('tablist', { name: 'Meeting view', exact: true }).getByRole('tab')).toHaveText(['Transcript', 'My notes', 'Summary'])
+    await expect(page.getByRole('tablist', { name: 'Meeting view', exact: true }).getByRole('tab')).toHaveText(['Transcript', 'My notes', 'Summary', 'Screenshots'])
   } finally { await app.close() }
 })
 

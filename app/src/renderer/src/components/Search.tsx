@@ -28,7 +28,7 @@ function Marked({ parts }: { parts: SnippetPart[] }) {
  * ⌘K searches meetings and the app's destinations and actions. A folder scopes meeting results and new questions.
  */
 export function Search({ folder, folders, onOpen, onNavigate, onSettingsChange, onShortcuts, onClose, sidebarCollapsed, onToggleSidebar }: {
-  folder?: Folder; folders?: Folder[]; onOpen: (id: string) => void; onNavigate: (route: string, agendaDate?: number) => void; onSettingsChange: () => void; onShortcuts: () => void; onClose: () => void
+  folder?: Folder; folders?: Folder[]; onOpen: (id: string, screenCapturedAt?: number) => void; onNavigate: (route: string, agendaDate?: number) => void; onSettingsChange: () => void; onShortcuts: () => void; onClose: () => void
   sidebarCollapsed: boolean; onToggleSidebar: () => void
 }) {
   const [open, setOpen] = useState(true)
@@ -191,7 +191,7 @@ export function Search({ folder, folders, onOpen, onNavigate, onSettingsChange, 
     }
   }
   const activate = (row: typeof rows[number] | undefined) => {
-    if (row?.kind === 'meeting') onOpen(row.meeting.meetingId)
+    if (row?.kind === 'meeting') onOpen(row.meeting.meetingId, row.meeting.screenCapturedAt)
     else if (row?.kind === 'command') void runCommand(row.command)
     else if (row?.kind === 'person') pickPerson(row)
     else if (q.trim()) void ask(q.trim())
@@ -287,7 +287,7 @@ export function Search({ folder, folders, onOpen, onNavigate, onSettingsChange, 
                 {previous?.kind !== 'meeting' && <li role="presentation" className="command-section">{typed || filtered ? t('Meetings') : t('Recent meetings')}</li>}
                 <li
                   id={`search-${r.meetingId}`} data-testid="search-result" role="option" aria-selected={i === activeIndex} aria-describedby={i === activeIndex && r.preview ? 'search-preview' : undefined}
-                  onMouseMove={(e) => hover(e, i)} onClick={() => onOpen(r.meetingId)}
+                  onMouseMove={(e) => hover(e, i)} onClick={() => activate(row)}
                   className="search-row search-meeting"
                 >
                   <span className="search-meeting-dot" aria-hidden="true" data-folder-color={r.folder?.color} title={r.folder?.name} />

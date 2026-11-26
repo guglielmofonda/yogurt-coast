@@ -98,7 +98,7 @@ const folderName = (name: string) => name.replace(/\s+/g, ' ').trim().slice(0, 2
 
 export type MeetingCard = Meeting & { /** the first words of the notes, plain text; empty with none yet */ preview: string; folders?: Array<Pick<Folder, 'id' | 'name' | 'icon' | 'color'>> }
 export type SnippetPart = { text: string; hit: boolean }
-export type SearchHit = { meetingId: string; snippet: string; parts: SnippetPart[]; confident?: boolean }
+export type SearchHit = { meetingId: string; snippet: string; parts: SnippetPart[]; confident?: boolean; screenCapturedAt?: number }
 
 // where a matched word starts and ends in a snippet: characters no note or transcript contains
 const OPEN = '\u0002', CLOSE = '\u0003'
@@ -718,35 +718,39 @@ export class Store {
       const title = String(r.title), attendees = (JSON.parse(String(r.attendees)) as Person[]).map(p => p.name).join(' '), folders = String(r.folders ?? '')
       const fields = [[title, 40, true], [attendees, 30, true], [folders, 30, false]] as const
       const scores = words.map((w, i) => Math.max(0, ...fields.map(([text, score, fuzzy]) => matchScore(text, w, i === words.length - 1, fuzzy, score))))
-      return [String(r.id), { scores, bonus: fields.some(([text]) => hasPhrase(text)) ? 5 : 0, parts: [] as SnippetPart[], snippetScore: 0 }]
+      return [String(r.id), { scores, bonus: fields.some(([text]) => hasPhrase(text)) ? 5 : 0, parts: [] as SnippetPart[], snippetScore: 0, screenCapturedAt: undefined as number | undefined }]
     }))
     words.forEach((word, i) => {
       const fts = `"${word}"${i === words.length - 1 ? '*' : ''}`
       // Use the existing text indexes per word, then intersect at meeting level rather than within one field or line.
-      const hits = this.db.prepare(`SELECT meeting_id, snippet, score, MIN(rank) FROM (
-        SELECT n.meeting_id, snippet(notes_fts, -1, '${OPEN}', '${CLOSE}', '…', 24) AS snippet, 20 AS score, notes_fts.rank AS rank
+      const hits = this.db.prepare(`SELECT meeting_id, snippet, score, captured_at, MIN(rank) FROM (
+        SELECT n.meeting_id, snippet(notes_fts, -1, '${OPEN}', '${CLOSE}', '…', 24) AS snippet, 20 AS score, NULL AS captured_at, notes_fts.rank AS rank
           FROM notes_fts JOIN notes n ON n.id = notes_fts.rowid WHERE notes_fts MATCH ?${inScope('n.meeting_id')}
         UNION ALL
-        SELECT s.meeting_id, 'Screenshot · ' || snippet(coast_fts, 0, '${OPEN}', '${CLOSE}', '…', 24), 15, coast_fts.rank
+        SELECT s.meeting_id, 'Screenshot · ' || snippet(coast_fts, 0, '${OPEN}', '${CLOSE}', '…', 24), 15, s.captured_at, coast_fts.rank
           FROM coast_fts JOIN coast_screen_text s ON s.id = coast_fts.rowid WHERE coast_fts MATCH ?${inScope('s.meeting_id')}
         UNION ALL
-        SELECT s.meeting_id, snippet(segments_fts, 0, '${OPEN}', '${CLOSE}', '…', 24), 10, segments_fts.rank
+        SELECT s.meeting_id, snippet(segments_fts, 0, '${OPEN}', '${CLOSE}', '…', 24), 10, NULL, segments_fts.rank
           FROM segments_fts JOIN segments s ON s.id = segments_fts.rowid WHERE segments_fts MATCH ? AND s.hidden = 0${inScope('s.meeting_id')}
       ) GROUP BY meeting_id, score`).all(fts, ...args, fts, ...args, fts, ...args) as Row[]
-      const add = (id: string, parts: SnippetPart[], score: number) => {
+      const add = (id: string, parts: SnippetPart[], score: number, screenCapturedAt?: number) => {
         const hit = found.get(id)
         if (!hit) return
         hit.scores[i] = Math.max(hit.scores[i], score)
-        if (score > hit.snippetScore) { hit.parts = parts; hit.snippetScore = score }
+        if (score > hit.snippetScore) {
+          hit.parts = parts
+          hit.snippetScore = score
+          hit.screenCapturedAt = screenCapturedAt
+        }
       }
-      for (const r of hits) add(String(r.meeting_id), partsOf(String(r.snippet)), Number(r.score))
+      for (const r of hits) add(String(r.meeting_id), partsOf(String(r.snippet)), Number(r.score), r.captured_at == null ? undefined : Number(r.captured_at))
       // FTS treats CJK runs as one token; retain matching inside those runs.
       if (CJK.test(word)) {
         const pairs = pairsOf([word])
         const where = (col: string) => pairs.map(() => `instr(${col}, ?) > 0`).join(' AND ')
         for (const r of this.db.prepare(`SELECT meeting_id, coalesce(enhanced, '') || char(10) || mine AS text FROM notes
           WHERE ${where("coalesce(enhanced, '') || char(10) || mine")}${inScope('meeting_id')}`).all(...pairs, ...args) as Row[]) add(String(r.meeting_id), around(String(r.text), pairs), 20)
-        for (const r of this.db.prepare(`SELECT meeting_id, text FROM coast_screen_text WHERE ${where('text')}${inScope('meeting_id')}`).all(...pairs, ...args) as Row[]) add(String(r.meeting_id), around(String(r.text), pairs), 15)
+        for (const r of this.db.prepare(`SELECT meeting_id, text, captured_at FROM coast_screen_text WHERE ${where('text')}${inScope('meeting_id')}`).all(...pairs, ...args) as Row[]) add(String(r.meeting_id), around(String(r.text), pairs), 15, Number(r.captured_at))
         for (const r of this.db.prepare(`SELECT meeting_id, text FROM segments WHERE hidden = 0 AND ${where('text')}${inScope('meeting_id')}`).all(...pairs, ...args) as Row[]) add(String(r.meeting_id), around(String(r.text), pairs), 10)
       }
     })
@@ -763,10 +767,11 @@ export class Store {
     }
     return scopedRows.map(r => {
       const hit = found.get(String(r.id))!
-      return { ...hitOf(String(r.id), hit.parts), score: hit.scores.reduce((a, b) => a + b, 0) + hit.bonus,
+      return { ...hitOf(String(r.id), hit.parts), screenCapturedAt: hit.screenCapturedAt, score: hit.scores.reduce((a, b) => a + b, 0) + hit.bonus,
         matches: hit.scores.every(s => s > 0), confident: hit.scores.every(s => s >= 29) }
     }).filter(h => h.matches).sort((a, b) => b.score - a.score).slice(0, limit)
-      .map(({ meetingId, snippet, parts, confident }) => ({ meetingId, snippet, parts, confident }))
+      .map(({ meetingId, snippet, parts, confident, screenCapturedAt }) => ({ meetingId, snippet, parts, confident,
+        ...(!confident && screenCapturedAt != null ? { screenCapturedAt } : {}) }))
   }
 
   /**

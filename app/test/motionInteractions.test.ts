@@ -612,7 +612,7 @@ it.each(['dark', 'mode'])('executes the ranked result when Enter beats a slow se
     expect(setTheme).toHaveBeenCalledExactlyOnceWith('dark')
     expect(onOpen).not.toHaveBeenCalled()
   } else {
-    expect(onOpen).toHaveBeenCalledExactlyOnceWith('m1')
+    expect(onOpen).toHaveBeenCalledExactlyOnceWith('m1', undefined)
     expect(setTheme).not.toHaveBeenCalled()
   }
 })

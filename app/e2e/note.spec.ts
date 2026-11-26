@@ -191,7 +191,7 @@ test('stopping writes the enhanced notes, streamed in, with their own line marke
     await expect(page.getByTestId('note-enhanced-editor').locator('h2').first()).toHaveText('Launch plan')
     await page.getByTestId('note-summary-tab').press('ArrowLeft')
     await expect(page.getByTestId('note-notes-tab')).toBeFocused()
-    await page.getByTestId('note-notes-tab').press('End')
+    await page.getByTestId('note-notes-tab').press('ArrowRight')
     await expect(page.getByTestId('note-notes-tab')).toHaveAttribute('data-version', 'enhanced')
     await page.keyboard.press('Meta+j')
     await expect(page.getByTestId('chat-input')).toBeFocused()

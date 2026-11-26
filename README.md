@@ -16,7 +16,7 @@
   <a href="docs/README.md#connect-an-agent">Connect an agent</a>
 </p>
 
-![The Fieldwork cover review in Yogurt. The second of two Coast screenshots shows the Tidal Atlas cover marked “Approved for print.”](docs/assets/coast-meeting.webp)
+![The Screenshots tab of the Fieldwork cover review in Yogurt. The second of two images shows the Tidal Atlas cover marked “Approved for print.”](docs/assets/coast-meeting.webp)
 
 In this fictional design review, the note says to send the selected cover to print. Its name, **Tidal Atlas**, appears only on the shared proof. Yogurt keeps that proof with the meeting.
 
@@ -45,13 +45,13 @@ The fork ships as source. It requires an Apple silicon Mac with macOS 14.4 or la
    pnpm dev
    ```
 
-3. **Record your first call.** Let the local models download, then choose **Start recording**. After you stop, open **My notes → Coast screenshots**.
+3. **Record your first call.** Let the local models download, then choose **Start recording**. After you stop, open **Screenshots**.
 
 ## Everyday controls
 
 | Task | Where to go |
 | --- | --- |
-| Revisit a slide or demo | Open **My notes → Coast screenshots**. Browse by capture time or click an image to enlarge it. |
+| Revisit a slide or demo | Open **Screenshots**. Browse by capture time or click an image to enlarge it. |
 | Ask about a decision | Open **Ask**. Answers can cite the transcript or the screenshot where the detail appeared. |
 | Choose your calendars | Open **Agenda → Calendars** and check the calendars you want. Google and iCloud accounts already in Apple Calendar work here. |
 | Give your agent read access | Enable **Settings → AI apps → Let AI apps read your meetings**. Connect Codex locally or Hermes over SSH with the read-only MCP helper. [Agent setup](docs/README.md#connect-an-agent) |

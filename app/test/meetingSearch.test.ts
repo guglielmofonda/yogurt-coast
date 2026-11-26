@@ -17,6 +17,18 @@ const search = (query: string, folder?: string) => store.search(query, 30, folde
 const ids = (query: string, folder?: string) => search(query, folder).map(h => h.meetingId)
 
 describe('meeting search', () => {
+  it('opens the frame that supplied the winning screenshot excerpt', () => {
+    const m = make('Fieldwork'), first = m.startedAt + 1000, second = m.startedAt + 4000
+    store.saveScreenText(m.id, 'first.png', first, 'Draft cover')
+    store.saveScreenText(m.id, 'second.png', second, 'Final cover 北海道旅行 Fieldwork')
+    expect(search('draft')[0].screenCapturedAt).toBe(first)
+    expect(search('final')[0].screenCapturedAt).toBe(second)
+    expect(search('道旅')[0].screenCapturedAt).toBe(second)
+    expect(search('Fieldwork')[0].screenCapturedAt).toBeUndefined()
+    store.setNotes(m.id, { mine: 'Final cover' })
+    expect(search('final')[0].screenCapturedAt).toBeUndefined()
+  })
+
   it('finds standup nov 10 by local start time, including both day boundaries', () => {
     const first = make('Team standup'), last = make('Team standup'), outside = make('Team standup', 11)
     store.updateMeeting(first.id, { startedAt: at(10, 0) })

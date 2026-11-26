@@ -1367,12 +1367,12 @@ app.whenReady().then(() => {
     if (hits && !hits.length) return []
     const cards = store.meetingCards({ limit: hits?.length ?? 3, folder: sp, ids: hits?.map(h => h.meetingId) })
     const byId = new Map(cards.map(c => [c.id, c]))
-    return (hits ?? cards.map(c => ({ meetingId: c.id, parts: [], confident: false }))).flatMap(hit => {
+    return (hits ?? cards.map(c => ({ meetingId: c.id, parts: [], confident: false, screenCapturedAt: undefined }))).flatMap(hit => {
       const card = byId.get(hit.meetingId)
       if (!card) return []
       const folder = card.folders?.find(f => f.id === sp) ?? card.folders?.[0]
       return [{ meetingId: card.id, title: card.title, startedAt: card.startedAt, attendees: card.attendees,
-        folder, preview: card.preview, parts: hit.parts, confident: hit.confident }]
+        folder, preview: card.preview, parts: hit.parts, confident: hit.confident, screenCapturedAt: hit.screenCapturedAt }]
     })
   })
   // the window's own moves (home, a note from the list): remembered here so a reload stays where it was
