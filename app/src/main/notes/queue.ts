@@ -6,7 +6,7 @@ import { CONTEXT } from '../../shared/engine-protocol'
  * meeting records, and gives way to anything else (run again after: what it did stays done).
  * folder: one folder proposal per meeting, with the same priority and recording policy as indexing.
  */
-export type JobKind = 'names' | 'enhance' | 'chat' | 'readahead' | 'index' | 'folder' | 'screenshots'
+export type JobKind = 'names' | 'enhance' | 'chat' | 'ask-model' | 'readahead' | 'index' | 'folder' | 'screenshots'
 const background = (kind: JobKind) => kind === 'index' || kind === 'folder' || kind === 'screenshots'
 /** A job gets a signal: aborted when a recording starts on a small Mac. It is then run again from the start later. */
 export type Job = (signal: AbortSignal) => Promise<void>
@@ -54,7 +54,7 @@ export function createQueue(o: {
   onIdle?: () => void
   idleMs?: number
   /** a notes model is on the Mac (first run: not until its download lands); nothing runs before */
-  modelReady?: () => boolean
+  modelReady?: (kind: JobKind) => boolean
 }) {
   const waiting: Entry[] = []
   let running: { entry: Entry; abort: AbortController } | undefined
@@ -69,7 +69,7 @@ export function createQueue(o: {
 
   const backlog = () => o.backlogMs?.() ?? 0
   const allowed = (kind: JobKind) => {
-    if (o.modelReady && !o.modelReady()) return false
+    if (o.modelReady && !o.modelReady(kind)) return false
     if (background(kind) && o.recording()) return false
     if (kind === 'readahead' && !o.smallMac && backlog() > READ_BACKLOG_MS) return false
     if (o.smallMac) return !o.recording()
@@ -102,13 +102,13 @@ export function createQueue(o: {
     watching()
     if (running) return
     // a question first (someone is waiting on it), reading ahead only once nothing else can run
-    let i = waiting.findIndex((e) => e.kind === 'chat' && allowed(e.kind))
+    let i = waiting.findIndex((e) => (e.kind === 'chat' || e.kind === 'ask-model') && allowed(e.kind))
     if (i === -1) i = waiting.findIndex((e) => e.kind !== 'readahead' && !background(e.kind) && allowed(e.kind))
     if (i === -1) i = waiting.findIndex((e) => e.kind === 'readahead' && allowed(e.kind))
     if (i === -1) i = waiting.findIndex((e) => background(e.kind) && allowed(e.kind))
     if (i === -1) {
       if (!waiting.length) armIdle()
-      else if (o.modelReady && !o.modelReady() && !saidWait) { saidWait = true; console.info('NOTES', 'waiting for the notes model to finish downloading') }
+      else if (o.modelReady && !saidWait && waiting.some(e => !o.modelReady!(e.kind))) { saidWait = true; console.info('NOTES', 'waiting for the notes model to finish downloading') }
       watching(); return
     }
     disarmIdle()

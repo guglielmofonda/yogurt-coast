@@ -71,7 +71,7 @@ export function NotesSetup({ go }: { go: (route: string) => void }) {
             <div className="notes-download-footer">
               <p className="notes-download-support">{failed
                 ? error
-                : upgrading ? t("Once this model is ready, we'll remove the old one.") : t('You can record meetings. AI summaries and Ask work when this finishes.')}</p>
+                : upgrading ? t("Switch between installed models in Ask.") : t('You can record meetings. AI summaries and Ask work when this finishes.')}</p>
               {(failed || upgrading) && <div className="notes-download-actions">
                 {failed && <button data-testid="notes-setup-retry" className="workspace-button" disabled={retrying} onClick={() => void retry()}>{retrying ? t('Retrying…') : t('Try again')}</button>}
                 {upgrading && <button data-testid="notes-setup-skip" className="text-action" disabled={setup.notesUpgradeChanging} onClick={() => void skip()}>{t('Skip')}</button>}

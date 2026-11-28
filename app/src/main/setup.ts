@@ -3,7 +3,8 @@ import { rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { ChecksumError, DiskSpaceError, ensureFile, fileNameFor, isVerified, partialDownloadGB, type DownloadDeps } from './downloader'
-import type { SetupState } from '../shared/types'
+import { askModelId, askOption, stillAvailable, type AskPreference, type LocalAskFile } from './askModels'
+import type { AskModelResult, SetupState } from '../shared/types'
 import { t } from '../shared/i18n'
 import { tooSlow, tooWeak } from './localCheck'
 
@@ -29,6 +30,7 @@ export type SetupDeps = {
   retryDelaysMs?: number[]
   /** the first notes model downloads after ready: the waits between tries when it fails (the last one repeats) */
   notesRetryMs?: number[]
+  askPreference?: { load(): AskPreference | undefined; save(preference: AskPreference): void }
   upgradePreference?: { load(): boolean; save(skipped: boolean): void }
   /** Windows and Linux: the speed check picks the speech model (a Mac never has it: turbo, as always) */
   speed?: SpeedDeps
@@ -82,14 +84,67 @@ export class SetupController {
   /** Try again after an error: time the speech models again instead of trusting what was stored */
   private recheck = false
 
-  constructor(private deps: SetupDeps) {}
+  private askPreference: AskPreference
+  private switching = false
+
+  constructor(private deps: SetupDeps) {
+    const saved = deps.askPreference?.load()
+    this.askPreference = { selected: saved?.selected, files: Array.isArray(saved?.files) ? saved.files : [] }
+  }
+
+  private askFiles() {
+    const files: Pick<LocalAskFile, 'path' | 'name' | 'quant'>[] = []
+    for (const item of [this.backgroundItem, this.firstItem]) {
+      if (!item) continue
+      const path = join(item.dir, item.fileName)
+      if (path === this.paths?.recommendedLlm || path === this.paths?.llm) files.push({ path, name: item.name, quant: item.quant })
+    }
+    for (const file of this.askPreference.files) {
+      if (!files.some(f => f.path === file.path) && stillAvailable(file)) files.push(file)
+    }
+    return files
+  }
+
+  askPath() {
+    const id = this.askPreference.selected
+    return (id && this.askFiles().find(f => askModelId(f.path) === id)?.path) || this.notesPath()
+  }
+
+  async chooseAskModel(id: string | null, load: (path: string) => Promise<void>, extra?: LocalAskFile): Promise<AskModelResult> {
+    if (this.switching || this._state.notesUpgradeChanging) return 'busy'
+    const files = this.askFiles()
+    const candidate = extra ?? files.find(f => askModelId(f.path) === id)
+    const path = id === null ? this.notesPath() : candidate?.path
+    if (!path || (extra && askModelId(extra.path) !== id)) return 'failed'
+    this.switching = true
+    this.set(this._state)
+    try {
+      await load(path)
+      const saved = this.askPreference.files.filter(f => f.path !== extra?.path)
+      if (extra && path !== this.paths?.llm && path !== this.paths?.recommendedLlm) saved.push(extra)
+      const preference = { selected: id ?? undefined, files: saved }
+      this.deps.askPreference?.save(preference)
+      this.askPreference = preference
+      return 'selected'
+    } catch (error) {
+      console.warn('Could not switch Ask model', error)
+      return 'failed'
+    } finally {
+      this.switching = false
+      this.set(this._state)
+    }
+  }
 
   get state() { return this._state }
   onState(cb: (s: SetupState) => void) { this.listeners.add(cb); return () => this.listeners.delete(cb) }
   private set(s: SetupState) {
-    const path = this.loadedNotesPath ?? this.notesPath()
-    const item = path && [this.backgroundItem, this.firstItem].find(i => i && join(i.dir, i.fileName) === path)
-    s = { ...s, askModel: item ? { name: item.name, quant: item.quant, fileName: item.fileName, loaded: !!this.loadedNotesPath } : undefined }
+    const files = this.askFiles()
+    const selected = files.find(f => askModelId(f.path) === this.askPreference.selected)
+    const resident = files.find(f => f.path === this.loadedNotesPath && (f.path === this.paths?.recommendedLlm || f.path === this.paths?.llm))
+    const item = selected ?? resident ?? files.find(f => f.path === this.notesPath())
+    const option = item && askOption(item)
+    s = { ...s, notesModelReady: !!this.notesPath(), askModels: files.map(askOption), askModelChoice: selected && this.askPreference.selected, askModelChanging: this.switching,
+      askModel: option && { name: option.name, quant: option.quant, fileName: option.fileName, loaded: item!.path === this.loadedNotesPath } }
     // the bar only moves forward, and only speaks up when a whole percent changes
     const prev = this._state
     if (s.phase === prev.phase && s.phase === 'downloading') {
@@ -111,13 +166,6 @@ export class SetupController {
       this.loadedNotesPath = path
       this.set(this._state)
     }
-    if (!path) return
-    const first = this.paths?.llm
-    if (!first || first === path || path !== this.paths?.recommendedLlm || this.upgradeChange) return
-    try {
-      this.removeFiles(first)
-      this.paths = { ...this.paths!, llm: undefined }
-    } catch (err) { console.warn('could not remove the first notes model', err) }
   }
 
   private removeFiles(path: string) {
@@ -149,7 +197,7 @@ export class SetupController {
   removeUpgrade(retire: (remove: () => void) => Promise<void>): Promise<void> {
     if (this.upgradeChange) return this.upgradeChange
     const path = this.paths?.recommendedLlm
-    if (!path || !this.firstItem) return Promise.resolve()
+    if (!path || !this.firstItem || this.switching) return Promise.resolve()
     return this.changeUpgrade(async () => {
       const item = this.firstItem!
       let shown = 0

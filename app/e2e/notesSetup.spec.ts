@@ -121,7 +121,7 @@ test('both AI stages live beside recording, open below, retry failures and disap
       await expect(popup.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '27')
       await expect(popup.locator('.notes-download-next')).toHaveCount(0)
       await expect(popup).not.toContainText('Next,')
-      await expect(popup).toContainText(upgrading ? "Once this model is ready, we'll remove the old one." : 'You can record meetings. AI summaries and Ask work when this finishes.')
+      await expect(popup).toContainText(upgrading ? "Switch between installed models in Ask." : 'You can record meetings. AI summaries and Ask work when this finishes.')
       await expectQuietLayout(page, upgrading, false)
       await expect.poll(async () => (await popup.boundingBox())!.y - status.y - status.height).toBeGreaterThanOrEqual(8)
       await page.keyboard.press('Escape')
@@ -363,7 +363,7 @@ test('Settings shows restore progress without a title-bar download and keeps the
         const descriptions = row.locator('.settings-description')
         await expect(descriptions).toHaveText([
           `Getting the smaller model · ${detail}`,
-          'The larger model keeps running summaries and Ask until then, and is removed after.',
+          'The larger model stays available until the smaller one is ready.',
         ])
         for (const line of await descriptions.all()) {
           await expect(line).toHaveCSS('text-wrap', 'pretty')
@@ -381,7 +381,7 @@ test('Settings shows restore progress without a title-bar download and keeps the
       await app.evaluate(({ ipcMain }, fail) => { ipcMain.emit('test:restore-finish', null, fail) }, fail)
       await expect(action).toBeEnabled()
       await expect(row).not.toContainText('Getting the smaller model')
-      await expect(row).not.toContainText('The larger model keeps running summaries and Ask')
+      await expect(row).not.toContainText('The larger model stays available')
       if (fail) {
         await expect(row.getByRole('alert')).toHaveText("Yogurt couldn't change the notes model.")
         await expect(action).toHaveText('Remove')
@@ -404,7 +404,7 @@ test('Settings download, Skip, restart and Remove use the real setup controller'
     await expect(page.getByTestId('settings-notes-model')).toContainText('Removing this model restores the smaller one.')
     await action.click()
     await expect(action).toHaveText(/^Download \([\d.]+ GB\)$/)
-    await expect(page.getByTestId('settings-notes-model')).toContainText("More detailed, accurate notes. Replaces the current model, so you don't keep both.")
+    await expect(page.getByTestId('settings-notes-model')).toContainText("Switch between installed models in Ask.")
     await action.click()
     await expect(action).toHaveText('Skip')
     await action.click()

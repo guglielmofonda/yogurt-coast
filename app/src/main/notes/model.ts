@@ -40,8 +40,7 @@ export function createNotesModel(o: { engine: Engine; modelPath: () => string | 
   }
   o.engine.onExit(() => { loading = undefined; forget() })
 
-  const ensure = async (): Promise<{ path: string; contextSize: number }> => {
-    const path = o.modelPath()
+  const ensure = async (path: string | undefined): Promise<{ path: string; contextSize: number }> => {
     if (!path) throw new Error('No notes model yet')
     if (loaded?.path === path) return loaded
     forget()
@@ -60,12 +59,11 @@ export function createNotesModel(o: { engine: Engine; modelPath: () => string | 
     loading = undefined; forget()
     return run()
   })
-  const load = () => again(ensure)
 
   return {
     /** the model, loaded; a stopped job's signal stops what it is writing */
-    async llm(signal?: AbortSignal): Promise<Llm> {
-      const m = await load()
+    async llm(signal?: AbortSignal, path = o.modelPath()): Promise<Llm> {
+      const m = await again(() => ensure(path))
       return {
         contextSize: m.contextSize,
         count: (texts) => o.engine.count(texts),
@@ -79,7 +77,7 @@ export function createNotesModel(o: { engine: Engine; modelPath: () => string | 
           const ask = () => o.engine.chat({ messages, ...(opts?.maxTokens ? { maxTokens: opts.maxTokens } : {}), ...(opts?.temperature !== undefined ? { temperature: opts.temperature } : {}) }, (t) => { wrote = true; onToken(t) }, signal)
           // no word came on the graphics card: loaded again without it, and asked again (nothing was shown yet)
           let first = true
-          return again(async () => { if (!first) await ensure(); first = false; return ask() }, () => !wrote && !signal?.aborted)
+          return again(async () => { if (!first) await ensure(path); first = false; return ask() }, () => !wrote && !signal?.aborted)
             .then((r) => { if (!signal?.aborted) held = messages[0].content; return r })
         },
         readAhead: async (text, stop) => {
@@ -95,7 +93,7 @@ export function createNotesModel(o: { engine: Engine; modelPath: () => string | 
     },
     loaded: () => loaded?.path,
     /** the next llm() loads the model first (it isn't loaded, or a better one landed) */
-    needsLoad: () => { const path = o.modelPath(); return !!path && loaded?.path !== path },
+    needsLoad: (path = o.modelPath()) => !!path && loaded?.path !== path,
   }
 }
 export type NotesModel = ReturnType<typeof createNotesModel>

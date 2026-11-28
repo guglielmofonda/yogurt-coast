@@ -318,12 +318,12 @@ function NotesModel({ reveal = false }: { reveal?: boolean }) {
         ? t('Getting the smaller model · {progress}', { progress: notesDownloadText(setup).detail })
         : downloading ? notesDownloadText(setup).detail : setup.notesUpgradeInstalled
         ? t('Removing this model restores the smaller one.')
-        : t("More detailed, accurate notes. Replaces the current model, so you don't keep both.")}</p>
-      {setup.notesRestoreFraction !== undefined && <p className="settings-description">{t('The larger model keeps running summaries and Ask until then, and is removed after.')}</p>}
+        : t("Switch between installed models in Ask.")}</p>
+      {setup.notesRestoreFraction !== undefined && <p className="settings-description">{t('The larger model stays available until the smaller one is ready.')}</p>}
       {setup.notesUpgradeError && <p className="settings-description">{setup.notesUpgradeError}</p>}
       {failed && <p role="alert" className="settings-description">{t("Yogurt couldn't change the notes model.")}</p>}
     </div>
-    <button data-testid="settings-notes-model-action" className="workspace-button settings-action" aria-busy={busy || setup.notesUpgradeChanging} disabled={busy || setup.notesUpgradeChanging} onClick={() => void act()}>
+    <button data-testid="settings-notes-model-action" className="workspace-button settings-action" aria-busy={busy || setup.notesUpgradeChanging} disabled={busy || setup.notesUpgradeChanging || setup.askModelChanging} onClick={() => void act()}>
       {setup.notesUpgradeInstalled ? (busy || setup.notesUpgradeChanging ? t('Removing…') : t('Remove')) : downloading ? t('Skip') : t('Download ({size} GB)', { size: notesUpgradeSize(setup.notesUpgradeBytes) })}
     </button>
   </div>

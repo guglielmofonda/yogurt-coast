@@ -12,6 +12,7 @@ export type Settings = { theme?: 'light' | 'dark'; language?: string; /** what t
   introSeen?: boolean
   /** The optional bigger notes model stays off until explicitly downloaded again. */
   notesUpgradeSkipped?: boolean
+  askModels?: import('./askModels').AskPreference
   /** home's Finish setup was put away while these were missing; it comes back only when something else is */
   setupDismissed?: import('./permissions').PermissionKind[]
   /** opens when the Mac starts; off unless the person said yes */

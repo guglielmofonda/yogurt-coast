@@ -1,3 +1,4 @@
+import { askModelId, inspectAskFile } from './askModels'
 import { createGoogleCalendar } from './googleCalendar'
 import { browserGrant, desktopClient, GoogleFailure } from './googleCalendar/oauth'
 import { desktopName } from '../shared/desktopName'
@@ -224,6 +225,10 @@ function createSetup(): SetupController {
   console.info(`MODELS dir=${modelsDir}`)
   return new SetupController({
     modelsDir,
+    askPreference: {
+      load: () => loadSettings(join(userDataDir(), 'settings.json')).askModels,
+      save: askModels => { updateSettings(join(userDataDir(), 'settings.json'), { askModels }) },
+    },
     upgradePreference: {
       load: () => loadSettings(join(userDataDir(), 'settings.json')).notesUpgradeSkipped === true,
       save: (skipped) => { updateSettings(join(userDataDir(), 'settings.json'), { notesUpgradeSkipped: skipped }) },
@@ -749,7 +754,7 @@ app.whenReady().then(() => {
   // first run: the notes model lands after recording already works; jobs wait in the queue for it
   // the embedding model (meaning search across meetings) runs in the same worker and is let go with the notes model
   const embedder = createEmbedder({ engine, modelPath: () => setup.installed()?.embed, id: bundledCatalog.embedding.id, dims: bundledCatalog.embedding.dims })
-  const queue = createQueue({ recording: () => !!activeMeeting(), smallMac, idleMs: memory.idleMs, backlogMs: transcriptionBacklogMs, onIdle: () => { void model.unload().catch(e => console.error('letting the notes model go failed', e)); void embedder.unload() }, modelReady: () => !!setup.notesPath() })
+  const queue = createQueue({ recording: () => !!activeMeeting(), smallMac, idleMs: memory.idleMs, backlogMs: transcriptionBacklogMs, onIdle: () => { void model.unload().catch(e => console.error('letting the notes model go failed', e)); void embedder.unload() }, modelReady: kind => kind === 'ask-model' || (kind === 'chat' ? !!setup.askPath() : !!setup.notesPath()) })
   ipcMain.handle('setup:remove-upgrade', () => setup.removeUpgrade(remove => queue.enqueue(async () => {
     await model.unload()
     remove()
@@ -887,14 +892,37 @@ app.whenReady().then(() => {
     onMeetingStart(changed)
     onMeetingStop(changed)
   }
+  const mainWindowRequest = (e: Electron.IpcMainInvokeEvent) => e.sender === win?.webContents && e.senderFrame === e.sender.mainFrame
+  const chooseAskModel = async (id: string | null, file?: Awaited<ReturnType<typeof inspectAskFile>>) => {
+    const result = await setup.chooseAskModel(id, path => queue.enqueue(async signal => { await model.llm(signal, path) }, 'ask-model'), file)
+    if (result === 'selected') { queue.modelArrived(); conversations.refresh() }
+    return result
+  }
+  ipcMain.handle('setup:choose-ask-model', (e, id: unknown) => {
+    if (!mainWindowRequest(e) || (id !== null && (typeof id !== 'string' || !/^[a-f0-9]{64}$/.test(id)))) return 'failed'
+    if (waitsForMeeting()) return 'recording'
+    return chooseAskModel(id)
+  })
+  ipcMain.handle('setup:add-ask-model', async e => {
+    if (!win || !mainWindowRequest(e)) return 'failed'
+    if (waitsForMeeting()) return 'recording'
+    try {
+      const picked = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: 'GGUF', extensions: ['gguf'] }] })
+      if (picked.canceled || !picked.filePaths.length) return 'cancelled'
+      const file = await inspectAskFile(picked.filePaths[0])
+      if (waitsForMeeting()) return 'recording'
+      return chooseAskModel(askModelId(file.path), file)
+    } catch { return 'failed' }
+  })
   // Both Ask surfaces share saved conversations and the same recording-first model queue.
   const conversations = hookConversations({
-    store, library, indexer, embedder, queue, model,
+    store, library, indexer, embedder, queue,
+    model: { llm: signal => model.llm(signal, setup.askPath()), needsLoad: () => model.needsLoad(setup.askPath()) },
     send: (v) => {
       win?.webContents.send('conversations:changed', v)
       if (v.chips.length === 1 && v.chips[0].kind === 'meeting') win?.webContents.send('chat:changed', { ...v, meetingId: v.chips[0].id })
     }, sendList: (l) => win?.webContents.send('conversations:list', l),
-    waitsForMeeting, waitsForModel: () => !setup.notesPath(),
+    waitsForMeeting, waitsForModel: () => !setup.askPath(),
     // a meeting read in ahead during a recording only where reading ahead is allowed (32 GB and up; the fake Mac is big)
     warmAllowed: () => !activeMeeting() || (isFake() ? !smallMac : readAheadAllowed(os.totalmem())),
   })

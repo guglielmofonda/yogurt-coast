@@ -5,7 +5,7 @@ import { StartRecording } from '../components/StartRecording'
 import { Mic, Search, SidebarToggle, Check, Circle, FileText, Users, MessageCircle, ArrowUp } from '../components/Icons'
 import { createPortal } from 'react-dom'
 import { readAgendaOpen, saveAgendaOpen } from '../agenda'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import type { MeetingCard } from '../../../shared/types'
 import { useScrollMemory } from '../useScrollMemory'
 import { loadUpTo } from '../paging'
@@ -18,7 +18,7 @@ import { MeetingRow } from '../components/MeetingRow'
 import { FolderChip } from '../components/FolderPicker'
 import { Agenda } from '../components/Agenda'
 import { HomeUpcoming } from '../components/HomeUpcoming'
-import { AskModelLabel } from '../components/AskModelLabel'
+import { AskModelLabel, AskModelSetup } from '../components/AskModelLabel'
 import { GranolaImportButton } from '../components/GranolaImportButton'
 import './Home.css'
 import { MEETING_DRAG } from '../folders'
@@ -98,9 +98,10 @@ export function Home({ open, openSearch, openFolder, agendaJump }: { open: (id: 
 }
 
 function HomeAsk() {
+  const switching = useContext(AskModelSetup)?.askModelChanging
   const [question, setQuestion] = useState(''), [sending, setSending] = useState(false)
   const ask = async () => {
-    if (!question.trim() || sending) return
+    if (!question.trim() || sending || switching) return
     setSending(true)
     try {
       const result = await window.yogurt.conversations.ask(null, question)
@@ -114,8 +115,8 @@ function HomeAsk() {
     <MessageCircle size={16} aria-hidden="true" />
     <input data-testid="home-ask" aria-label={t('Ask about your meetings')} placeholder={t('Ask about your meetings')} value={question}
       maxLength={4000} readOnly={sending} onChange={e => setQuestion(e.target.value)} />
-    <AskModelLabel />
-    <button type="submit" aria-label={t('Ask about your meetings')} disabled={!question.trim() || sending}><ArrowUp size={15} /></button>
+    <AskModelLabel disabled={sending} />
+    <button type="submit" aria-label={t('Ask about your meetings')} disabled={!question.trim() || sending || switching}><ArrowUp size={15} /></button>
   </form></div>
 }
 

@@ -15,6 +15,8 @@ const api: YogurtApi = {
   phone: phoneCompanionOn(process.env),
   setup: {
     state: () => ipcRenderer.invoke('setup:state'),
+    chooseAskModel: id => ipcRenderer.invoke('setup:choose-ask-model', id),
+    addAskModel: () => ipcRenderer.invoke('setup:add-ask-model'),
     onState: (cb) => {
       const on = (_e: unknown, s: SetupState) => cb(s)
       ipcRenderer.on('setup:state', on)

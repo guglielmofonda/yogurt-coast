@@ -124,7 +124,7 @@ it('translates the popover readout and support in every locale', () => {
     for (const key of [
       'Download stopped', 'Upgrade paused', 'about {minutes} min left',
       'You can record meetings. AI summaries and Ask work when this finishes.',
-      "Once this model is ready, we'll remove the old one.",
+      "Switch between installed models in Ask.",
     ]) {
       expect(keys).toContain(key)
       expect(table[key]).toBeTypeOf('string')
@@ -147,10 +147,10 @@ it('explains the notes model benefit and removal in every locale', () => {
   for (const { id } of LOCALES) {
     const table = load(id)
     for (const key of [
-      "More detailed, accurate notes. Replaces the current model, so you don't keep both.",
+      "Switch between installed models in Ask.",
       'Removing this model restores the smaller one.',
       'Getting the smaller model · {progress}',
-      'The larger model keeps running summaries and Ask until then, and is removed after.',
+      'The larger model stays available until the smaller one is ready.',
       'Removing…',
     ]) {
       expect(keys).toContain(key)

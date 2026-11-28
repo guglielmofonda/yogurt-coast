@@ -12,7 +12,7 @@ import { useSmoothText } from '../useSmoothText'
 import { AnswerText } from './AnswerText'
 import { Loading } from './Loading'
 import { LoadingContent } from './LoadingContent'
-import { AskModelLabel } from './AskModelLabel'
+import { AskModelLabel, AskModelSetup } from './AskModelLabel'
 import { NotesModelWait } from './NotesModelWait'
 import { ThinkingDots } from './ThinkingDots'
 import { ConversationActions } from './ConversationActions'
@@ -174,7 +174,8 @@ export function AskConversation({ id, pendingDraftKey, initial, loadError = fals
   }, [mention, text, targetResults, expanded, chat])
   const turns = chat?.turns ?? [], last = turns.at(-1)
   const answering = last?.status === 'waiting' || last?.status === 'answering'
-  const busy = recordingWait || !chat || sending || changing || answering
+  const switching = useContext(AskModelSetup)?.askModelChanging
+  const busy = switching || recordingWait || !chat || sending || changing || answering
   const unsent = (chat ? chat.firstChips === null : home || panel) && !turns.length
   const landing = home || (!panel && unsent)
   const saveText = (value: string) => {
@@ -233,7 +234,7 @@ export function AskConversation({ id, pendingDraftKey, initial, loadError = fals
     }).catch(() => { saveText(q); setError(true) }).finally(() => setSending(false))
   }
   const send = (q: string) => {
-    if (recordingWait || !q.trim() || sending || changing || answering || loadError || readFailed || (!chat && (!panel || error))) return
+    if (switching || recordingWait || !q.trim() || sending || changing || answering || loadError || readFailed || (!chat && (!panel || error))) return
     keepTyping()
     follow.resume(); setSending(true); setError(false); setMention(undefined); setSelector(undefined)
     // Typing is available before the conversation loads; Enter must survive that handoff too.
@@ -370,7 +371,7 @@ export function AskConversation({ id, pendingDraftKey, initial, loadError = fals
               </Popover.Positioner>
             </Popover.Portal>
           </Popover.Root>
-          <AskModelLabel />
+          <AskModelLabel disabled={answering && !chat?.waitsForModel} />
           {answering ? <button type="button" data-testid={`${prefix}-stop`} className="ask-toolbar-button ask-stop" aria-label={chat?.waitsForModel ? t('Cancel question') : t('Stop')} title={chat?.waitsForModel ? t('Cancel question') : t('Stop')} onClick={() => { keepTyping(); window.yogurt.conversations.stop(id) }}><Square size={10} fill="currentColor" /></button>
             : <button type="submit" data-testid={`${prefix}-send`} className="ask-toolbar-button ask-send" disabled={busy || !text.trim()} aria-label={t('Ask')}><span className="orb-material" aria-hidden="true" /><ArrowUp size={16} /></button>}
         </div>

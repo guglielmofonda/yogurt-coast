@@ -1,9 +1,10 @@
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { speedKey, type Catalog, type Hardware } from '@yogurt/picker'
 import bundled from '../../catalog/catalog.json'
+import { askModelId, type AskPreference } from '../src/main/askModels'
 import { SetupController, type SetupDeps, type SpeedDeps, type SpeedResult } from '../src/main/setup'
 import { tooSlow } from '../src/main/localCheck'
 import { fakeDownloadDeps } from '../src/main/fake'
@@ -659,7 +660,7 @@ describe('optional better notes model', () => {
     expect(existsSync(join(root, 'llm', name(bigUrl) + '.ok'))).toBe(false)
   })
 
-  it('keeps the small model through a failed bigger load and deletes it only after success', async () => {
+  it('keeps both installed models after loading the upgrade and after restart', async () => {
     const rec = recorder(u => u === bigUrl)
     const { c, root } = setup({ download: rec.deps })
     const engine = new FakeEngine()
@@ -683,9 +684,10 @@ describe('optional better notes model', () => {
     await model.llm()
     expect(model.loaded()).toBe(c.installed()?.recommendedLlm)
     expect(c.state.askModel).toEqual(bigger)
-    expect(existsSync(first)).toBe(false)
-    expect(existsSync(first + '.ok')).toBe(false)
-    expect(c.installed()?.llm).toBeUndefined()
+    expect(existsSync(first)).toBe(true)
+    expect(existsSync(first + '.ok')).toBe(true)
+    expect(c.installed()?.llm).toBe(first)
+    expect(c.state.askModels?.map(m => m.name)).toEqual([bigger.name, starter.name])
     const next = setup({ modelsDir: root })
     await next.c.start(); await next.c.idle()
     expect(next.rec.asked).not.toContain(starterUrl)
@@ -710,6 +712,9 @@ describe('optional better notes model', () => {
     await c.start(); await c.idle()
     const bigger = c.notesPath()!
     c.notesModelChanged(bigger)
+    // An older install could already have discarded the smaller weights.
+    rmSync(c.installed()!.llm!)
+    rmSync(c.installed()!.llm! + '.ok')
     restoring = true
     states.length = 0
     const retire = vi.fn(async (remove: () => void) => {
@@ -738,6 +743,58 @@ describe('optional better notes model', () => {
     expect(retire).toHaveBeenCalledTimes(fail ? 0 : 1)
     expect(existsSync(bigger)).toBe(fail)
     if (fail) expect(c.notesPath()).toBe(bigger)
+  })
+
+  it('switches the actual Ask engine, preserves the notes model, and remembers only successful choices', async () => {
+    let saved: AskPreference | undefined
+    const askPreference = { load: () => saved, save: (s: AskPreference) => { saved = s } }
+    const { c, root } = setup({ askPreference })
+    await c.start(); await c.idle()
+    const engine = new FakeEngine()
+    const model = createNotesModel({ engine, modelPath: () => c.notesPath(), onModelChange: p => c.notesModelChanged(p) })
+    const load = async (path: string) => { await model.llm(undefined, path) }
+    const [big, small] = c.state.askModels!
+    const bigPath = c.notesPath()!, smallPath = c.installed()!.llm!
+    expect(await c.chooseAskModel(small.id, load)).toBe('selected')
+    expect(model.loaded()).toBe(smallPath)
+    expect(c.askPath()).toBe(smallPath)
+    await model.llm()
+    expect(model.loaded()).toBe(bigPath)
+    expect(c.state.askModel).toMatchObject({ name: small.name, loaded: false })
+    expect(await c.chooseAskModel(big.id, async () => { throw Error('out of memory') })).toBe('failed')
+    expect(await c.chooseAskModel('arbitrary', load)).toBe('failed')
+    expect(saved?.selected).toBe(small.id)
+    const next = setup({ modelsDir: root, askPreference }).c
+    await next.start(); await next.idle()
+    expect(next.askPath()).toBe(smallPath)
+    expect(next.notesPath()).toBe(bigPath)
+    expect(await next.chooseAskModel(null, load)).toBe('selected')
+    expect(next.askPath()).toBe(bigPath)
+    expect(saved?.selected).toBeUndefined()
+  })
+
+  it('remembers a linked local file, falls back when missing, and never removes it', async () => {
+    let saved: AskPreference | undefined
+    const askPreference = { load: () => saved, save: (s: AskPreference) => { saved = s } }
+    const { c, root } = setup({ askPreference })
+    await c.start(); await c.idle()
+    const path = join(root, 'outside.gguf')
+    writeFileSync(path, 'fixture')
+    const { size, mtimeMs } = statSync(path)
+    const file = { path, name: 'My local model', quant: 'Q4_K_M', size, mtimeMs }
+    const load = vi.fn(async () => {})
+    expect(await c.chooseAskModel(askModelId(path), load, file)).toBe('selected')
+    expect(load).toHaveBeenCalledWith(path)
+    expect(c.askPath()).toBe(path)
+    expect(c.state.askModels?.map(m => m.fileName)).toContain('outside.gguf')
+    await c.removeUpgrade(async remove => remove())
+    expect(c.askPath()).toBe(path)
+    rmSync(path)
+    const next = setup({ modelsDir: root, askPreference }).c
+    await next.start(); await next.idle()
+    expect(next.state.askModelChoice).toBeUndefined()
+    expect(next.state.askModels?.map(m => m.fileName)).not.toContain('outside.gguf')
+    expect(next.askPath()).toBe(next.notesPath())
   })
 
   it('does not publish restore progress when the smaller model is still on disk', async () => {
@@ -802,6 +859,10 @@ describe('optional better notes model', () => {
     vi.spyOn(engine, 'unload').mockRejectedValue(new Error('unload failed'))
     const bigger = c.notesPath()!
     block = failure === 'download'
+    if (block) {
+      rmSync(c.installed()!.llm!)
+      rmSync(c.installed()!.llm! + '.ok')
+    }
     await expect(c.removeUpgrade(async remove => { await model.unload(); remove() })).rejects.toThrow()
     expect(c.notesPath()).toBe(bigger)
     expect(existsSync(bigger)).toBe(true)

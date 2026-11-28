@@ -31,8 +31,8 @@
 .home-ask-bar form { display:flex; align-items:center; gap:10px; width:100%; max-width:760px; margin-inline:auto; padding:6px 8px 6px 14px; color:var(--written); background:var(--control); border:1px solid var(--line); border-radius:14px; font-size:13px; text-align:start; }
 .home-ask-bar form:focus-within { border-color:var(--accent); }
 .home-ask-bar input { min-width:0; flex:1; border:0; background:transparent; color:var(--ink); font:inherit; outline:none; }
-.home-ask-bar button { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; color:var(--bg); background:var(--ink); }
-.home-ask-bar button:disabled { opacity:.38; }
+.home-ask-bar button[type=submit] { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; color:var(--bg); background:var(--ink); }
+.home-ask-bar button[type=submit]:disabled { opacity:.38; }
 @container meeting-library (max-width:390px) {
   .upcoming-day { grid-template-columns:68px minmax(0,1fr); padding-inline:6px; }
   .upcoming-date { gap:4px; } .upcoming-date strong { font-size:23px; }

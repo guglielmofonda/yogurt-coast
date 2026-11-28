@@ -50,6 +50,8 @@ export type YogurtApi = {
   phone: boolean
   setup: {
     state(): Promise<SetupState>
+    chooseAskModel(id: string | null): Promise<AskModelResult>
+    addAskModel(): Promise<AskModelResult>
     /** called with each change; returns the way to stop listening */
     onState(cb: (s: SetupState) => void): () => void
     retry(): Promise<void>
@@ -367,6 +369,8 @@ export type YogurtApi = {
 }
 
 /** First-run setup: the models this Mac needs. Ready (recording works) once the speech model is in place; the notes models keep downloading after. */
+export type AskModelOption = { id: string; name: string; quant: string; fileName: string }
+export type AskModelResult = 'selected' | 'cancelled' | 'failed' | 'recording' | 'busy'
 export type SetupState = {
   phase: 'checking' | 'downloading' | 'ready' | 'error'
   /** 0 to 1 over what ready waits for */
@@ -375,6 +379,10 @@ export type SetupState = {
   /** Speech is ready, but the first notes-model download failed. Recording and transcription still work. */
   notesError?: string
   /** The resident answer model, or the verified model the next question will load. */
+  notesModelReady?: boolean
+  askModels?: AskModelOption[]
+  askModelChoice?: string
+  askModelChanging?: boolean
   askModel?: { name: string; quant: string; fileName: string; loaded: boolean }
   /** First notes-model progress (0 to 1), retained on failure until retry or completion. */
   notesFraction?: number
