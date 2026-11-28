@@ -1,4 +1,11 @@
 {
+  "Coming up": "Binnenkort",
+  "No upcoming meetings": "Geen geplande vergaderingen",
+  "Import from Granola": "Importeren uit Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Klaar voor import {ready} · Al in Yogurt {existing} · Overgeslagen {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Geïmporteerd {added} · Al in Yogurt {existing} · Overgeslagen {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Kies een ZIP- of CSV-export van Granola van maximaal 128 MB.",
+  "Choose the file again to finish importing.": "Kies het bestand opnieuw om het importeren te voltooien.",
   "Record": "Opnemen",
   "Search meetings": "Vergaderingen zoeken",
   "About Yogurt": "Over Yogurt",

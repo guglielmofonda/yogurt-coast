@@ -1,4 +1,11 @@
 {
+  "Coming up": "På gång",
+  "No upcoming meetings": "Inga kommande möten",
+  "Import from Granola": "Importera från Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Redo att importera {ready} · Finns redan i Yogurt {existing} · Överhoppade {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Importerade {added} · Finns redan i Yogurt {existing} · Överhoppade {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Välj en ZIP- eller CSV-export från Granola på högst 128 MB.",
+  "Choose the file again to finish importing.": "Välj filen igen för att slutföra importen.",
   "Record": "Spela in",
   "Search meetings": "Sök möten",
   "About Yogurt": "Om Yogurt",

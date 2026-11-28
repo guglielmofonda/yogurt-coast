@@ -1,4 +1,11 @@
 {
+  "Coming up": "Незабаром",
+  "No upcoming meetings": "Немає майбутніх зустрічей",
+  "Import from Granola": "Імпортувати з Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Готово до імпорту {ready} · Вже в Yogurt {existing} · Пропущено {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Імпортовано {added} · Вже в Yogurt {existing} · Пропущено {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Виберіть експорт Granola у форматі ZIP або CSV розміром до 128 МБ.",
+  "Choose the file again to finish importing.": "Виберіть файл ще раз, щоб завершити імпорт.",
   "Record": "Записати",
   "Search meetings": "Пошук зустрічей",
   "About Yogurt": "Про Yogurt",

@@ -1,4 +1,11 @@
 {
+  "Coming up": "Paparating",
+  "No upcoming meetings": "Walang paparating na pulong",
+  "Import from Granola": "Mag-import mula sa Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Handang i-import {ready} · Nasa Yogurt na {existing} · Nilaktawan {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Na-import {added} · Nasa Yogurt na {existing} · Nilaktawan {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Pumili ng ZIP o CSV na export ng Granola na hanggang 128 MB.",
+  "Choose the file again to finish importing.": "Piliin ulit ang file para matapos ang pag-import.",
   "Record": "Mag-record",
   "Search meetings": "Maghanap ng mga meeting",
   "About Yogurt": "Tungkol sa Yogurt",

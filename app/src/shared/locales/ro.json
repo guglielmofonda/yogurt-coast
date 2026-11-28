@@ -1,4 +1,11 @@
 {
+  "Coming up": "În curând",
+  "No upcoming meetings": "Nu există întâlniri viitoare",
+  "Import from Granola": "Importă din Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Gata de import {ready} · Deja în Yogurt {existing} · Omise {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Importate {added} · Deja în Yogurt {existing} · Omise {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Alege un export Granola ZIP sau CSV de cel mult 128 MB.",
+  "Choose the file again to finish importing.": "Alege din nou fișierul pentru a încheia importul.",
   "Record": "Înregistrați",
   "Search meetings": "Căutați întâlniri",
   "About Yogurt": "Despre Yogurt",

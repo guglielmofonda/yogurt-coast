@@ -272,6 +272,7 @@ export class Store {
     if (!meetingCols.includes('last_opened_at')) this.db.exec('ALTER TABLE meetings ADD COLUMN last_opened_at INTEGER')
     if (!meetingCols.includes('speaker_order')) this.db.exec("ALTER TABLE meetings ADD COLUMN speaker_order TEXT NOT NULL DEFAULT '[]'")
     for (const name of ['source', 'source_id']) if (!meetingCols.includes(name)) this.db.exec(`ALTER TABLE meetings ADD COLUMN ${name} TEXT`)
+    this.db.exec('CREATE INDEX IF NOT EXISTS meetings_import_source ON meetings(source, source_id) WHERE source_id IS NOT NULL')
     for (const [name, type] of [['event_ended_at', 'INTEGER'], ['event_title', 'TEXT'], ['event_calendar_name', 'TEXT'], ['event_calendar_source', 'TEXT'], ['own_email', 'TEXT']]) {
       if (!meetingCols.includes(name)) this.db.exec(`ALTER TABLE meetings ADD COLUMN ${name} ${type}`)
     }
@@ -372,7 +373,7 @@ export class Store {
   }
   close() { this.db.close() }
 
-  private writeAtomically<T>(write: () => T): T {
+  writeAtomically<T>(write: () => T): T {
     this.db.exec('SAVEPOINT meeting_write')
     try {
       const result = write()
@@ -526,15 +527,13 @@ export class Store {
   }
   addSegments(segs: Omit<Segment, 'id'>[]) {
     const ins = this.db.prepare('INSERT INTO segments (meeting_id, track, start_ms, end_ms, text, speaker, hidden, echo_confident) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    this.db.exec('BEGIN')
-    try {
+    this.writeAtomically(() => {
       for (const s of segs) {
         const r = ins.run(s.meetingId, s.track, s.startMs, s.endMs, s.text, s.speaker, s.hidden ? 1 : 0, s.hidden && s.echoConfident ? 1 : 0)
         // a hidden line is not for search
         if (s.hidden) this.db.prepare("INSERT INTO segments_fts(segments_fts, rowid, text) VALUES ('delete', ?, ?)").run(r.lastInsertRowid, s.text)
       }
-      this.db.exec('COMMIT')
-    } catch (e) { this.db.exec('ROLLBACK'); throw e }
+    })
   }
   /** the meeting's lines in order; hidden echo lines left out unless asked for */
   /** last: only the latest lines (the recorder's hover reads a recent tail, however long the meeting runs) */

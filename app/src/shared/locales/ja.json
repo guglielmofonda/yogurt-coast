@@ -1,4 +1,11 @@
 {
+  "Coming up": "今後の予定",
+  "No upcoming meetings": "今後の会議はありません",
+  "Import from Granola": "Granola から読み込む",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "読み込み予定 {ready} · Yogurt に登録済み {existing} · スキップ {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "読み込み済み {added} · Yogurt に登録済み {existing} · スキップ {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "128 MB 以下の Granola エクスポート（ZIP または CSV）を選んでください。",
+  "Choose the file again to finish importing.": "ファイルをもう一度選んで読み込みを完了してください。",
   "Record": "録音",
   "Search meetings": "会議を検索",
   "About Yogurt": "Yogurt について",

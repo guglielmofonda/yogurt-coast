@@ -1,4 +1,11 @@
 {
+  "Coming up": "Nadcházející události",
+  "No upcoming meetings": "Žádné nadcházející schůzky",
+  "Import from Granola": "Importovat z Granoly",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Připraveno k importu {ready} · Již v Yogurtu {existing} · Přeskočeno {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Importováno {added} · Již v Yogurtu {existing} · Přeskočeno {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Vyberte export z Granoly ve formátu ZIP nebo CSV do 128 MB.",
+  "Choose the file again to finish importing.": "Pro dokončení importu vyberte soubor znovu.",
   "Record": "Nahrávat",
   "Search meetings": "Hledat schůzky",
   "About Yogurt": "O aplikaci Yogurt",

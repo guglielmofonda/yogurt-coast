@@ -199,6 +199,7 @@ export type YogurtApi = {
     later(): Promise<void>
     onStatus(fn: (s: UpdateStatus) => void): () => void
   }
+  granola: { import(): Promise<GranolaImportResult> }
   backup: {
     /** import waits while a meeting records */
     status(): Promise<{ recording: boolean }>
@@ -271,6 +272,7 @@ export type YogurtApi = {
     setHideWithoutLink(hide: boolean): Promise<boolean>
     onChange(cb: () => void): () => void
     comingUp(): Promise<{ status: CalendarStatus; events: CalEvent[] }>
+    overview(at: number): Promise<{ status: CalendarStatus; events: AgendaEvent[]; unavailable?: string[]; needsSelection?: boolean }>
     /** not asked yet: asks; turned off: opens the Mac's settings */
     connect(): Promise<CalendarStatus>
     /** the events on the day of this time, earliest first (none without Calendar access) */
@@ -401,6 +403,9 @@ export type SetupState = {
 export type { Meeting, Person, Segment, SnippetPart, Folder } from '../main/store'
 export type { CalEvent, CalendarSource, CalendarStatus } from '../main/calendar'
 /** Calendar occurrence with its saved note, if one exists. No inferred or sample meetings. */
+export type GranolaImportResult =
+  | { status: 'done'; added: number; duplicates: number; rejected: number }
+  | { status: 'cancelled' | 'invalid' | 'failed' | 'busy' }
 export type AgendaEvent = CalEvent & { note?: { id: string; state: Meeting['state']; source?: string } }
 /** Start notes: the meeting's id, or why it didn't start (gone: the event left the calendar) */
 export type StartResult = { id: string; alreadyRecording?: true; resumeRequested?: true } | { error: 'gone' | 'failed' }

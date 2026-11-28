@@ -1,4 +1,11 @@
 {
+  "Coming up": "近期行程",
+  "No upcoming meetings": "沒有即將開始的會議",
+  "Import from Granola": "從 Granola 匯入",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "準備匯入 {ready} · 已在 Yogurt 中 {existing} · 已略過 {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "已匯入 {added} · 已在 Yogurt 中 {existing} · 已略過 {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "請選擇不超過 128 MB 的 Granola 匯出 ZIP 或 CSV 檔。",
+  "Choose the file again to finish importing.": "請重新選擇檔案以完成匯入。",
   "Record": "錄音",
   "Search meetings": "搜尋會議",
   "About Yogurt": "關於 Yogurt",

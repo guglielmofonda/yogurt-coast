@@ -1,4 +1,11 @@
 {
+  "Coming up": "Próximamente",
+  "No upcoming meetings": "No hay reuniones próximas",
+  "Import from Granola": "Importar desde Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Listas para importar {ready} · Ya en Yogurt {existing} · Omitidas {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Importadas {added} · Ya en Yogurt {existing} · Omitidas {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Elige un archivo ZIP o CSV exportado de Granola de hasta 128 MB.",
+  "Choose the file again to finish importing.": "Vuelve a elegir el archivo para terminar la importación.",
   "Record": "Grabar",
   "Search meetings": "Buscar reuniones",
   "About Yogurt": "Acerca de Yogurt",

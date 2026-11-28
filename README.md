@@ -49,8 +49,13 @@ The fork ships as source. It requires an Apple silicon Mac with macOS 14.4 or la
 
 ## Everyday controls
 
+Home shows the next four days from your selected calendars, followed by your notes in date order. Use the question box to search for a decision across meetings.
+
+![Yogurt Home shows upcoming meetings, recent Fieldwork Editions notes, the Granola import button, and a box for asking about meeting history.](docs/assets/home-granola.webp)
+
 | Task | Where to go |
 | --- | --- |
+| Bring existing Granola notes with you | On the Meetings home screen, choose **Import from Granola** and select the downloaded ZIP or CSV. Review the counts, then choose **Import notes**. [Migration guide](docs/README.md#bring-your-granola-notes-into-yogurt) |
 | Revisit a slide or demo | Open **Screenshots**. Browse by capture time or click an image to enlarge it. |
 | Ask about a decision | Open **Ask**. Answers can cite the transcript or the screenshot where the detail appeared. |
 | Choose your calendars | Open **Agenda → Calendars** and check the calendars you want. Google and iCloud accounts already in Apple Calendar work here. |

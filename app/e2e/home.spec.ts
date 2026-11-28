@@ -257,8 +257,9 @@ test('Home remembers a hidden Agenda after relaunch and keeps the recording menu
     await toggle.click()
     const agenda = page.getByRole('complementary', { name: 'Agenda' })
     await expect(agenda).toBeVisible()
-    const above = (await list.boundingBox())!, below = (await agenda.boundingBox())!
-    expect(below.y).toBeCloseTo(above.y + above.height, 0)
+    const above = (await list.boundingBox())!, ask = (await page.locator('.home-ask-bar').boundingBox())!, below = (await agenda.boundingBox())!
+    expect(ask.y).toBeCloseTo(above.y + above.height, 0)
+    expect(below.y).toBeCloseTo(ask.y + ask.height, 0)
     expect(below.height).toBe(200)
     await toggle.click()
     await expect.poll(() => list.evaluate(el => el.clientHeight)).toBe(height)
@@ -294,7 +295,7 @@ test('meeting rows fill a laptop pane and stay centred in their own column throu
             const css = getComputedStyle(list)
             const left = list.getBoundingClientRect().left + list.clientLeft + parseFloat(css.paddingLeft)
             const available = list.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight)
-            const width = Math.min(available + 16, 1080)
+            const width = Math.min(available, parseFloat(getComputedStyle(heading).maxWidth)) + 16
             const centre = left + available / 2
             const row = hover.getBoundingClientRect()
             error = Math.max(error, Math.abs(row.left - (centre - width / 2)), Math.abs(row.width - width))
@@ -365,7 +366,12 @@ test('wide Home with both sidebars hidden in light and dark', async ({}, testInf
     await expect(page.getByTestId('new-note')).toHaveText('Record')
     for (const width of [1440, 1920]) {
       await page.setViewportSize({ width, height: 900 })
-      await expect(page.locator('.native-meeting-row').first()).toHaveCSS('width', '1080px')
+      const heading = (await page.locator('.home-library .library-page-heading').boundingBox())!
+      const upcoming = (await page.getByTestId('home-upcoming').boundingBox())!
+      expect(heading.width).toBe(760)
+      expect(heading.x).toBeCloseTo(upcoming.x, 0)
+      expect(heading.width).toBeCloseTo(upcoming.width, 0)
+      await expect(page.locator('.native-meeting-row').first()).toHaveCSS('width', `${heading.width + 16}px`)
       for (const theme of ['light', 'dark'] as const) {
         await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' })
         await page.screenshot({ path: testInfo.outputPath(`home-wide-${width}-${theme}.png`) })

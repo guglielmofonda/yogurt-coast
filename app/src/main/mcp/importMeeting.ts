@@ -1,3 +1,4 @@
+import type { Store, Person, Folder } from '../store'
 import { NOTES_MAX } from '../notes'
 import { TITLE_MAX, PEOPLE_MAX } from '../meeting'
 import { Refusal, bool, list, people, str, time, type Args } from './args'
@@ -55,6 +56,27 @@ function linesOf(v: unknown[]): ImportLine[] {
   })
 }
 
+type ImportedNote = {
+  title: string; startedAt: number; endedAt?: number | null; sourceId?: string; attendees: Person[]
+  lines: ImportLine[]; summary: string | null; mine: string; folder?: Folder; newFolder?: string
+}
+
+/** Both native file import and MCP write the same searchable meeting, atomically. */
+export function saveImportedNote(s: Store, me: string, m: ImportedNote) {
+  return s.writeAtomically(() => {
+    const already = m.sourceId ? s.meetingFromSource('import', m.sourceId) : undefined
+    if (already) return { id: already.id, title: already.title, already_imported: true as const }
+    const timed = timedLines(m.lines)
+    const meeting = s.createMeeting({ title: m.title, titleSource: 'user', startedAt: m.startedAt, endedAt: m.endedAt === undefined ? m.startedAt + (timed.at(-1)?.endMs ?? 0) : m.endedAt,
+      eventId: null, app: null, attendees: m.attendees, keepAttendees: true, state: 'done', source: 'import', ...(m.sourceId ? { sourceId: m.sourceId } : {}) })
+    if (timed.length) s.addSegments(toSegments(meeting.id, timed, me))
+    s.setNotes(meeting.id, { mine: m.mine, enhanced: m.summary, edited: m.summary != null })
+    const f = m.folder ?? (m.newFolder ? s.folders().find(x => x.name.toLowerCase() === m.newFolder!.toLowerCase()) ?? s.createFolder(m.newFolder) : undefined)
+    if (f) s.addToFolder(f.id, meeting.id)
+    return { id: meeting.id, title: meeting.title, start: new Date(meeting.startedAt).toISOString(), lines: timed.length, folder: f ? { id: f.id, name: f.name } : null }
+  })
+}
+
 export function importHandlers({ d, folderOf, log }: Ctx): Record<string, (a: Args) => Promise<string>> {
   const s = d.store
   /** one meeting, checked whole before anything is saved */
@@ -83,24 +105,13 @@ export function importHandlers({ d, folderOf, log }: Ctx): Record<string, (a: Ar
     return { title, startedAt, endedAt, attendees, lines, summary: summary?.trim() ? summary : null, mine: mine ?? '', writeSummary, sourceId, folder, newFolder: !folder && createFolder ? folderName : undefined }
   }
   const save = (m: ReturnType<typeof check>) => {
-    const already = m.sourceId ? s.meetingFromSource('import', m.sourceId) : undefined
-    if (already) return { id: already.id, title: already.title, already_imported: true }
-    const timed = timedLines(m.lines)
-    const meeting = s.createMeeting({ title: m.title, titleSource: 'user', startedAt: m.startedAt, endedAt: m.endedAt ?? m.startedAt + (timed.at(-1)?.endMs ?? 0),
-      eventId: null, app: null, attendees: m.attendees, keepAttendees: true, state: 'done', source: 'import', ...(m.sourceId ? { sourceId: m.sourceId } : {}) })
-    try {
-      if (timed.length) s.addSegments(toSegments(meeting.id, timed, d.me()))
-      // the other app's summary counts as edited, so new people never have it rewritten by itself
-      s.setNotes(meeting.id, { mine: m.mine, enhanced: m.summary, edited: m.summary != null })
-      const f = m.folder ?? (m.newFolder ? s.folders().find((x) => x.name.toLowerCase() === m.newFolder!.toLowerCase()) ?? s.createFolder(m.newFolder) : undefined)
-      if (f) s.addToFolder(f.id, meeting.id)
-      log(`create_meeting made ${meeting.id}: ${timed.length} lines${m.summary ? ', a summary' : ''}${f ? `, in ${f.id}` : ''}`)
-      d.app.imported(meeting.id)
-      if (f) d.app.changed('folders')
-      if (m.writeSummary) d.app.rewriteSummary(meeting.id, '')
-      return { id: meeting.id, title: meeting.title, start: new Date(meeting.startedAt).toISOString(), lines: timed.length, folder: f ? { id: f.id, name: f.name } : null,
-        summary: m.summary ? 'given' : m.writeSummary ? (d.app.notesReady() ? 'Yogurt is writing it' : 'Yogurt writes it once its notes model has downloaded') : 'none' }
-    } catch (e) { s.deleteMeeting(meeting.id); throw e }
+    const result = saveImportedNote(s, d.me(), m)
+    if (result.already_imported) return result
+    log(`create_meeting made ${result.id}: ${result.lines} lines${m.summary ? ', a summary' : ''}${result.folder ? `, in ${result.folder.id}` : ''}`)
+    d.app.imported(result.id)
+    if (result.folder) d.app.changed('folders')
+    if (m.writeSummary) d.app.rewriteSummary(result.id, '')
+    return { ...result, summary: m.summary ? 'given' : m.writeSummary ? (d.app.notesReady() ? 'Yogurt is writing it' : 'Yogurt writes it once its notes model has downloaded') : 'none' }
   }
   return {
     async create_meeting(a) { return JSON.stringify(save(check(a)), null, 2) },

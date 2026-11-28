@@ -1,4 +1,11 @@
 {
+  "Coming up": "Tulossa",
+  "No upcoming meetings": "Ei tulevia kokouksia",
+  "Import from Granola": "Tuo Granolasta",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Valmiina tuotavaksi {ready} · Jo Yogurtissa {existing} · Ohitettu {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Tuotu {added} · Jo Yogurtissa {existing} · Ohitettu {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Valitse enintään 128 Mt:n ZIP- tai CSV-vienti Granolasta.",
+  "Choose the file again to finish importing.": "Viimeistele tuonti valitsemalla tiedosto uudelleen.",
   "Record": "Tallenna",
   "Search meetings": "Hae kokouksia",
   "About Yogurt": "Tietoja Yogurtista",

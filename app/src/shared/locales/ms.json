@@ -1,4 +1,11 @@
 {
+  "Coming up": "Akan datang",
+  "No upcoming meetings": "Tiada mesyuarat akan datang",
+  "Import from Granola": "Import daripada Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Sedia untuk diimport {ready} · Sudah dalam Yogurt {existing} · Dilangkau {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Diimport {added} · Sudah dalam Yogurt {existing} · Dilangkau {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Pilih fail eksport ZIP atau CSV Granola sehingga 128 MB.",
+  "Choose the file again to finish importing.": "Pilih fail sekali lagi untuk menyelesaikan import.",
   "Record": "Rakam",
   "Search meetings": "Cari mesyuarat",
   "About Yogurt": "Perihal Yogurt",

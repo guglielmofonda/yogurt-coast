@@ -1,4 +1,11 @@
 {
+  "Coming up": "예정된 일정",
+  "No upcoming meetings": "예정된 회의가 없습니다",
+  "Import from Granola": "Granola에서 가져오기",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "가져올 회의 {ready} · 이미 Yogurt에 있음 {existing} · 건너뜀 {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "가져옴 {added} · 이미 Yogurt에 있음 {existing} · 건너뜀 {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "128MB 이하의 Granola 내보내기 ZIP 또는 CSV 파일을 선택하세요.",
+  "Choose the file again to finish importing.": "가져오기를 마치려면 파일을 다시 선택하세요.",
   "Record": "녹음",
   "Search meetings": "회의 검색",
   "About Yogurt": "Yogurt 정보",

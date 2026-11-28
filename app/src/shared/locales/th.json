@@ -1,4 +1,11 @@
 {
+  "Coming up": "เร็ว ๆ นี้",
+  "No upcoming meetings": "ไม่มีการประชุมที่กำลังจะมาถึง",
+  "Import from Granola": "นำเข้าจาก Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "พร้อมนำเข้า {ready} · อยู่ใน Yogurt แล้ว {existing} · ข้าม {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "นำเข้าแล้ว {added} · อยู่ใน Yogurt แล้ว {existing} · ข้าม {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "เลือกไฟล์ ZIP หรือ CSV ที่ส่งออกจาก Granola ขนาดไม่เกิน 128 MB",
+  "Choose the file again to finish importing.": "เลือกไฟล์อีกครั้งเพื่อนำเข้าให้เสร็จ",
   "Record": "บันทึก",
   "Search meetings": "ค้นหาการประชุม",
   "About Yogurt": "เกี่ยวกับ Yogurt",

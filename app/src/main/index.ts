@@ -88,6 +88,8 @@ import { createIndexer } from './library/indexer'
 import { hookConversations } from './library/conversations'
 import { hookShare } from './share'
 import { hookBackup } from './backupIpc'
+import { hookGranolaImport } from './granolaImportIpc'
+import { HOME_AGENDA_DAYS } from '../shared/comingUp'
 import { hookFolders } from './foldersIpc'
 import { hookMcp } from './mcp'
 import { createQuietStart } from './quietStart'
@@ -321,9 +323,9 @@ async function comingUp(): Promise<CalEvent[]> {
 }
 
 /** The events on the day of this time, earliest first */
-async function eventsOn(at: number, purpose?: 'link-event', unavailable?: string[]): Promise<CalEvent[]> {
+async function eventsOn(at: number, purpose?: 'link-event', unavailable?: string[], days = 1): Promise<CalEvent[]> {
   const from = new Date(at); from.setHours(0, 0, 0, 0)
-  const to = new Date(from); to.setDate(to.getDate() + 1)
+  const to = new Date(from); to.setDate(to.getDate() + days)
   return (await readCalendar(from.getTime(), to.getTime(), purpose ?? (event => eventIds(event).some(id => !!storeRef?.meetingForEvent(id))), unavailable)).sort((a, b) => a.start - b.start)
 }
 
@@ -960,6 +962,11 @@ app.whenReady().then(() => {
     setRecordingPill: preferences.setRecordingPill, db: store.db, meetingsDir: join(userDataDir(), 'meetings'), window: () => win, recording: () => !!activeMeeting() || !!resumingId,
     changed: () => { win?.webContents.send('meetings:changed'); win?.webContents.send('conversations:list', conversations.list()); void indexer.refresh(); coast.restore(); folderSuggestions.refresh() },
     beforeExport: () => { notes.retryDrafts(); return notes.pendingDraftId() } })
+  hookGranolaImport({ store, me, window: () => win, changed: () => {
+    win?.webContents.send('meetings:changed')
+    foldersChanged()
+    void indexer.schedule()
+  } })
   // AI apps change things only through the functions behind the app's own buttons
   const noteSaved = (id: string, r: ReturnType<typeof notes.replace>) => { if (r === 'saved') win?.webContents.send('meetings:changed'); return r }
   void hookMcp({
@@ -1305,10 +1312,10 @@ app.whenReady().then(() => {
     win?.webContents.send('calendar:changed')
     return true
   })
-  const calendarDay = async (at: unknown, purpose?: unknown) => {
+  const calendarDay = async (at: unknown, purpose?: unknown, days = 1) => {
     if (typeof at !== 'number' || !Number.isFinite(at) || !Number.isFinite(new Date(at).getTime())) return { status: 'error' as const, events: [] }
     const unavailable: string[] = []
-    const events = (await eventsOn(at, purpose === 'link-event' ? 'link-event' : undefined, unavailable)).map((event) => {
+    const events = (await eventsOn(at, purpose === 'link-event' ? 'link-event' : undefined, unavailable, days)).map((event) => {
       const meeting = eventIds(event).map((id) => store.meetingForEvent(id)).find(Boolean)
       const note = meeting && withStopState(meeting)
       return { ...event, attendees: resolvePeople(store.db, event.attendees), ...(note ? { note: { id: note.id, state: note.state, ...(note.source ? { source: note.source } : {}) } } : {}) }
@@ -1316,6 +1323,7 @@ app.whenReady().then(() => {
     const needsSelection = !calendarLinks && !loadSettings(settingsFile).selectedCalendarIds?.length
     return { status: calendarStatus(), events, unavailable, needsSelection }
   }
+  ipcMain.handle('calendar:overview', (_e, at: unknown) => calendarDay(at, undefined, HOME_AGENDA_DAYS))
   ipcMain.handle('calendar:day', (_e, at: unknown, purpose?: unknown) => calendarDay(at, purpose))
   const calendarComingUp = async () => {
     const events = (await comingUp()).map(event => ({ ...event, attendees: resolvePeople(store.db, event.attendees) }))

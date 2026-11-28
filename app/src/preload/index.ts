@@ -220,6 +220,7 @@ const api: YogurtApi = {
     comingUp: () => ipcRenderer.invoke('calendar:coming-up'),
     connect: () => ipcRenderer.invoke('calendar:connect'),
     day: (at, purpose) => ipcRenderer.invoke('calendar:day', at, purpose),
+    overview: at => ipcRenderer.invoke('calendar:overview', at),
     links: () => ipcRenderer.invoke('calendar:links'),
     addLink: (url) => ipcRenderer.invoke('calendar:add-link', url),
     removeLink: (id) => ipcRenderer.invoke('calendar:remove-link', id),
@@ -259,6 +260,7 @@ const api: YogurtApi = {
     later: () => ipcRenderer.invoke('updates:later'),
     onStatus: (fn) => { const f = (_e: unknown, s: UpdateStatus) => fn(s); ipcRenderer.on('updates:status', f); return () => { ipcRenderer.off('updates:status', f) } },
   },
+  granola: { import: () => ipcRenderer.invoke('granola:import') },
   backup: {
     status: () => ipcRenderer.invoke('backup:status'),
     export: () => ipcRenderer.invoke('backup:export'),

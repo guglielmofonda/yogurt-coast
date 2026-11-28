@@ -1,4 +1,11 @@
 {
+  "Coming up": "Coming up",
+  "No upcoming meetings": "No upcoming meetings",
+  "Import from Granola": "Import from Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Choose a Granola export ZIP or CSV up to 128 MB.",
+  "Choose the file again to finish importing.": "Choose the file again to finish importing.",
   "Record": "Record",
   "Search meetings": "Search meetings",
   "Hide sidebar": "Hide sidebar",

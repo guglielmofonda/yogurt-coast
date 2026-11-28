@@ -202,7 +202,8 @@ test('a narrow agenda can scroll the header and the last event into view', async
   try {
     const page = await app.firstWindow()
     await seedAgendaAtNoon(app, page)
-    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(2))
+    const window = await app.browserWindow(page)
+    await window.evaluate(win => { win.setContentSize(900, 700); win.webContents.setZoomFactor(2) })
     const agenda = page.getByRole('complementary', { name: 'Agenda' })
     await expect(agenda).toHaveCSS('overflow-y', 'auto')
     const event = agenda.getByTestId('event').last()

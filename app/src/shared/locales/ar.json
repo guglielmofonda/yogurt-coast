@@ -1,4 +1,11 @@
 {
+  "Coming up": "القادم",
+  "No upcoming meetings": "لا توجد اجتماعات قادمة",
+  "Import from Granola": "استيراد من Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "جاهز للاستيراد {ready} · موجود في Yogurt {existing} · تم تخطيه {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "تم الاستيراد {added} · موجود في Yogurt {existing} · تم تخطيه {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "اختر ملف تصدير Granola بصيغة ZIP أو CSV بحجم يصل إلى 128 م.ب.",
+  "Choose the file again to finish importing.": "اختر الملف مرة أخرى لإكمال الاستيراد.",
   "Record": "تسجيل",
   "Search meetings": "البحث في الاجتماعات",
   "About Yogurt": "حول Yogurt",

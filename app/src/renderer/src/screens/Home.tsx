@@ -2,7 +2,7 @@ import { InlineError, ReadError } from '../components/InlineError'
 import { transcriptionLabel } from '../../../shared/transcription'
 import { LoadingContent } from '../components/LoadingContent'
 import { StartRecording } from '../components/StartRecording'
-import { Mic, Search, SidebarToggle, Check, Circle, FileText, Users } from '../components/Icons'
+import { Mic, Search, SidebarToggle, Check, Circle, FileText, Users, MessageCircle, ArrowUp } from '../components/Icons'
 import { createPortal } from 'react-dom'
 import { readAgendaOpen, saveAgendaOpen } from '../agenda'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
@@ -17,6 +17,9 @@ import { readMeetingRows, useMeetingRowMotion } from '../meetingRowMotion'
 import { MeetingRow } from '../components/MeetingRow'
 import { FolderChip } from '../components/FolderPicker'
 import { Agenda } from '../components/Agenda'
+import { HomeUpcoming } from '../components/HomeUpcoming'
+import { GranolaImportButton } from '../components/GranolaImportButton'
+import './Home.css'
 import { MEETING_DRAG } from '../folders'
 import { command, keys, onMac } from '../keys'
 import { emptySelection, meetingSelection, meetingTargets, selectsMeeting } from '../meetingSelection'
@@ -70,20 +73,48 @@ export function Home({ open, openSearch, openFolder, agendaJump }: { open: (id: 
       <SidebarToggle className="flex-none -scale-x-100 rtl:scale-x-100" size={16} aria-hidden="true" />
     </button>, toolbar)}
     <StartRecording testId="new-note" compact={calendar && !agendaOpen} emptyActions={emptyActions} onGone={() => setCalendarRevision(revision => revision + 1)} />
-    <div className="native-library" ref={past.setRoot} tabIndex={-1}>
-      <div className="library-page-heading justify-between">
-        <h1>{t('Your meetings')}</h1>
-        <button className="ghost-btn home-search" onClick={openSearch} aria-haspopup="dialog" title={`${t('Search meetings')} (${keys('⌘K')})`}>
-          <Search size={16} aria-hidden="true" />{t('Search meetings')}
-        </button>
+    <div className="home-main">
+      <div className="native-library home-library" ref={past.setRoot} tabIndex={-1}>
+        {calendar && <HomeUpcoming open={open} agendaOpen={agendaOpen} />}
+        <div className="library-page-heading justify-between">
+          <h1>{t('Your meetings')}</h1>
+          <div className="home-library-actions">
+            <GranolaImportButton />
+            <button className="ghost-btn home-search" onClick={openSearch} aria-haspopup="dialog" title={`${t('Search meetings')} (${keys('⌘K')})`}>
+              <Search size={16} aria-hidden="true" />{t('Search meetings')}
+            </button>
+          </div>
+        </div>
+        {past.failed && !!past.cards?.length && <InlineError testId="meetings-read-error" retry={past.retry} />}
+        <LoadingContent pending={!past.cards && !past.failed} testId="meetings-loading" skeleton={<MeetingListLoading />} className="library-load">{!past.cards?.length ? <LibraryEmpty testId="past-empty" icon={<FileText size={28} aria-hidden="true" />} title={t('Your notes will show up here')} description={t('Your summary appears after you stop recording.')} retry={past.failed ? past.retry : undefined}><div ref={setEmptyActions} /></LibraryEmpty> : <PastNotes cards={past.cards ?? []} day={day} more={past.more} sentinel={past.setSentinel} onOpen={open} openFolder={openFolder} />}</LoadingContent>
       </div>
-      {past.failed && !!past.cards?.length && <InlineError testId="meetings-read-error" retry={past.retry} />}
-      <LoadingContent pending={!past.cards && !past.failed} testId="meetings-loading" skeleton={<MeetingListLoading />} className="library-load">{!past.cards?.length ? <LibraryEmpty testId="past-empty" icon={<FileText size={28} aria-hidden="true" />} title={t('Your notes will show up here')} description={t('Your summary appears after you stop recording.')} retry={past.failed ? past.retry : undefined}><div ref={setEmptyActions} /></LibraryEmpty> : <PastNotes cards={past.cards ?? []} day={day} more={past.more} sentinel={past.setSentinel} onOpen={open} openFolder={openFolder} />}</LoadingContent>
+      <HomeAsk />
     </div>
     {calendar && <div ref={panel} id="home-agenda" className="home-agenda-panel" inert={!agendaOpen}>
       {(agendaOpen || agendaMotion) && <Agenda revision={calendarRevision} recording={recording} onStart={start} onOpen={open} jumpTo={agendaJump} />}
     </div>}
   </div>
+}
+
+function HomeAsk() {
+  const [question, setQuestion] = useState(''), [sending, setSending] = useState(false)
+  const ask = async () => {
+    if (!question.trim() || sending) return
+    setSending(true)
+    try {
+      const result = await window.yogurt.conversations.ask(null, question)
+      if (typeof result === 'string') window.yogurt.nav.go(`/chat/${result}`)
+      else if (result) toasts.add({ title: t('Available after recording') })
+      else throw Error()
+    } catch { toasts.add({ title: t("Yogurt couldn't answer that.") }) }
+    finally { setSending(false) }
+  }
+  return <div className="home-ask-bar"><form aria-label={t('Ask about your meetings')} onSubmit={e => { e.preventDefault(); void ask() }}>
+    <MessageCircle size={16} aria-hidden="true" />
+    <input data-testid="home-ask" aria-label={t('Ask about your meetings')} placeholder={t('Ask about your meetings')} value={question}
+      maxLength={4000} readOnly={sending} onChange={e => setQuestion(e.target.value)} />
+    <button type="submit" aria-label={t('Ask about your meetings')} disabled={!question.trim() || sending}><ArrowUp size={15} /></button>
+  </form></div>
 }
 
 export function LibraryEmpty({ testId, icon, title, description, retry, children }: {
@@ -260,7 +291,7 @@ export function PastCard({ c, onOpen, openFolder, openFolders, more, when, fixed
     <button data-meeting-id={c.id} disabled={loading} onClick={() => onOpen(c.id)} aria-pressed={selected} className="native-meeting-link">
     <span className="meeting-content">
     <span className={`meeting-identity ${recording ? 'recording' : ''}`} aria-hidden="true">{loading ? null : selected ? <Check size={16} data-testid="meeting-selected" /> : recording ? <Mic className="flex-none" size={16} /> : c.attendees.length > 1 ? <Users size={16} /> : initials || <FileText size={16} />}</span>
-    <span className="meeting-description"><strong>{loading ? <span className="loading-bar" style={{ width: c.title.length * 6, maxWidth: '85%' }} /> : c.title}</strong><span data-testid={loading ? undefined : "past-note-attendees"} title={c.attendees.map((p) => p.name).join(', ') || undefined}>{loading ? <span className="loading-bar" style={{ width: 110 }} /> : transcriptionLabel(c.transcriptionState) || (c.attendees.length ? peopleSummary(c.attendees, me) : t('Personal notes'))}</span>
+    <span className="meeting-description"><strong>{loading ? <span className="loading-bar" style={{ width: c.title.length * 6, maxWidth: '85%' }} /> : c.title}</strong><span data-testid={loading ? undefined : "past-note-attendees"} title={c.attendees.map((p) => p.name).join(', ') || undefined}>{loading ? <span className="loading-bar" style={{ width: 110 }} /> : transcriptionLabel(c.transcriptionState) || (c.attendees.length ? peopleSummary(c.attendees, me) : (c.source === 'import' && c.preview) || t('Personal notes'))}</span>
     </span>
     </span>
     <span className="meeting-meta row-swap-meta">{recording ? <span className="meeting-live"><Circle size={6} fill="currentColor" />{c.paused ? t('Paused') : t('Recording')}</span> : <><time>{loading ? <span className="loading-bar" style={{ width: 45 }} /> : when ?? timeOf(c.startedAt)}</time>{minutes != null && <small data-testid="past-note-duration">{loading ? <span className="loading-bar" style={{ width: 26 }} /> : t('{count} min', { count: minutes })}</small>}</>}</span>

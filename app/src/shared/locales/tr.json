@@ -1,4 +1,11 @@
 {
+  "Coming up": "Yaklaşanlar",
+  "No upcoming meetings": "Yaklaşan toplantı yok",
+  "Import from Granola": "Granola’dan içe aktar",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "İçe aktarılmaya hazır {ready} · Zaten Yogurt’ta {existing} · Atlanan {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "İçe aktarılan {added} · Zaten Yogurt’ta {existing} · Atlanan {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Granola’dan dışa aktarılmış, en fazla 128 MB boyutunda bir ZIP veya CSV seçin.",
+  "Choose the file again to finish importing.": "İçe aktarmayı tamamlamak için dosyayı yeniden seçin.",
   "Record": "Kaydet",
   "Search meetings": "Toplantı ara",
   "About Yogurt": "Yogurt hakkında",

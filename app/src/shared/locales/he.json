@@ -1,4 +1,11 @@
 {
+  "Coming up": "בקרוב",
+  "No upcoming meetings": "אין פגישות קרובות",
+  "Import from Granola": "ייבוא מ־Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "מוכן לייבוא {ready} · כבר ב־Yogurt {existing} · דולגו {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "יובאו {added} · כבר ב־Yogurt {existing} · דולגו {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "יש לבחור קובץ ייצוא ZIP או CSV של Granola בגודל של עד 128 מ״ב.",
+  "Choose the file again to finish importing.": "יש לבחור שוב את הקובץ כדי לסיים את הייבוא.",
   "Record": "הקלטה",
   "Search meetings": "חיפוש פגישות",
   "About Yogurt": "על Yogurt",

@@ -19,6 +19,14 @@ Apple Vision extracts text from each attached image. Press **⌘K** and enter a 
 
 In this fictional design review, the shared cover proof is the only place the words “Tidal Atlas” appear. Saved images and their text live in Yogurt’s profile on your Mac, by default `~/Library/Application Support/Yogurt`.
 
+## Bring your Granola notes into Yogurt
+
+1. In Granola, open **Settings → Profile → Generate CSV** and select your workspaces. Download the export from Granola’s email. Granola includes notes you own that have a summary. [Granola’s export guide](https://docs.granola.ai/help-center/sharing/exporting-notes)
+2. On Yogurt’s **Meetings** home screen, choose **Import from Granola**. Select the downloaded ZIP or an extracted CSV. Yogurt reads it locally, shows how many meetings are new, and lists skipped rows before you confirm.
+3. Choose **Import notes**. Each meeting keeps its original creation date, personal notes, summary, and available transcript. Each workspace becomes a folder. Search and Ask can use the imported text. Importing the same meeting again preserves your edits in Yogurt.
+
+The importer accepts up to 128 MB of uncompressed CSV data per import. You can select workspace CSVs individually for a larger export. Granola’s export contains text. Audio and Coast screen captures are available for meetings recorded with those features in Yogurt.
+
 ## Choose calendars
 
 Open **Agenda → Calendars**, grant macOS calendar access, and check the calendars you want Yogurt to use. New installations start with an empty selection. Newly discovered calendars also start unchecked. Checked calendars appear first. Your selection applies to the agenda, reminders, meeting matching, and calendar queries from agents.

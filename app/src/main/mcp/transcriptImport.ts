@@ -44,7 +44,7 @@ function named(rest: string): { speaker: string | null; text: string } {
  * "Name  0:05" heading with the words on the lines under it. A line that is none of these carries on the line
  * before it; after a blank line it is a new line by the same speaker.
  */
-export function parseTranscript(text: string): ImportLine[] {
+export function parseTranscript(text: string, layout: 'paragraphs' | 'lines' = 'paragraphs'): ImportLine[] {
   const out: ImportLine[] = []
   let blank = false
   /** a heading waiting for its words */
@@ -68,10 +68,10 @@ export function parseTranscript(text: string): ImportLine[] {
     } else if (heading) {
       const h: { speaker: string | null; startMs: number } = heading
       add({ startMs: h.startMs, endMs: null, speaker: h.speaker, text: line })
-    } else if (out.length && !blank) {
+    } else if (out.length && !blank && layout === 'paragraphs') {
       out[out.length - 1].text += ` ${line}`
     } else {
-      add({ startMs: null, endMs: null, speaker: out.at(-1)?.speaker ?? null, text: line })
+      add({ startMs: null, endMs: null, speaker: layout === 'lines' ? null : out.at(-1)?.speaker ?? null, text: line })
     }
     blank = false
   }
@@ -84,9 +84,14 @@ const sayMs = (text: string) => Math.min(30_000, Math.max(1_000, text.split(/\s+
 /** Each line gets a start and an end: a missing start follows the line before, a missing end is where the next starts. */
 export function timedLines(lines: ImportLine[]): Array<{ startMs: number; endMs: number; speaker: string | null; text: string }> {
   const out: Array<{ startMs: number; endMs: number; speaker: string | null; text: string }> = []
+  let nextTimed = 0
   lines.forEach((l, i) => {
+    if (nextTimed <= i) {
+      nextTimed = i + 1
+      while (nextTimed < lines.length && lines[nextTimed].startMs == null) nextTimed++
+    }
     const startMs = l.startMs ?? out.at(-1)?.endMs ?? 0
-    const next = lines.slice(i + 1).find((x) => x.startMs != null)?.startMs
+    const next = lines[nextTimed]?.startMs
     const endMs = l.endMs != null && l.endMs >= startMs ? l.endMs : next != null && next > startMs ? next : startMs + sayMs(l.text)
     out.push({ startMs, endMs, speaker: l.speaker, text: l.text })
   })

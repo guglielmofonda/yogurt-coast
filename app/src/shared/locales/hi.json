@@ -1,4 +1,11 @@
 {
+  "Coming up": "आगामी",
+  "No upcoming meetings": "कोई आगामी मीटिंग नहीं है",
+  "Import from Granola": "Granola से आयात करें",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "आयात के लिए तैयार {ready} · पहले से Yogurt में {existing} · छोड़े गए {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "आयात किए गए {added} · पहले से Yogurt में {existing} · छोड़े गए {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Granola से निर्यात की गई 128 MB तक की ZIP या CSV फ़ाइल चुनें।",
+  "Choose the file again to finish importing.": "आयात पूरा करने के लिए फ़ाइल फिर से चुनें।",
   "Record": "रिकॉर्ड करें",
   "Search meetings": "मीटिंग खोजें",
   "About Yogurt": "Yogurt के बारे में",

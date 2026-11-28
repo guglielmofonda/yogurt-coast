@@ -1,4 +1,11 @@
 {
+  "Coming up": "Προσεχώς",
+  "No upcoming meetings": "Δεν υπάρχουν προσεχείς συναντήσεις",
+  "Import from Granola": "Εισαγωγή από το Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Έτοιμα για εισαγωγή {ready} · Ήδη στο Yogurt {existing} · Παραλείφθηκαν {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Εισήχθησαν {added} · Ήδη στο Yogurt {existing} · Παραλείφθηκαν {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Επιλέξτε εξαγωγή Granola σε ZIP ή CSV έως 128 MB.",
+  "Choose the file again to finish importing.": "Επιλέξτε ξανά το αρχείο για να ολοκληρωθεί η εισαγωγή.",
   "Record": "Ηχογράφηση",
   "Search meetings": "Αναζήτηση συναντήσεων",
   "About Yogurt": "Σχετικά με το Yogurt",

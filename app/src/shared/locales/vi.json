@@ -1,4 +1,11 @@
 {
+  "Coming up": "Sắp tới",
+  "No upcoming meetings": "Không có cuộc họp sắp tới",
+  "Import from Granola": "Nhập từ Granola",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Sẵn sàng nhập {ready} · Đã có trong Yogurt {existing} · Đã bỏ qua {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Đã nhập {added} · Đã có trong Yogurt {existing} · Đã bỏ qua {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Chọn tệp ZIP hoặc CSV xuất từ Granola có dung lượng tối đa 128 MB.",
+  "Choose the file again to finish importing.": "Chọn lại tệp để hoàn tất quá trình nhập.",
   "Record": "Ghi âm",
   "Search meetings": "Tìm cuộc họp",
   "About Yogurt": "Giới thiệu về Yogurt",

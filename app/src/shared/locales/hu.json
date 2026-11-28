@@ -1,4 +1,11 @@
 {
+  "Coming up": "Következik",
+  "No upcoming meetings": "Nincsenek közelgő megbeszélések",
+  "Import from Granola": "Importálás a Granolából",
+  "Ready to import {ready} · Already in Yogurt {existing} · Skipped {skipped}": "Importálható {ready} · Már a Yogurtban {existing} · Kihagyva {skipped}",
+  "Imported {added} · Already in Yogurt {existing} · Skipped {skipped}": "Importálva {added} · Már a Yogurtban {existing} · Kihagyva {skipped}",
+  "Choose a Granola export ZIP or CSV up to 128 MB.": "Válasszon egy legfeljebb 128 MB-os Granola ZIP- vagy CSV-exportot.",
+  "Choose the file again to finish importing.": "Az importálás befejezéséhez válassza ki újra a fájlt.",
   "Record": "Rögzítés",
   "Search meetings": "Megbeszélések keresése",
   "About Yogurt": "A Yogurt névjegye",

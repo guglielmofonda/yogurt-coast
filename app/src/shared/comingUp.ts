@@ -1,3 +1,5 @@
+export const HOME_AGENDA_DAYS = 4
+
 import type { CalEvent } from '../main/calendar'
 
 const MIN = 60_000
