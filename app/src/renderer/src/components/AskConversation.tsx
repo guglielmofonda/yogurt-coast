@@ -12,6 +12,7 @@ import { useSmoothText } from '../useSmoothText'
 import { AnswerText } from './AnswerText'
 import { Loading } from './Loading'
 import { LoadingContent } from './LoadingContent'
+import { AskModelLabel } from './AskModelLabel'
 import { NotesModelWait } from './NotesModelWait'
 import { ThinkingDots } from './ThinkingDots'
 import { ConversationActions } from './ConversationActions'
@@ -369,6 +370,7 @@ export function AskConversation({ id, pendingDraftKey, initial, loadError = fals
               </Popover.Positioner>
             </Popover.Portal>
           </Popover.Root>
+          <AskModelLabel />
           {answering ? <button type="button" data-testid={`${prefix}-stop`} className="ask-toolbar-button ask-stop" aria-label={chat?.waitsForModel ? t('Cancel question') : t('Stop')} title={chat?.waitsForModel ? t('Cancel question') : t('Stop')} onClick={() => { keepTyping(); window.yogurt.conversations.stop(id) }}><Square size={10} fill="currentColor" /></button>
             : <button type="submit" data-testid={`${prefix}-send`} className="ask-toolbar-button ask-send" disabled={busy || !text.trim()} aria-label={t('Ask')}><span className="orb-material" aria-hidden="true" /><ArrowUp size={16} /></button>}
         </div>

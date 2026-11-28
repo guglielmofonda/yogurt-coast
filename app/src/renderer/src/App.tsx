@@ -1,3 +1,4 @@
+import { AskModelSetup } from './components/AskModelLabel'
 import { ReadError } from './components/InlineError'
 import { LoadingContent } from './components/LoadingContent'
 import { MeetingListLoading } from './screens/Home'
@@ -219,7 +220,7 @@ export function App() {
   return <AskRecordingWait value={recordingWait}>
     {mac && <MacLaunch active={launching} />}
     <div data-testid="app-shell" inert={launching || undefined} className={starting ? 'app-shell flex h-full flex-col bg-bg' : `app-shell h-full text-ink ${ready ? 'bg-transparent' : 'bg-bg'}`}>
-      {page}
+      <AskModelSetup value={setup}>{page}</AskModelSetup>
       {inWorkspace && searching && <Search folder={folder} folders={folders} onOpen={(id, at) => open(id, at == null ? undefined : { ms: null, screenCapturedAt: at })} onNavigate={go} onShortcuts={openShortcuts} onSettingsChange={() => setSettingsRevision((v) => v + 1)} onClose={() => setSearching(false)} sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => toggleSidebar()} />}
       {inWorkspace && shortcuts && <Shortcuts onClose={() => setShortcuts(false)} />}
       {inWorkspace && <TrashToast go={go} />}

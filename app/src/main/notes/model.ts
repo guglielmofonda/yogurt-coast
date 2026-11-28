@@ -24,7 +24,7 @@ const before = (pairs: string[] = []): EngineMessage[] => pairs.map((content, i)
  * one sequence for its whole life, let go when the queue says so. It remembers what the sequence starts with, so a
  * read ahead only sends what is new.
  */
-export function createNotesModel(o: { engine: Engine; modelPath: () => string | undefined; onLoaded?: (path: string) => void
+export function createNotesModel(o: { engine: Engine; modelPath: () => string | undefined; onModelChange?: (path: string | undefined) => void
   /** the context to load with (smaller on a Mac with little memory; notes split a long meeting into parts to fit) */
   contextSize?: number
   /** let go of what must not sit in memory next to the model (whisper-server on a Mac with little memory) */
@@ -34,26 +34,30 @@ export function createNotesModel(o: { engine: Engine; modelPath: () => string | 
   let loading: Promise<{ path: string; contextSize: number }> | undefined
   /** the text the model's sequence starts with (the first message of what it last read): what a read ahead builds on */
   let held = ''
-  o.engine.onExit(() => { loaded = undefined; loading = undefined; held = '' })
+  const forget = () => {
+    held = ''
+    if (loaded) { loaded = undefined; o.onModelChange?.(undefined) }
+  }
+  o.engine.onExit(() => { loading = undefined; forget() })
 
   const ensure = async (): Promise<{ path: string; contextSize: number }> => {
     const path = o.modelPath()
     if (!path) throw new Error('No notes model yet')
     if (loaded?.path === path) return loaded
-    held = ''
-    loaded = undefined
+    forget()
     const t0 = performance.now()
     loading ??= (async () => { await o.beforeLoad?.().catch((e) => console.error('letting go before the notes model loads failed', e)) })().then(() => o.engine.load(path, o.contextSize ?? CONTEXT, MIN_CONTEXT)).then((r) => {
       console.info('TIMING', `load ${((performance.now() - t0) / 1000).toFixed(1)} s`)
-      o.onLoaded?.(path)
-      return (loaded = { path, contextSize: r.contextSize })
+      loaded = { path, contextSize: r.contextSize }
+      o.onModelChange?.(path)
+      return loaded
     }).finally(() => { loading = undefined })
     return loading
   }
   /** Windows and Linux: the graphics card gave up (stuck or crashed while starting); the engine now runs without it, once more */
   const again = <T>(run: () => Promise<T>, ok = () => true): Promise<T> => run().catch((e) => {
     if (!(e instanceof GraphicsGaveUpError) || !ok()) throw e
-    loaded = undefined; loading = undefined; held = ''
+    loading = undefined; forget()
     return run()
   })
   const load = () => again(ensure)
@@ -87,8 +91,7 @@ export function createNotesModel(o: { engine: Engine; modelPath: () => string | 
     async unload() {
       await loading?.catch(() => {})
       await o.engine.unload()
-      loaded = undefined
-      held = ''
+      forget()
     },
     loaded: () => loaded?.path,
     /** the next llm() loads the model first (it isn't loaded, or a better one landed) */

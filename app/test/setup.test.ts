@@ -59,6 +59,7 @@ describe('SetupController', () => {
       expect(c.state.phase).toBe('ready')
       expect(c.installed()?.asr).toBeTruthy()
       expect(c.notesPath()).toBeUndefined()
+    expect(c.state.askModel).toBeUndefined()
       const failed = states.length
       await c.retry()
       await c.idle()
@@ -663,12 +664,16 @@ describe('optional better notes model', () => {
     const { c, root } = setup({ download: rec.deps })
     const engine = new FakeEngine()
     const load = vi.spyOn(engine, 'load')
-    const model = createNotesModel({ engine, modelPath: () => c.notesPath(), onLoaded: path => c.notesModelLoaded(path) })
+    const model = createNotesModel({ engine, modelPath: () => c.notesPath(), onModelChange: path => c.notesModelChanged(path) })
     await c.start()
     await vi.waitFor(() => expect(rec.asked).toContain(bigUrl))
     const first = c.installed()!.llm!
     await model.llm()
+    const starter = { name: 'Gemma 4 E4B', quant: 'Q4_0', fileName: name(starterUrl), loaded: true }
+    const bigger = { name: 'Gemma 4 26B', quant: 'Q4_0', fileName: name(bigUrl), loaded: true }
+    expect(c.state.askModel).toEqual(starter)
     rec.release(); await c.idle()
+    expect(c.state.askModel).toEqual(starter)
     expect(model.loaded()).toBe(first)
     expect(existsSync(first)).toBe(true)
     load.mockRejectedValueOnce(new Error('not enough memory'))
@@ -677,6 +682,7 @@ describe('optional better notes model', () => {
     expect(existsSync(first + '.ok')).toBe(true)
     await model.llm()
     expect(model.loaded()).toBe(c.installed()?.recommendedLlm)
+    expect(c.state.askModel).toEqual(bigger)
     expect(existsSync(first)).toBe(false)
     expect(existsSync(first + '.ok')).toBe(false)
     expect(c.installed()?.llm).toBeUndefined()
@@ -684,6 +690,9 @@ describe('optional better notes model', () => {
     await next.c.start(); await next.c.idle()
     expect(next.rec.asked).not.toContain(starterUrl)
     expect(next.c.notesPath()).toBe(c.notesPath())
+    expect(next.c.state.askModel).toEqual({ ...bigger, loaded: false })
+    await model.unload()
+    expect(c.state.askModel).toEqual(next.c.state.askModel)
   })
 
   it.each([false, true])('publishes separate restore progress and clears it when the download fails: %s', async fail => {
@@ -700,7 +709,7 @@ describe('optional better notes model', () => {
     } } })
     await c.start(); await c.idle()
     const bigger = c.notesPath()!
-    c.notesModelLoaded(bigger)
+    c.notesModelChanged(bigger)
     restoring = true
     states.length = 0
     const retire = vi.fn(async (remove: () => void) => {
@@ -748,7 +757,7 @@ describe('optional better notes model', () => {
     const prefs = preference(root)
     const { c } = setup({ modelsDir: root, upgradePreference: prefs })
     const engine = new FakeEngine()
-    const model = createNotesModel({ engine, modelPath: () => c.notesPath(), onLoaded: path => c.notesModelLoaded(path) })
+    const model = createNotesModel({ engine, modelPath: () => c.notesPath(), onModelChange: path => c.notesModelChanged(path) })
     const queue = createQueue({ recording: () => false, smallMac: false, modelReady: () => !!c.notesPath() })
     await c.start(); await c.idle(); await model.llm()
     const bigger = c.notesPath()!
@@ -759,7 +768,7 @@ describe('optional better notes model', () => {
     const removed = c.removeUpgrade(remove => queue.enqueue(async () => { await model.unload(); remove() }, 'enhance'))
     await vi.waitFor(() => expect(c.installed()?.llm).toBeTruthy())
     // A concurrent successful load must not clean up the fallback being restored for removal.
-    c.notesModelLoaded(bigger)
+    c.notesModelChanged(bigger)
     expect(existsSync(c.installed()!.llm!)).toBe(true)
     expect(existsSync(bigger)).toBe(true)
     release(); await working
@@ -768,6 +777,7 @@ describe('optional better notes model', () => {
     releaseUnload(); await removed
     expect(existsSync(bigger)).toBe(false)
     expect(c.notesPath()).toBe(c.installed()?.llm)
+    expect(c.state.askModel).toMatchObject({ name: 'Gemma 4 E4B', loaded: false })
     await model.llm()
     expect(model.loaded()).toBe(c.installed()?.llm)
     expect(c.state.notesUpgradeInstalled).toBe(false)
@@ -787,7 +797,7 @@ describe('optional better notes model', () => {
     } } })
     await c.start(); await c.idle()
     const engine = new FakeEngine()
-    const model = createNotesModel({ engine, modelPath: () => c.notesPath(), onLoaded: path => c.notesModelLoaded(path) })
+    const model = createNotesModel({ engine, modelPath: () => c.notesPath(), onModelChange: path => c.notesModelChanged(path) })
     await model.llm()
     vi.spyOn(engine, 'unload').mockRejectedValue(new Error('unload failed'))
     const bigger = c.notesPath()!

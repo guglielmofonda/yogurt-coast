@@ -18,6 +18,7 @@ import { MeetingRow } from '../components/MeetingRow'
 import { FolderChip } from '../components/FolderPicker'
 import { Agenda } from '../components/Agenda'
 import { HomeUpcoming } from '../components/HomeUpcoming'
+import { AskModelLabel } from '../components/AskModelLabel'
 import { GranolaImportButton } from '../components/GranolaImportButton'
 import './Home.css'
 import { MEETING_DRAG } from '../folders'
@@ -113,6 +114,7 @@ function HomeAsk() {
     <MessageCircle size={16} aria-hidden="true" />
     <input data-testid="home-ask" aria-label={t('Ask about your meetings')} placeholder={t('Ask about your meetings')} value={question}
       maxLength={4000} readOnly={sending} onChange={e => setQuestion(e.target.value)} />
+    <AskModelLabel />
     <button type="submit" aria-label={t('Ask about your meetings')} disabled={!question.trim() || sending}><ArrowUp size={15} /></button>
   </form></div>
 }

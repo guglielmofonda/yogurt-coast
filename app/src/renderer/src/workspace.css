@@ -488,7 +488,12 @@
 .ask-box textarea { display:block;width:100%;field-sizing:content;min-height:38px;max-height:160px;resize:none;background:transparent;outline:none;color:var(--ink);font-size:14px;line-height:22px; }
 .ask-box textarea:focus-visible { outline:none; }
 .ask-box textarea::placeholder { color:var(--muted); }
-.ask-box-actions { display:flex;align-items:center;justify-content:space-between;margin-top:8px; }
+.ask-box-actions { display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px; }
+.ask-model-label { display:flex;flex:none;align-items:baseline;gap:5px;min-width:0;max-width:54%;margin-inline-start:auto;color:var(--muted);font-size:12px;line-height:18px;white-space:nowrap; }
+.ask-model-label > :first-child { min-width:0;overflow:hidden;text-overflow:ellipsis; }
+.ask-model-label > bdi:first-child { color:var(--written); }
+.ask-model-quant { flex:none;font-size:11px; }
+.home-ask-bar .ask-model-label { max-width:40%; }
 .ask-toolbar-button { display:grid;place-items:center;width:28px;height:28px;flex:none;border:1px solid transparent;border-radius:50%;color:var(--muted);transition:background-color var(--dur-micro) ease,color var(--dur-micro) ease; }
 .ask-box:has(textarea[aria-disabled=true]) { background:var(--card); }
 .ask-box textarea[aria-disabled=true] { cursor:not-allowed;color:var(--muted); }

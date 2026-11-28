@@ -374,6 +374,8 @@ export type SetupState = {
   message?: string
   /** Speech is ready, but the first notes-model download failed. Recording and transcription still work. */
   notesError?: string
+  /** The resident answer model, or the verified model the next question will load. */
+  askModel?: { name: string; quant: string; fileName: string; loaded: boolean }
   /** First notes-model progress (0 to 1), retained on failure until retry or completion. */
   notesFraction?: number
   /** Size of the first notes model; ETA is absent until the downloader has an estimate. */

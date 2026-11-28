@@ -34,6 +34,7 @@ test('asking across meetings from Chat: the answer streams in with sources that 
     await expect(turn).toHaveAttribute('data-status', 'answering', { timeout: 10_000 })
     await expect(page.getByTestId('chat-page-stop')).toBeVisible()
     await expect(page.getByTestId('chat-page-answer').locator('.fw').first()).toBeVisible()
+    await expect(page.getByTestId('ask-model')).toHaveAttribute('title', /Loaded on this device\ngemma-4-26B_q4_0-it\.gguf/)
     await expect(turn).toHaveAttribute('data-status', 'done', { timeout: 15_000 })
     await expect(page.getByTestId('chat-page-answer')).toContainText('Pricing call')
     // The cited sentence reveals its supporting quote without leaving the answer.

@@ -72,6 +72,7 @@ test('Ask opens one contained panel, keeps the note usable, and restores focus w
     await expect(panel).toBeVisible()
     await expect(input).toBeFocused()
     await expect(panel.getByTestId('chat-box')).toBeVisible()
+    await expect(panel.getByTestId('ask-model')).toContainText('Gemma 4 26B')
     const reading = (await page.locator('.note-reading-area').boundingBox())!, panelBox = (await panel.boundingBox())!
     const composer = (await panel.locator('.chat-composer').boundingBox())!
     expect(await page.getByTestId('note-title').boundingBox()).toEqual(closed)

@@ -57,7 +57,7 @@ Home shows the next four days from your selected calendars, followed by your not
 | --- | --- |
 | Bring existing Granola notes with you | On the Meetings home screen, choose **Import from Granola** and select the downloaded ZIP or CSV. Review the counts, then choose **Import notes**. [Migration guide](docs/README.md#bring-your-granola-notes-into-yogurt) |
 | Revisit a slide or demo | Open **Screenshots**. Browse by capture time or click an image to enlarge it. |
-| Ask about a decision | Open **Ask**. Answers can cite the transcript or the screenshot where the detail appeared. |
+| Ask about a decision | Open **Ask**. The name beside Send shows the local answer model. Hover for the exact file and whether it’s loaded. Answers can cite transcripts and screenshots. |
 | Choose your calendars | Open **Agenda → Calendars** and check the calendars you want. Google and iCloud accounts already in Apple Calendar work here. |
 | Give your agent read access | Enable **Settings → AI apps → Let AI apps read your meetings**. Connect Codex locally or Hermes over SSH with the read-only MCP helper. [Agent setup](docs/README.md#connect-an-agent) |
 

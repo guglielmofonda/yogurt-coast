@@ -56,15 +56,19 @@ export function friendly(err: unknown): string {
 /** One file to fetch: where it goes inside the models folder, and how big it is (for the progress bar) */
 type Item = { url: string; sha256: string; bytes: number; dir: string; fileName: string }
 
-const llmItem = (dir: string, c: Choice): Item => ({ url: c.build.url, sha256: c.build.sha256, bytes: c.build.sizeGB * 1e9, dir, fileName: fileNameFor(c.build.url) })
+const llmItem = (dir: string, c: Choice) => ({
+  url: c.build.url, sha256: c.build.sha256, bytes: c.build.sizeGB * 1e9, dir, fileName: fileNameFor(c.build.url),
+  name: c.model.name, quant: c.build.quant,
+})
 
 export class SetupController {
   private _state: SetupState = { phase: 'checking', fraction: 0 }
   private listeners = new Set<(s: SetupState) => void>()
   private busy = false
   private background: Promise<void> | undefined
-  private backgroundItem: Item | undefined
-  private firstItem: Item | undefined
+  private backgroundItem?: ReturnType<typeof llmItem>
+  private firstItem?: ReturnType<typeof llmItem>
+  private loadedNotesPath?: string
   private upgradeAbort: AbortController | undefined
   private upgradeDownload: Promise<void> | undefined
   private upgradeChange: Promise<void> | undefined
@@ -83,6 +87,9 @@ export class SetupController {
   get state() { return this._state }
   onState(cb: (s: SetupState) => void) { this.listeners.add(cb); return () => this.listeners.delete(cb) }
   private set(s: SetupState) {
+    const path = this.loadedNotesPath ?? this.notesPath()
+    const item = path && [this.backgroundItem, this.firstItem].find(i => i && join(i.dir, i.fileName) === path)
+    s = { ...s, askModel: item ? { name: item.name, quant: item.quant, fileName: item.fileName, loaded: !!this.loadedNotesPath } : undefined }
     // the bar only moves forward, and only speaks up when a whole percent changes
     const prev = this._state
     if (s.phase === prev.phase && s.phase === 'downloading') {
@@ -98,8 +105,13 @@ export class SetupController {
 
   notesPath() { return this.paths?.recommendedLlm ?? this.paths?.llm }
 
-  /** The engine has disposed the old model and successfully loaded this one, inside the serial job queue. */
-  notesModelLoaded(path: string) {
+  /** A downloaded upgrade can land while the engine is still answering with the first model. */
+  notesModelChanged(path: string | undefined) {
+    if (path !== this.loadedNotesPath) {
+      this.loadedNotesPath = path
+      this.set(this._state)
+    }
+    if (!path) return
     const first = this.paths?.llm
     if (!first || first === path || path !== this.paths?.recommendedLlm || this.upgradeChange) return
     try {
